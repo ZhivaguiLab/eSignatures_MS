@@ -44,25 +44,6 @@ model. It reproduces the Python results: eSS18 (SBS100) log2 OR 4.21, q = 9.7e-2
 eSS47 log2 OR 3.44, q = 5.7e-4; eSS17 (SBS4) log2 OR 1.67, q = 1.4e-3; eSS33
 (SBS22a) log2 OR 0.87, q = 1.3e-3.
 
-## Input data
-
-Filtered and unfiltered mutational catalogues are available through the COSMIC
-experimental signatures portal:
-https://cancer.sanger.ac.uk/signatures/experimental/
-
-The Figure 7 script reads its three input files from
-`fig07_organoid_validation/inputs/` and runs without further setup.
-
-The Figure 6 scripts read the per-cancer-type pan-cancer decomposition
-(`SPE_DeNovo_eSS51/.../Decompose_Solution_Activities.txt`, roughly 1.6 GB across
-all cancer types) and the clinical sample table
-(`HD Signatures WGS Datasets v2.0 - final_sample_summary_v2.tsv`). These are not
-redistributed here. Place them in a local directory and set the path constant at
-the top of each Figure 6 script (`BASE` in the Python scripts, `DATA_DIR` in the R
-script). The R script expects a single pooled activities file,
-`pooled_Decompose_Solution_Activities.txt`, built by concatenating the per-cancer
-`Decompose_Solution_Activities.txt` tables.
-
 ## Software
 
 Python 3.10: SigProfilerMatrixGenerator 1.3.6, SigProfilerAssignment 1.1.4,
