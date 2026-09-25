@@ -1,0 +1,29 @@
+# Preprocessing Configuration
+# Automatically removes samples matching specified patterns before clustering
+
+# Exclusion patterns by mutation type
+# Samples matching ANY pattern will be excluded
+
+DBS:
+  exclude:
+    - hTumor          # Remove anything containing 'hTumour'
+    # Add more DBS-specific patterns here
+
+ID:
+  exclude:
+    - hTumor          # Remove anything containing 'hTumour'
+    # Add more ID-specific patterns here
+
+# SBS: No preprocessing needed (already clean)
+# SBS:
+#   exclude: []
+
+# Pattern matching is case-insensitive by default
+# 'hTumour', 'htumour', 'HTUMOUR' all match
+case_sensitive: false
+
+# Notes:
+# - Patterns are matched as substrings
+# - If no patterns defined for a mutation type, no preprocessing occurs
+# - Cleaned data is cached in data/input_cleaned/<TYPE>/ for reuse
+# - Use --force_preprocess to regenerate cleaned data

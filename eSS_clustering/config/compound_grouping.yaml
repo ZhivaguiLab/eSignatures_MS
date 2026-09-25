@@ -1,0 +1,68 @@
+# Compound Grouping Configuration
+# Collapses replicate/variant compound names into single groups for matrix visualization
+
+# Strategy: Rules are applied in order (regex first, then explicit mappings)
+# This allows you to catch patterns, then override specific cases
+
+# ---------------------------------------------------------------------------
+# Regex-based rules (applied first)
+# ---------------------------------------------------------------------------
+# Pattern matching uses Python regex syntax
+# Capture groups (\1, \2) can be used in replace_with
+
+regex_rules:
+  # Human tumor samples (numbered prefix)
+  - pattern: '^\d+_human_tumor_connective_SNV_hg38$'
+    replace_with: 'Human_tumor_connective'
+    description: 'Collapse numbered human connective tumor samples'
+  
+  - pattern: '^\d+_human_tumor_breast_SNV_hg38$'
+    replace_with: 'Human_tumor_breast'
+    description: 'Collapse numbered human breast tumor samples'
+  
+  # RPE1 cell line variants (keep genotype, remove replicate number)
+  - pattern: '^(B2D12|BRCA1|WT)_(CX|ETO|PDS|U)\d+$'
+    replace_with: '\1_\2'
+    description: 'Collapse RPE1 genotype variants (e.g., B2D12_CX1 → B2D12_CX)'
+  
+  # Replicate samples (remove replicate suffix)
+  - pattern: '^(.+)_replicate\d+_final$'
+    replace_with: '\1'
+    description: 'Remove _replicateN_final suffix'
+  
+  # HMEC samples (complex naming)
+  - pattern: '^HMEC_exome_\w+_hg38_Bap_HMEC_exome_\w+__Genome$'
+    replace_with: 'HMEC_BaP'
+    description: 'Simplify HMEC BaP exposure samples'
+
+# ---------------------------------------------------------------------------
+# Explicit mappings (applied after regex, highest priority)
+# ---------------------------------------------------------------------------
+# Use this for one-off cases or to override regex results
+# Format: "original_name": "display_name"
+
+explicit_mappings:
+  # Specific HMEC samples if you want different names
+  HMEC_exome_184A1_hg38_Bap_HMEC_exome_184A1__Genome: 'HMEC_BaP_184A1'
+  HMEC_exome_184Aa_hg38_Bap_HMEC_exome_184Aa__Genome: 'HMEC_BaP_184Aa'
+  
+  # Override compound names for clarity
+  CHF: 'Cyclophosphamide'
+  AAI: 'Aristolochic_acid_I'
+  AFB1: 'Aflatoxin_B1'
+  ATC: 'Acrolein'
+  
+  # Correct inconsistent spellings
+  BaP: 'Benzo[a]pyrene'
+  Bap: 'Benzo[a]pyrene'
+  
+  # Human-readable names for codes
+  SS: 'Simulated_solar_radiation'
+
+# ---------------------------------------------------------------------------
+# Notes
+# ---------------------------------------------------------------------------
+# - Regex rules are applied in the order listed
+# - Explicit mappings override all regex results
+# - Original compound names are preserved in the data; this only affects display
+# - Use the same file for SBS/DBS/ID or create type-specific configs
