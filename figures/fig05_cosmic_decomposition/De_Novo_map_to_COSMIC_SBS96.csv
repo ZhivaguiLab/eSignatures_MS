@@ -1,0 +1,102 @@
+De novo extracted, Global NMF Signatures, L1 Error %, L2 Error %, KL Divergence, Cosine Similarity, Correlation
+Signature 96-SBS1, Signature 96-SBS1, 0, 0, 0, 1, 1
+Signature 96-SBS2, Signature 96-SBS2, 0, 0, 0, 1, 1
+Signature 96-SBS3, Signature eSS4 (39.82%) & Signature eSS17 (22.66%) & Signature eSS24 (37.52%), 46.29,  50.12, 0.186, 0.87, 0.51
+Signature 96-SBS4, Signature eSS9 (24.32%) & Signature eSS17 (75.68%), 32.69,  22.67, 0.109, 0.97, 0.97
+Signature 96-SBS5, Signature eSS6 (47.72%) & Signature eSS24 (31.42%) & Signature eSS37 (20.86%), 25.36,  29.38, 0.056, 0.96, 0.89
+Signature 96-SBS6, Signature 96-SBS6, 0, 0, 0, 1, 1
+Signature 96-SBS7a, Signature eSS27 (100.00%), 63.56,  41.00, 0.331, 0.91, 0.91
+Signature 96-SBS7b, Signature eSS27 (74.40%) & Signature eSS30 (25.60%), 63.12,  37.68, 0.337, 0.93, 0.92
+Signature 96-SBS7c, Signature 96-SBS7c, 0, 0, 0, 1, 1
+Signature 96-SBS7d, Signature 96-SBS7d, 0, 0, 0, 1, 1
+Signature 96-SBS8, Signature eSS14 (20.14%) & Signature eSS16 (56.32%) & Signature eSS38 (23.54%), 47.74,  44.04, 0.209, 0.90, 0.82
+Signature 96-SBS9, Signature 96-SBS9, 0, 0, 0, 1, 1
+Signature 96-SBS10a, Signature 96-SBS10a, 0, 0, 0, 1, 1
+Signature 96-SBS10b, Signature 96-SBS10b, 0, 0, 0, 1, 1
+Signature 96-SBS10c, Signature eSS9 (100.00%), 70.64,  57.20, 0.567, 0.82, 0.78
+Signature 96-SBS10d, Signature 96-SBS10d, 0, 0, 0, 1, 1
+Signature 96-SBS11, Signature eSS28 (100.00%), 21.61,  12.96, 0.068, 0.99, 0.99
+Signature 96-SBS12, Signature eSS37 (50.10%) & Signature eSS43 (49.90%), 51.36,  43.19, 0.240, 0.90, 0.88
+Signature 96-SBS13, Signature 96-SBS13, 0, 0, 0, 1, 1
+Signature 96-SBS14, Signature 96-SBS14, 0, 0, 0, 1, 1
+Signature 96-SBS15, Signature 96-SBS15, 0, 0, 0, 1, 1
+Signature 96-SBS16, Signature eSS36 (44.34%) & Signature eSS37 (55.66%), 68.53,  58.19, 0.379, 0.81, 0.79
+Signature 96-SBS17a, Signature 96-SBS17a, 0, 0, 0, 1, 1
+Signature 96-SBS17b, Signature 96-SBS17b, 0, 0, 0, 1, 1
+Signature 96-SBS18, Signature eSS8 (57.32%) & Signature eSS11 (42.68%), 43.12,  35.88, 0.145, 0.93, 0.92
+Signature 96-SBS19, Signature eSS25 (68.94%) & Signature eSS30 (31.06%), 95.28,  52.69, 0.621, 0.85, 0.87
+Signature 96-SBS20, Signature 96-SBS20, 0, 0, 0, 1, 1
+Signature 96-SBS21, Signature 96-SBS21, 0, 0, 0, 1, 1
+Signature 96-SBS22a, Signature eSS33 (100.00%), 40.04,  22.71, 0.170, 0.97, 0.97
+Signature 96-SBS22b, Signature eSS33 (47.00%) & Signature eSS35 (27.08%) & Signature eSS48 (25.92%), 37.98,  34.32, 0.116, 0.94, 0.92
+Signature 96-SBS22c, Signature eSS18 (26.14%) & Signature eSS37 (73.86%), 46.61,  42.97, 0.242, 0.90, 0.85
+Signature 96-SBS23, Signature eSS28 (62.74%) & Signature eSS30 (37.26%), 71.89,  49.59, 0.428, 0.87, 0.85
+Signature 96-SBS24, Signature eSS10 (70.16%) & Signature eSS14 (29.84%), 47.01,  37.18, 0.189, 0.93, 0.91
+Signature 96-SBS25, Signature eSS5 (28.34%) & Signature eSS32 (23.32%) & Signature eSS39 (48.34%), 36.18,  36.83, 0.128, 0.93, 0.84
+Signature 96-SBS26, Signature eSS37 (49.24%) & Signature eSS43 (50.76%), 63.00,  48.52, 0.341, 0.87, 0.84
+Signature 96-SBS27, Signature 96-SBS27, 0, 0, 0, 1, 1
+Signature 96-SBS28, Signature 96-SBS28, 0, 0, 0, 1, 1
+Signature 96-SBS29, Signature eSS11 (100.00%), 60.65,  40.66, 0.287, 0.91, 0.90
+Signature 96-SBS30, Signature eSS29 (100.00%), 59.17,  51.69, 0.260, 0.86, 0.83
+Signature 96-SBS31, Signature eSS31 (100.00%), 46.67,  35.34, 0.171, 0.94, 0.93
+Signature 96-SBS32, Signature 96-SBS32, 0, 0, 0, 1, 1
+Signature 96-SBS33, Signature 96-SBS33, 0, 0, 0, 1, 1
+Signature 96-SBS34, Signature 96-SBS34, 0, 0, 0, 1, 1
+Signature 96-SBS35, Signature eSS22 (19.70%) & Signature eSS31 (57.62%) & Signature eSS34 (22.68%), 46.20,  37.45, 0.170, 0.93, 0.90
+Signature 96-SBS36, Signature eSS8 (100.00%), 56.71,  45.76, 0.229, 0.89, 0.88
+Signature 96-SBS37, Signature 96-SBS37, 0, 0, 0, 1, 1
+Signature 96-SBS38, Signature eSS15 (56.40%) & Signature eSS20 (43.60%), 69.23,  45.32, 0.326, 0.89, 0.89
+Signature 96-SBS39, Signature 96-SBS39, 0, 0, 0, 1, 1
+Signature 96-SBS40a, Signature eSS2 (60.38%) & Signature eSS6 (39.62%), 32.12,  32.86, 0.092, 0.94, 0.88
+Signature 96-SBS40b, Signature 96-SBS40b, 0, 0, 0, 1, 1
+Signature 96-SBS40c, Signature eSS6 (43.48%) & Signature eSS24 (56.52%), 36.58,  41.85, 0.120, 0.91, 0.76
+Signature 96-SBS41, Signature eSS35 (36.72%) & Signature eSS47 (63.28%), 71.01,  52.11, 0.450, 0.85, 0.83
+Signature 96-SBS42, Signature 96-SBS42, 0, 0, 0, 1, 1
+Signature 96-SBS43, Signature 96-SBS43, 0, 0, 0, 1, 1
+Signature 96-SBS44, Signature 96-SBS44, 0, 0, 0, 1, 1
+Signature 96-SBS45, Signature eSS19 (100.00%), 56.99,  38.41, 0.268, 0.92, 0.92
+Signature 96-SBS46, Signature 96-SBS46, 0, 0, 0, 1, 1
+Signature 96-SBS47, Signature eSS23 (28.54%) & Signature eSS35 (31.62%) & Signature eSS49 (39.84%), 75.95,  54.18, 0.679, 0.84, 0.81
+Signature 96-SBS48, Signature 96-SBS48, 0, 0, 0, 1, 1
+Signature 96-SBS49, Signature 96-SBS49, 0, 0, 0, 1, 1
+Signature 96-SBS50, Signature 96-SBS50, 0, 0, 0, 1, 1
+Signature 96-SBS51, Signature 96-SBS51, 0, 0, 0, 1, 1
+Signature 96-SBS52, Signature 96-SBS52, 0, 0, 0, 1, 1
+Signature 96-SBS53, Signature 96-SBS53, 0, 0, 0, 1, 1
+Signature 96-SBS54, Signature 96-SBS54, 0, 0, 0, 1, 1
+Signature 96-SBS55, Signature 96-SBS55, 0, 0, 0, 1, 1
+Signature 96-SBS56, Signature 96-SBS56, 0, 0, 0, 1, 1
+Signature 96-SBS57, Signature 96-SBS57, 0, 0, 0, 1, 1
+Signature 96-SBS58, Signature eSS23 (30.60%) & Signature eSS46 (69.40%), 79.26,  57.70, 0.524, 0.82, 0.77
+Signature 96-SBS59, Signature 96-SBS59, 0, 0, 0, 1, 1
+Signature 96-SBS60, Signature 96-SBS60, 0, 0, 0, 1, 1
+Signature 96-SBS84, Signature 96-SBS84, 0, 0, 0, 1, 1
+Signature 96-SBS85, Signature eSS47 (100.00%), 60.57,  46.61, 0.267, 0.88, 0.85
+Signature 96-SBS86, Signature 96-SBS86, 0, 0, 0, 1, 1
+Signature 96-SBS87, Signature 96-SBS87, 0, 0, 0, 1, 1
+Signature 96-SBS88, Signature eSS36 (100.00%), 39.81,  19.17, 0.193, 0.98, 0.98
+Signature 96-SBS89, Signature eSS4 (79.30%) & Signature eSS34 (20.70%), 56.44,  59.54, 0.266, 0.80, 0.50
+Signature 96-SBS90, Signature eSS35 (100.00%), 25.36,  5.85, 0.091, 1.00, 1.00
+Signature 96-SBS91, Signature 96-SBS91, 0, 0, 0, 1, 1
+Signature 96-SBS92, Signature eSS25 (61.78%) & Signature eSS37 (38.22%), 49.11,  47.49, 0.224, 0.88, 0.80
+Signature 96-SBS93, Signature 96-SBS93, 0, 0, 0, 1, 1
+Signature 96-SBS94, Signature eSS6 (38.36%) & Signature eSS17 (61.64%), 46.44,  40.44, 0.172, 0.91, 0.85
+Signature 96-SBS95, Signature eSS9 (24.36%) & Signature eSS11 (75.64%), 35.61,  27.46, 0.126, 0.96, 0.95
+Signature 96-SBS96, Signature 96-SBS96, 0, 0, 0, 1, 1
+Signature 96-SBS97, Signature 96-SBS97, 0, 0, 0, 1, 1
+Signature 96-SBS98, Signature eSS1 (47.62%) & Signature eSS6 (52.38%), 65.88,  53.54, 0.429, 0.84, 0.78
+Signature 96-SBS99, Signature 96-SBS99, 0, 0, 0, 1, 1
+Signature 96-SBS100, Signature eSS18 (100.00%), 29.33,  23.48, 0.090, 0.97, 0.96
+Signature 96-SBS101, Signature eSS34 (38.34%) & Signature eSS37 (33.02%) & Signature eSS39 (28.64%), 44.06,  37.55, 0.203, 0.93, 0.89
+Signature 96-SBS102, Signature eSS6 (48.98%) & Signature eSS29 (51.02%), 35.08,  32.08, 0.107, 0.95, 0.92
+Signature 96-SBS103, Signature 96-SBS103, 0, 0, 0, 1, 1
+Signature 96-SBS104, Signature 96-SBS104, 0, 0, 0, 1, 1
+Signature 96-SBS105, Signature 96-SBS105, 0, 0, 0, 1, 1
+Signature 96-SBS106, Signature 96-SBS106, 0, 0, 0, 1, 1
+Signature 96-SBS107, Signature 96-SBS107, 0, 0, 0, 1, 1
+Signature 96-SBS108, Signature eSS36 (26.32%) & Signature eSS40 (73.68%), 55.24,  55.32, 0.273, 0.83, 0.76
+Signature 96-SBS109, Signature eSS12 (40.32%) & Signature eSS47 (59.68%), 35.56,  36.62, 0.114, 0.93, 0.83
+Signature 96-SBS110, Signature eSS13 (47.52%) & Signature eSS29 (52.48%), 51.51,  49.17, 0.215, 0.87, 0.81
+Signature 96-SBS111, Signature eSS7 (100.00%), 54.39,  53.23, 0.232, 0.85, 0.76
+Signature 96-SBS112, Signature eSS28 (43.94%) & Signature eSS31 (56.06%), 47.61,  42.84, 0.222, 0.90, 0.87
+Signature 96-SBS113, Signature eSS15 (100.00%), 87.88,  59.60, 0.775, 0.80, 0.79

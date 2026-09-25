@@ -1,0 +1,60 @@
+#!/bin/bash
+#SBATCH -q hcp-ddp302
+#SBATCH -p platinum
+#SBATCH -A ddp302
+#SBATCH --mail-type=END
+#SBATCH --mail-user=z8jiang@ucsd.edu
+#SBATCH --job-name=null_library_fit
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=10G
+#SBATCH --time=10:00:00
+#SBATCH --exclude=tscc-13-[9-12] # Nodes throw Illegal instruction errors on tabix
+#SBATCH --array=0-100%10
+#SBATCH --output=/tscc/lustre/restricted/alexandrov-ddn/users/z8jiang/signature_stress_test/Maria_Z_eSignature/log/null_library_%A_%a.log
+#SBATCH --error=/tscc/lustre/restricted/alexandrov-ddn/users/z8jiang/signature_stress_test/Maria_Z_eSignature/log/null_library_%A_%a.err
+
+# Note on array scaling: Each array task processes a block of 10 replicates.
+# Array 0-100 handles replicates 0 through 1,000. Replicate 0 is the true unshuffled library.
+# The %10 cap keeps a max of 10 tasks running concurrently so we do not flood the nodes.
+
+source /tscc/nfs/home/z8jiang/anaconda3/etc/profile.d/conda.sh
+conda activate SigProfilerAssignment
+
+cd /tscc/lustre/restricted/alexandrov-ddn/users/z8jiang/signature_stress_test/Maria_Z_eSignature
+mkdir -p log
+
+# Stop numpy from spawning massive nested thread pools and tanking the node's CPU
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+
+# LOKY caps joblib's auto-detection. SPA hardcodes n_jobs=64 so this alone doesn't
+# fix the issue, but it's safe to keep here as a fallback cap.
+export LOKY_MAX_CPU_COUNT=4
+
+# This gets picked up by our joblib.Parallel patch at the top of the python script.
+# It forces the worker count down from 64 so we stop crashing.
+export SPA_MAX_WORKERS=4
+
+# Route joblib's shared memory to node-local scratch instead of /dev/shm.
+# /dev/shm is small and shared by everyone on the node, so this avoids memory limits.
+export JOBLIB_TEMP_FOLDER="/tscc/lustre/ddn/scratch/z8jiang/Maria_Z_null_library_fit/joblib_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+mkdir -p "$JOBLIB_TEMP_FOLDER"
+trap 'rm -rf "$JOBLIB_TEMP_FOLDER"' EXIT
+
+# Bump the open file limit as high as the node allows
+ulimit -n "$(ulimit -Hn)" || true
+echo "Open file limit set to: $(ulimit -n)"
+
+# Run 10 replicates per task ID. 
+# The '|| echo' prevents a single failed replicate from crashing the entire block.
+# Since the python script checks for existing files, resubmitting just fills in gaps.
+START=$(( SLURM_ARRAY_TASK_ID * 10 ))
+for R in $(seq "$START" $(( START + 9 ))); do
+  if [ "$R" -le 1000 ]; then
+    echo "=== Starting replicate $R ==="
+    /tscc/nfs/home/z8jiang/anaconda3/envs/SigProfilerAssignment/bin/python null_library_fit.py "$R" || echo "Replicate $R failed, moving to next"
+  fi
+done

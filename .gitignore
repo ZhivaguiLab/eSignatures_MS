@@ -1,0 +1,8 @@
+# Python bytecode caches (auto-generated, never ship in a code-availability release)
+__pycache__/
+*.pyc
+*.pyo
+# macOS Finder metadata
+.DS_Store
+# Image
+*.png

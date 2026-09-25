@@ -1,0 +1,97 @@
+Processing 101 COSMIC targets across 1000 shuffled libraries
+
+Real library: median cosine 0.790, max 1.000
+Null matrix: 1000 replicates by 101 targets
+
+Checking variance across shuffles:
+Targets identical across all 1000 replicates: 0 / 101
+Median spread of a target across replicates: 0.0765
+
+Global background stats:
+Total cosines from shuffled libraries: 101000
+Median: 0.630, 95th: 0.850, 99th: 0.910, Max: 0.980
+Fraction reaching 0.80: 0.1484
+Fraction reaching 0.85: 0.0641
+Fraction reaching 0.90: 0.0152
+Fraction reaching 0.95: 0.0006
+Real library median: 0.790, max: 1.000
+
+ Resolution ceiling 
+Smallest possible p-value: 0.00100 (based on 1000 replicates)
+26 out of 101 targets hit this floor.
+Smallest reachable FDR given the ties: 0.00388
+
+ How many targets qualify? (out of 101) 
+Cosine >= 0.90 alone (ignoring chance): 31
+Beats chance alone (FDR <= 0.05): 53
+Beats chance AND cosine >= 0.85: 36
+Beats chance AND cosine >= 0.90: 31
+Beats chance AND cosine >= 0.95: 10
+
+ Top 15 targets (ranked by margin over null 95th percentile) 
+cosmic_signature  observed_cosine  null_median  null_p95  null_max  margin_over_null_p95  p_value      fdr
+           SBS88             0.99        0.480      0.63      0.74                  0.36 0.000999 0.003881
+           SBS35             0.93        0.590      0.71      0.83                  0.22 0.000999 0.003881
+           SBS90             1.00        0.490      0.81      0.93                  0.19 0.000999 0.003881
+           SBS11             0.99        0.700      0.80      0.89                  0.19 0.000999 0.003881
+           SBS98             0.84        0.440      0.65      0.80                  0.19 0.000999 0.003881
+           SBS31             0.94        0.620      0.77      0.90                  0.17 0.000999 0.003881
+           SBS47             0.82        0.440      0.65      0.81                  0.17 0.000999 0.003881
+           SBS7b             0.93        0.630      0.77      0.88                  0.16 0.000999 0.003881
+           SBS85             0.89        0.610      0.74      0.84                  0.15 0.000999 0.003881
+           SBS7a             0.93        0.565      0.79      0.90                  0.14 0.000999 0.003881
+           SBS16             0.82        0.500      0.68      0.81                  0.14 0.000999 0.003881
+           SBS41             0.86        0.530      0.73      0.86                  0.13 0.002997 0.009459
+          SBS22c             0.91        0.670      0.78      0.85                  0.13 0.000999 0.003881
+           SBS45             0.95        0.635      0.82      0.96                  0.13 0.001998 0.006727
+           SBS38             0.90        0.580      0.78      0.95                  0.12 0.003996 0.011531
+
+ Targets that fail to beat their own chance ceiling 
+cosmic_signature  observed_cosine  null_median  null_p95  null_max  margin_over_null_p95  p_value
+           SBS48             0.16        0.560    0.7800      0.90               -0.6200 0.982018
+           SBS91             0.37        0.550    0.7700      0.91               -0.4000 0.884116
+           SBS86             0.33        0.470    0.7000      0.89               -0.3700 0.914086
+          SBS10b             0.40        0.440    0.7700      0.89               -0.3700 0.747253
+           SBS52             0.43        0.590    0.7900      0.92               -0.3600 0.695305
+           SBS13             0.24        0.210    0.6000      0.86               -0.3600 0.444555
+          SBS17a             0.31        0.440    0.6500      0.77               -0.3400 0.945055
+           SBS49             0.45        0.570    0.7700      0.94               -0.3200 0.658342
+          SBS103             0.39        0.350    0.6705      0.90               -0.2805 0.334665
+           SBS27             0.55        0.490    0.8100      0.95               -0.2600 0.338661
+           SBS97             0.56        0.500    0.8000      0.90               -0.2400 0.386613
+           SBS7d             0.43        0.470    0.6700      0.75               -0.2400 0.685315
+           SBS15             0.58        0.580    0.7905      0.93               -0.2105 0.509491
+          SBS17b             0.21        0.190    0.4100      0.45               -0.2000 0.439560
+           SBS33             0.50        0.490    0.6900      0.81               -0.1900 0.495504
+           SBS39             0.61        0.690    0.7700      0.85               -0.1600 0.973027
+           SBS7c             0.67        0.480    0.8200      0.89               -0.1500 0.174825
+           SBS59             0.66        0.580    0.7800      0.92               -0.1200 0.290709
+          SBS106             0.43        0.420    0.5400      0.65               -0.1100 0.453546
+           SBS14             0.69        0.610    0.8000      0.98               -0.1100 0.266733
+          SBS10a             0.69        0.580    0.8000      0.86               -0.1100 0.076923
+           SBS60             0.33        0.160    0.4300      0.43               -0.1000 0.162837
+           SBS46             0.76        0.790    0.8600      0.92               -0.1000 0.744256
+            SBS2             0.66        0.450    0.7500      0.88               -0.0900 0.145854
+           SBS54             0.65        0.540    0.7400      0.87               -0.0900 0.170829
+            SBS6             0.73        0.720    0.8200      0.93               -0.0900 0.479520
+           SBS44             0.67        0.640    0.7500      0.86               -0.0800 0.352647
+           SBS99             0.60        0.510    0.6505      0.75               -0.0505 0.155844
+           SBS34             0.76        0.510    0.8000      0.92               -0.0400 0.088911
+          SBS107             0.73        0.655    0.7700      0.90               -0.0400 0.164835
+          SBS110             0.86        0.840    0.9000      0.94               -0.0400 0.356643
+           SBS32             0.81        0.750    0.8400      0.94               -0.0300 0.170829
+           SBS84             0.73        0.630    0.7600      0.86               -0.0300 0.139860
+           SBS21             0.74        0.600    0.7700      0.89               -0.0300 0.111888
+          SBS10d             0.75        0.560    0.7700      0.93               -0.0200 0.081918
+           SBS50             0.68        0.535    0.7000      0.84               -0.0200 0.083916
+           SBS42             0.79        0.660    0.8100      0.89               -0.0200 0.093906
+           SBS26             0.88        0.820    0.8900      0.94               -0.0100 0.085914
+           SBS20             0.74        0.540    0.7500      0.90               -0.0100 0.068931
+           SBS30             0.86        0.780    0.8700      0.92               -0.0100 0.091908
+           SBS96             0.75        0.690    0.7600      0.83               -0.0100 0.115884
+           SBS56             0.77        0.580    0.7700      0.95                0.0000 0.061938
+           SBS53             0.75        0.560    0.7500      0.87                0.0000 0.056943
+           SBS55             0.42        0.270    0.4200      0.50                0.0000 0.051948
+Note: No etiological claim survives here, regardless of the raw cosine.
+
+Saved results to /tscc/lustre/restricted/alexandrov-ddn/users/z8jiang/signature_stress_test/Maria_Z_eSignature/null_SPA_summary.csv

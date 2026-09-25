@@ -1,0 +1,471 @@
+---
+title: "Poisson resampling"
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(ggrastr)
+library(showtext)
+library(ggtext)
+library(scales)
+
+# sample_type can be "exome" or "genome".
+
+# Resampling code eSignature_Poisson_simulations_copy.py
+
+input_file <- '/Users/zichenjiang/Downloads/combined_esignatures_samples_1386_SBS96_results_test.csv'; sample_type <- 'genome' # This actually is a mix of exomes and genomes from cell lines and organisms of different species
+output_filename <- '/Users/zichenjiang/Downloads/Stress_test/figure panels/Poisson_violin_plot_eSignature_1000sims_per1386_SBS96_small_file_test.png'
+
+####
+# I'm setting 'DejaVuSans' to be like python
+# for the default R font, comment out these lines.
+font_add("DejaVuSans", regular='/Users/zichenjiang/Downloads/Stress_test/dejavu-fonts-ttf-2.37/ttf/DejaVuSans.ttf', italic = '/Users/zichenjiang/Downloads/Stress_test/dejavu-fonts-ttf-2.37/ttf/DejaVuSans-Oblique.ttf')
+showtext_auto()
+theme_set(theme_bw(base_family = 'DejaVuSans'))
+#####
+
+raw_data <- read.csv(input_file)
+
+raw_data <- raw_data %>%
+    mutate(
+      mutation_count = as.integer(original_mutation_count),
+      cosine_similarity = as.numeric(cosine_similarity)
+    ) %>%
+    filter(!is.na(mutation_count) & !is.na(cosine_similarity))
+
+cat('Unique sample IDs in the raw simulation data:')
+cat(length(unique(raw_data$sample_id)))
+
+
+# KEY THRESHOLDS
+# The cosine similarity value we consider "highly concordant"
+COSINE_SIMILARITY_THRESHOLD <- 0.95
+
+# The percentage of samples that must be concordant to find our mutation count thresholds
+PERCENT_SAMPLES_THRESHOLD_99 <- 99
+PERCENT_SAMPLES_THRESHOLD_90 <- 90
+
+# Calculate Percentage of Concordant Samples at EACH Mutation Count
+# This is not used for the plot
+# This table calculates, for each real mutation count, what percentage of simulated points have a cosine similarity ≥ our threshold with their real sample(s).
+# For example, if only 1 real sample has 100 SBS, then 90% or 95% of 1,000 simulated profiles from this 1 sample has to have ≥0.95 cos sim with itself.
+# If 3 real samples have 101 SBS, then 90% or 95% of 3,000 simulated profiles from these 3 samples have to have ≥0.95 cos sim with themselves.
+# Maybe 840 simulations from A are the same as A (84%) + 950 from B same as B (95%) + 1000 from C are the same as C (100%) = 90% of 3,000 simulations same as their original samples
+point_percentage_data <- raw_data %>%
+  group_by(mutation_count) %>%
+  summarize(
+    # Calculate the percentage of samples meeting the threshold
+    percent_above_threshold = (sum(cosine_similarity >= COSINE_SIMILARITY_THRESHOLD, na.rm = TRUE) / n()) * 100,
+    .groups = 'drop'
+  )
+
+```
+
+
+```{r}
+# 1. CALCULATE KEY VALUES FOR PLOTTING
+# This section calculates all the necessary statistics and values
+# that will be used to annotate the plots.
+
+# 1a. Calculate CUMULATIVE Percentage of Concordant Samples
+# This is more complex. For each mutation count 'x', we want to know the
+# percentage of all samples with 'x' OR MORE mutations that are concordant.
+cumulative_percentage_data <- raw_data %>%
+  # Sort by mutation count to ensure correct cumulative calculation
+  arrange(mutation_count) %>%
+  mutate(
+    # Check which rows (each simulation of a sample is a row) meet and exceed the 0.95 cos sim
+    is_above_threshold = cosine_similarity >= COSINE_SIMILARITY_THRESHOLD,
+    # Calculate the cumulative number of simulations ≥ mutation count of their associated real samples
+    total_samples_at_or_above_x = rev(cumsum(rev(rep(1, n())))),
+    # Calculate the cumulative number of *concordant* simulations ≥ their associated real mutation count
+    concordant_samples_at_or_above_x = rev(cumsum(rev(is_above_threshold)))
+  ) %>%
+  # Now, group by mutation count to get the final percentage for each point
+  # Treats all samples that have the exact same mutation count as a single group. Calculates the cumulative percentage up to this group and assigns the same percentage (e.g., 90%) to every sample within it.
+  # So it could be easier to cross the 90% threshold, or it may not. Depends on if most samples with the same mutation count are all unstable or most are stable
+  group_by(mutation_count) %>% 
+  summarize(
+    # The percentage is the max value within each group
+    percent_cumulative = (max(concordant_samples_at_or_above_x) / max(total_samples_at_or_above_x)) * 100,
+    .groups = 'drop'
+  )
+```
+
+```{r}
+# # Old
+# # --- 5b. Find the Smallest Mutation Count for 95% and 90% Concordance ---
+# # Using the cumulative data, find the minimum mutation count where at least
+# # 95% (or 90%) of samples are concordant.
+# # ROBUSTNESS: If no data meets the criteria, min() returns Inf. We convert this to NA.
+# 
+# # For 90%
+# smc90_result <- cumulative_percentage_data %>%
+#   filter(percent_cumulative >= PERCENT_SAMPLES_THRESHOLD_90) %>%
+#   summarize(min_mc = min(mutation_count, na.rm = TRUE)) %>%
+#   pull(min_mc)
+# smallest_mc_for_90_percent <- if (is.infinite(smc90_result)) NA else smc90_result
+# 
+# cat("Smallest mutation count for 90% of simulations with cos sim >0.95: ", smallest_mc_for_90_percent)
+# 
+# 
+# # For 95%
+# smc95_result <- cumulative_percentage_data %>%
+#   filter(percent_cumulative >= PERCENT_SAMPLES_THRESHOLD_99) %>%
+#   summarize(min_mc = min(mutation_count, na.rm = TRUE)) %>%
+#   pull(min_mc)
+# smallest_mc_for_95_percent <- if (is.infinite(smc95_result)) NA else smc95_result
+# 
+# cat("\nSmallest mutation count for 95% of simulations with cos sim >0.95: ", smallest_mc_for_95_percent)
+
+```
+
+
+```{r}
+# 1b. Find the Smallest Mutation Count for 95% and 90% Concordance
+# NOT using the cumulative data anymore
+# It filters the raw data for simulations with EXACTLY x mutations and calculates the local_concordance_pct.
+# The percentage of simulations with cos sim > 0.95 with their original profiles that has x real mutations might only be 88%
+# even though the cumulative average of everything ≥ x is 90%.
+# Because 88% < 90%, it rejects x and keeps walking up the list until it finds a point (like y) where the exact, localized success rate is also ≥90%
+
+# Parameters for Neighborhood Checking
+check_neighborhood <- FALSE
+neighborhood_size <- 0
+window_radius <- neighborhood_size / 2
+
+# Helper Function for Threshold Validation
+get_validated_threshold <- function(cum_data, raw_df, target_percent, 
+                                    check_local, radius, cos_sim_thresh) {
+  
+  # Get all candidates that meet the cumulative threshold, sorted ascending
+  candidates <- cum_data %>%
+    filter(percent_cumulative >= target_percent) %>%
+    arrange(mutation_count) %>%
+    pull(mutation_count)
+  
+  # If no candidates meet the cumulative requirement, return NA
+  if (length(candidates) == 0) return(NA)
+  
+  # If we aren't checking the neighborhood, just return the smallest candidate
+  if (!check_local) return(candidates[1])
+  
+  # Test each candidate against the local neighborhood requirement
+  for (val in candidates) {
+    lower_bound <- val - radius
+    upper_bound <- val + radius
+    
+    # Filter the raw data for the +/- neighborhood
+    neighborhood_data <- raw_df %>%
+      filter(mutation_count >= lower_bound & mutation_count <= upper_bound)
+    
+    if (nrow(neighborhood_data) > 0) {
+      # Calculate the local percentage of concordant simulations
+      # mean() on a logical vector gives the exact proportion of TRUEs
+      local_concordance_pct <- mean(
+        neighborhood_data$cosine_similarity >= cos_sim_thresh, 
+        na.rm = TRUE
+      ) * 100
+      
+      # If the local neighborhood also meets the target, this is our valid threshold
+      if (local_concordance_pct >= target_percent) {
+        return(val)
+      }
+    }
+  }
+  
+  # If no candidates pass the neighborhood test
+  return(NA)
+}
+
+# Find the Smallest Mutation Count for 95% and 90% Concordance
+# For 90%
+smallest_mc_for_90_percent <- get_validated_threshold(
+  cum_data = cumulative_percentage_data,
+  raw_df = raw_data,
+  target_percent = PERCENT_SAMPLES_THRESHOLD_90, # Assuming this is e.g., 90
+  check_local = check_neighborhood,
+  radius = window_radius,
+  cos_sim_thresh = COSINE_SIMILARITY_THRESHOLD
+)
+
+cat("Smallest mutation count for 90% of simulations with cos sim >0.95 in a 100 mutation neighborhood: ", smallest_mc_for_90_percent)
+
+# For 95%
+smallest_mc_for_95_percent <- get_validated_threshold(
+  cum_data = cumulative_percentage_data,
+  raw_df = raw_data,
+  target_percent = PERCENT_SAMPLES_THRESHOLD_99, # Assuming this is e.g., 95
+  check_local = check_neighborhood,
+  radius = window_radius,
+  cos_sim_thresh = COSINE_SIMILARITY_THRESHOLD
+)
+
+cat("\nSmallest mutation count for 95% of simulations with cos sim >0.95 in a 100 mutation neighborhood: ", smallest_mc_for_95_percent)
+
+```
+
+
+
+``` {r}
+# 1c. Find Values for Specific Annotations
+# Get other useful values for plot labels and lines.
+
+# Total number of unique samples
+if ("Sample" %in% colnames(raw_data)) {
+  n_samples <- n_distinct(raw_data$Sample, na.rm = TRUE)
+} else if ("sample_id" %in% colnames(raw_data)) {
+  n_samples <- n_distinct(raw_data$sample_id, na.rm = TRUE)
+} else {
+  n_samples <- NA # Fallback if neither column is found
+  warning("Could not find 'Sample' or 'sample_id' column to count samples.")
+}
+
+# 2. DEFINE AXIS BREAKS AND DYNAMIC PLOT PARAMETERS
+# Create shared, dynamic axis breaks to ensure all plots are aligned
+# and important values are clearly marked.
+
+# Define the set of "standard" breaks that are not the special 90/95% values
+standard_breaks <- c(min(raw_data$mutation_count, na.rm = TRUE), 100, 1000, 10000, 100000, 1000000, max(raw_data$mutation_count, na.rm = TRUE))
+x_axis_limits <- c(50, max(standard_breaks, na.rm = TRUE))
+plot_title <- sprintf("Cosine Similarity Distribution of Poisson-Resampled eSignature SBS-96 Sample Profiles with the Original Profiles (n = %s)", format(n_samples, big.mark = ","))
+x_lab_title <- expression("Original Sample SBS Count") # expression("Original Sample SBS Count (log"[10]*" scale)")
+
+  # x_lab_title <- expression("Original Sample SBS Count (log"[10]*" scale)")
+
+# Define the special breaks we always want to keep
+special_breaks <- c(smallest_mc_for_90_percent, smallest_mc_for_95_percent)
+
+# De-conflict close labels by SHIFTING standard labels
+# This logic preserves the special 90/95 labels and moves nearby standard ones.
+proximity_threshold <- 1.2 # How close is "too close"
+
+for (s_break in special_breaks) {
+  if (!is.na(s_break)) {
+    # Use an index-based loop to modify the vector in place
+    for (i in seq_along(standard_breaks)) {
+      std_break <- standard_breaks[i]
+      # Check for proximity
+      if ((max(s_break, std_break) / min(s_break, std_break)) < proximity_threshold) {
+        # If too close, shift the standard break away by 50%
+        if (std_break > s_break) {
+          standard_breaks[i] <- std_break * 1.5 # Move it up
+        } else {
+          standard_breaks[i] <- std_break * 0.5 # Move it down
+        }
+      }
+    }
+  }
+}
+
+# Combine the (potentially modified) standard breaks with the special breaks
+x_axis_breaks <- unique(sort(c(standard_breaks, special_breaks)))
+x_axis_breaks <- na.omit(x_axis_breaks) # Remove any NA values
+x_axis_labels <- scales::comma(x_axis_breaks) # Create labels from the final breaks
+
+
+# Y-Axis Breaks (consistent for both)
+y_axis_breaks <- unique(sort(c(seq(0, 1, by = 0.2))))
+y_axis_labels <- sprintf("%.1f", y_axis_breaks)
+
+
+# Add data preparation step for dynamic width
+# calculates the y-range for each mutation count to control violin width.
+yrange_data <- raw_data %>%
+  group_by(mutation_count) %>%
+  summarize(
+    # Conditional logic for violin width based on sample type
+    yrange = {
+      range_diff <- diff(range(cosine_similarity, na.rm = TRUE))
+      if (sample_type == "exome") {
+        case_when(
+          range_diff >= 0 & range_diff < 0.1      ~ range_diff + 0.5,
+          range_diff >= 0.1 & range_diff < 0.3333 ~ range_diff + 1,
+          range_diff >= 0.3333 & range_diff < 0.5 ~ range_diff + 2,
+          range_diff >= 0.5 & range_diff < 0.8    ~ range_diff + 5,
+          range_diff >= 0.8                       ~ range_diff + 5,
+          TRUE                                    ~ range_diff + 5 
+        )
+      } else { # genome
+        # case_when(
+        #   range_diff >= 0 & range_diff < 0.1      ~ range_diff + 2,
+        #   range_diff >= 0.1 & range_diff < 0.3333 ~ range_diff + 6,
+        #   TRUE                                    ~ range_diff + 5 
+        # )
+        range_diff * 0.5 + 0.2 # 0.1 + 0.05 thin black line
+      }
+    },
+    .groups = 'drop'
+  )
+
+# Join the y-range back to the original data so it can be used in the plot
+plot_data <- raw_data %>%
+  left_join(yrange_data, by = "mutation_count")
+
+
+
+cat("Values:", plot_title, "\n", output_filename)
+```
+
+
+
+```{r}
+# Plot
+
+violin_plot <- ggplot(plot_data, aes(x = mutation_count, y = cosine_similarity)) +
+  geom_violin_rast(
+    aes(group = mutation_count, width = yrange),
+    fill = "lightblue",
+    color = "grey40",
+    alpha = 0.7,
+    linewidth = 0.03,
+    raster.dpi = 600, 
+    na.rm = TRUE,
+    trim = TRUE
+  ) +
+  geom_vline(
+    aes(xintercept = smallest_mc_for_90_percent, color = "darkred_label"),
+    linewidth = 0.7, linetype = "dashed", na.rm = TRUE
+  ) +
+  geom_vline(
+    aes(xintercept = smallest_mc_for_95_percent, color = "red_label"),
+    linewidth = 0.7, linetype = "dashed", na.rm = TRUE
+  ) +
+  scale_x_log10(
+    breaks = x_axis_breaks,
+    labels = x_axis_labels,
+    limits = x_axis_limits,
+    # Use guide_axis to dodge labels into two rows if they overlap
+    guide = guide_axis(n.dodge = 2)
+  ) +
+  scale_y_continuous(
+    limits = c(0, 1), # cosine similarity range
+    breaks = y_axis_breaks,
+    labels = y_axis_labels
+  ) +
+  scale_color_manual(
+    name = NULL,
+    values = c("darkred_label" = "darkred", "red_label" = "red"),
+    labels = c(
+      # "darkred_label" = sprintf("90%% of samples with ≥ %s indels have cos sim ≥ 0.95", smallest_mc_for_90_percent),
+      # "red_label" = sprintf("95%% of samples with ≥ %s indels have cos sim ≥ 0.95", smallest_mc_for_95_percent)
+      "darkred_label" = sprintf("90%% of samples with ≥ %s SBSs have cos sim ≥ 0.95", smallest_mc_for_90_percent),
+      "red_label" = sprintf("99%% of samples with ≥ %s SBSs have cos sim ≥ 0.95", smallest_mc_for_95_percent)
+    )
+  ) +
+  guides(
+    color = guide_legend(override.aes = list(linetype = "solid"))
+  ) +
+  labs(
+    x = x_lab_title,
+    y = "Cosine Similarity",
+    title = plot_title
+  ) +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(hjust = 0.5, size = 50),
+    axis.title = element_text(size = 50),
+    axis.text = element_text(size = 50),
+    legend.text = element_text(size = 50),
+    legend.position = "bottom"
+  )
+
+
+ggsave(
+  output_filename,
+  plot = violin_plot,
+  width = 8,
+  height = 4,
+  units = 'in',
+  dpi = 600, 
+  bg = "white"
+)
+```
+
+
+```{r}
+# CALCULATE AND PRINT FINAL STATISTICS
+# Determine the correct sample ID column name
+sample_col_name <- if ("Sample" %in% colnames(raw_data)) "Sample" else if ("sample_id" %in% colnames(raw_data)) "sample_id" else NA
+
+# Helper function to count unique samples safely
+count_unique_samples <- function(df, col_name) {
+  if (!is.na(col_name) && col_name %in% colnames(df)) {
+    return(n_distinct(df[[col_name]], na.rm = TRUE))
+  } else {
+    return(NA)
+  }
+}
+
+# Overall Stability
+stable_overall_df <- raw_data %>% filter(cosine_similarity >= COSINE_SIMILARITY_THRESHOLD)
+sims_stable_overall <- nrow(stable_overall_df)
+samples_stable_overall <- count_unique_samples(stable_overall_df, sample_col_name)
+perc_sims_stable_overall <- (sims_stable_overall / nrow(raw_data)) * 100
+perc_samples_stable_overall <- (samples_stable_overall / n_samples) * 100
+
+# 9% Threshold Calculations
+if (!is.na(smallest_mc_for_90_percent)) {
+  above_90_thresh_df <- raw_data %>% filter(mutation_count >= smallest_mc_for_90_percent)
+  sims_above_90 <- nrow(above_90_thresh_df)
+  samples_above_90 <- count_unique_samples(above_90_thresh_df, sample_col_name)
+  perc_sims_above_90 <- (sims_above_90 / nrow(raw_data)) * 100
+  perc_samples_above_90 <- (samples_above_90 / n_samples) * 100
+  
+  stable_above_90_df <- above_90_thresh_df %>% filter(cosine_similarity >= COSINE_SIMILARITY_THRESHOLD)
+  sims_stable_above_90 <- nrow(stable_above_90_df)
+  samples_stable_above_90 <- count_unique_samples(stable_above_90_df, sample_col_name)
+  perc_sims_stable_above_90 <- (sims_stable_above_90 / sims_above_90) * 100
+  perc_samples_stable_above_90 <- (samples_stable_above_90 / samples_above_90) * 100
+} else {
+  # Set to NA if threshold wasn't found
+  sims_above_90 <- samples_above_90 <- sims_stable_above_90 <- samples_stable_above_90 <- NA
+  perc_sims_above_90 <- perc_samples_above_90 <- perc_sims_stable_above_90 <- perc_samples_stable_above_90 <- NA
+}
+
+# 95% Threshold Calculations
+if (!is.na(smallest_mc_for_95_percent)) {
+  above_95_thresh_df <- raw_data %>% filter(mutation_count >= smallest_mc_for_95_percent)
+  sims_above_95 <- nrow(above_95_thresh_df)
+  samples_above_95 <- count_unique_samples(above_95_thresh_df, sample_col_name)
+  perc_sims_above_95 <- (sims_above_95 / nrow(raw_data)) * 100
+  perc_samples_above_95 <- (samples_above_95 / n_samples) * 100
+  
+  stable_above_95_df <- above_95_thresh_df %>% filter(cosine_similarity >= COSINE_SIMILARITY_THRESHOLD)
+  sims_stable_above_95 <- nrow(stable_above_95_df)
+  samples_stable_above_95 <- count_unique_samples(stable_above_95_df, sample_col_name)
+  perc_sims_stable_above_95 <- (sims_stable_above_95 / sims_above_95) * 100
+  perc_samples_stable_above_95 <- (samples_stable_above_95 / samples_above_95) * 100
+} else {
+  # Set to NA if threshold wasn't found
+  sims_above_95 <- samples_above_95 <- sims_stable_above_95 <- samples_stable_above_95 <- NA
+  perc_sims_above_95 <- perc_samples_above_95 <- perc_sims_stable_above_95 <- perc_samples_stable_above_95 <- NA
+}
+
+cat("\n--- Data Summary ---\n")
+cat(sprintf("Total simulations (rows) in dataset: %s\n", format(nrow(raw_data), big.mark = ",")))
+cat(sprintf("Total unique samples in dataset: %s\n\n", format(n_samples, big.mark = ",")))
+
+cat(sprintf("Simulations with cosine similarity >= %.2f: %s (%.1f%%)\n", COSINE_SIMILARITY_THRESHOLD, format(sims_stable_overall, big.mark = ","), perc_sims_stable_overall))
+cat(sprintf("Unique samples with cosine similarity >= %.2f: %s (%.1f%%)\n", COSINE_SIMILARITY_THRESHOLD, format(samples_stable_overall, big.mark = ","), perc_samples_stable_overall))
+cat("---\n")
+
+cat(sprintf("90%% Concordance Threshold (smallest_mc_for_90_percent): %s mutations\n", format(smallest_mc_for_90_percent, big.mark = ",")))
+cat(sprintf("Simulations with mutation_count >= %s: %s (%.1f%% of total)\n", smallest_mc_for_90_percent, format(sims_above_90, big.mark = ","), perc_sims_above_90))
+cat(sprintf("Unique samples with mutation_count >= %s: %s (%.1f%% of total)\n", smallest_mc_for_90_percent, format(samples_above_90, big.mark = ","), perc_samples_above_90))
+cat(sprintf("  - Of these, simulations with cosine_similarity >= %.2f: %s (%.1f%%)\n", COSINE_SIMILARITY_THRESHOLD, format(sims_stable_above_90, big.mark = ","), perc_sims_stable_above_90))
+cat(sprintf("  - Of these, unique samples with cosine_similarity >= %.2f: %s (%.1f%%)\n", COSINE_SIMILARITY_THRESHOLD, format(samples_stable_above_90, big.mark = ","), perc_samples_stable_above_90))
+cat("---\n")
+
+cat(sprintf("99%% Concordance Threshold (smallest_mc_for_99_percent): %s mutations\n", format(smallest_mc_for_95_percent, big.mark = ",")))
+cat(sprintf("Simulations with mutation_count >= %s: %s (%.1f%% of total)\n", smallest_mc_for_95_percent, format(sims_above_95, big.mark = ","), perc_sims_above_95))
+cat(sprintf("Unique samples with mutation_count >= %s: %s (%.1f%% of total)\n", smallest_mc_for_95_percent, format(samples_above_95, big.mark = ","), perc_samples_above_95))
+cat(sprintf("  - Of these, simulations with cosine_similarity >= %.2f: %s (%.1f%%)\n", COSINE_SIMILARITY_THRESHOLD, format(sims_stable_above_95, big.mark = ","), perc_sims_stable_above_95))
+cat(sprintf("  - Of these, unique samples with cosine_similarity >= %.2f: %s (%.1f%%)\n", COSINE_SIMILARITY_THRESHOLD, format(samples_stable_above_95, big.mark = ","), perc_samples_stable_above_95))
+cat("--------------------\n")
+```
+

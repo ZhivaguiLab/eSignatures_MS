@@ -1,0 +1,227 @@
+model,Exposure,Chemical_group,mean_mut_per_Mb,n_samples,group_potency_max_mut_per_Mb,x_order,y_order
+iPSC,Acetaldehyde,Aldehyde,0.0163698,4,0.0163698,0,18
+iPSC,Formaldehyde,Aldehyde,0.0135083,6,0.0135083,1,18
+iPSC,Acrolein,Aldehyde,0.00872365,2,0.00872365,2,18
+iPSC,Ellipticine,Alkaloid,0.0284643,10,0.0284643,3,18
+iPSC,Camptothecin,Alkaloid,0.0086755,2,0.0086755,4,18
+iPSC,Methyl methanesulfonate,Alkylating agent,0.0676793,2,370.202,5,18
+C. elegans,Methyl methanesulfonate,Alkylating agent,370.202,38,370.202,5,33
+Lung_cancer,N-methyl-N-nitrosourea,Alkylating agent,8.37505,26,8.37505,6,14
+iPSC,N-methyl-N-nitrosourea,Alkylating agent,0.109232,3,8.37505,6,18
+C. elegans,Ethyl methanesulfonate,Alkylating agent,4.14674,33,4.14674,7,33
+iPSC,N-ethyl-N-nitrosourea,Alkylating agent,0.45945,3,3.88553,8,18
+Brain_cancer,N-ethyl-N-nitrosourea,Alkylating agent,3.88553,5,3.88553,8,36
+iPSC,Dimethyl Sulfate,Alkylating agent,0.0660624,3,0.759508,9,18
+C. elegans,Dimethyl Sulfate,Alkylating agent,0.759508,28,0.759508,9,33
+iPSC,Temozolomide,Alkylating agent,0.176465,5,0.176465,10,18
+iPSC,Diethyl sulfate,Alkylating agent,0.13026,3,0.13026,11,18
+iPSC,Semustine,Alkylating agent,0.017362,6,0.017362,12,18
+MEF,Acrylamide,Amide,0.820346,13,0.820346,13,10
+iPSC,Acrylamide,Amide,0.0111048,2,0.820346,13,18
+Liver_cancer,Diethanolamine,Amine,0.0819041,5,0.0819041,14,16
+iPSC,o-Anisidine,Aniline,0.00741848,4,0.00741848,15,18
+iPSC,o-Toluidine,Aniline,0.00597648,2,0.00597648,16,18
+MEF,"2-hydroxyamino-1-methyl-6-phenylimidazo[4,5-b]pyridine",Aromatic amine,3.37269,3,3.37269,17,10
+MEF,"2-Amino-1-methyl-6-phenylimidazo[4,5-b]pyridine",Aromatic amine,0.904421,3,0.904421,18,10
+iPSC,"2-Amino-1-methyl-6-phenylimidazo[4,5-b]pyridine",Aromatic amine,0.108296,7,0.904421,18,18
+MEF,4-Aminobiphenyl,Aromatic amine,0.766736,3,0.766736,19,10
+iPSC,4-Aminobiphenyl,Aromatic amine,0.0193655,4,0.766736,19,18
+BEAS-2B,3-aminobiphenyl,Aromatic amine,0.0463861,5,0.0463861,20,39
+iPSC,Benzidine,Aromatic amine,0.0374038,6,0.0374038,21,18
+BEAS-2B,1-naphthylamine,Aromatic amine,0.0287198,5,0.0287198,22,39
+iPSC,"2,6-dimethylaniline",Aromatic amine,0.0114065,4,0.0114065,23,18
+iPSC,2-Naphthylamine,Aromatic amine,0.00962089,8,0.00962089,24,18
+iPSC,"4,4'-Methylene(2-chloroaniline)",Aromatic amine,0.00803498,5,0.00803498,25,18
+Liver_cancer,Cumene,Aromatic hydrocarbon,0.309712,5,0.309712,26,16
+iPSC,Sudan I,Azo dye,0.0116701,2,0.0116701,27,18
+h_Intestinal_organoids,Colibactin,Bacteria,0.282895,9,0.282895,28,27
+Liver_cancer,Oxazepam,Benzodiazepine,0.0461749,5,0.0461749,29,16
+iPSC,Potassium bromate,Bromate,0.0696321,6,0.0696321,30,18
+U937,5-aza-4-thio-2-deoxycytidine,Cancer chemotherapy drug,18.0688,5,58.0784,31,0
+Thymus_cancer,5-aza-4-thio-2-deoxycytidine,Cancer chemotherapy drug,13.3698,37,58.0784,31,3
+Spleen_cancer,5-aza-4-thio-2-deoxycytidine,Cancer chemotherapy drug,22.4778,3,58.0784,31,5
+Lymph_Node_cancer,5-aza-4-thio-2-deoxycytidine,Cancer chemotherapy drug,18.1,2,58.0784,31,13
+CEM,5-aza-4-thio-2-deoxycytidine,Cancer chemotherapy drug,58.0784,5,58.0784,31,32
+Bone_Marrow_cancer,5-aza-4-thio-2-deoxycytidine,Cancer chemotherapy drug,5.69394,11,58.0784,31,37
+7298,5-aza-4-thio-2-deoxycytidine,Cancer chemotherapy drug,3.88519,27,58.0784,31,41
+HepG2,Duocarmycin,Cancer chemotherapy drug,21.2346,4,21.2346,32,23
+C. elegans,Trimethyl psoralen_UVA,Cancer chemotherapy drug,10.7828,35,10.7828,33,33
+C. elegans,CX-5461_UVA,Cancer chemotherapy drug,1.73706,17,1.73706,34,33
+U937,Decitabine,Cancer chemotherapy drug,0.614585,5,1.14184,35,0
+CEM,Decitabine,Cancer chemotherapy drug,1.14184,5,1.14184,35,32
+Lung_cancer,Urethane,Carbamate,1.8517,66,1.8517,36,14
+iPSC,Potassium chromate,Chromate,0.0101024,2,0.0101024,37,18
+TK6,Captafol,Dicarboximide fungicide,0.123489,3,0.123489,38,2
+m_Intestinal_organoids,High fat diet,Diet,0.301003,19,0.50311,39,12
+Liver_cancer,High fat diet,Diet,0.50311,13,0.50311,39,16
+m_Intestinal_organoids,Normal fat diet,Diet,0.331199,20,0.331199,40,12
+MEF,"Benzo[a]pyrene-7,8-diol-9,10-epoxide",Epoxide,2.98919,7,2.98919,41,10
+iPSC,"Benzo[a]pyrene-7,8-diol-9,10-epoxide",Epoxide,0.988337,3,2.98919,41,18
+MEF,Glycidamide,Epoxide,2.95439,8,2.95439,42,10
+iPSC,Glycidamide,Epoxide,0.0539291,3,2.95439,42,18
+iPSC,"Dibenz[a,h]anthracene diol epoxide",Epoxide,0.811584,6,0.811584,43,18
+iPSC,Propylene oxide,Epoxide,0.191434,3,0.191434,44,18
+iPSC,"Dibenzo[a,l]pyrene diol epoxide",Epoxide,0.139056,6,0.139056,45,18
+iPSC,Styrene Oxide,Epoxide,0.0384738,3,0.08256,46,18
+HEK293T,Styrene Oxide,Epoxide,0.08256,4,0.08256,46,25
+Liver_cancer,Bromochloroacetic acid,Haloacetic acid,0.415923,5,0.415923,47,16
+iPSC,3-Chloro-4-(dichloromethyl)-5-hydroxy-2(5H)-furanone,Haloalkene compound,0.059802,5,0.059802,48,18
+Liver_cancer,Ginkgo biloba extract,Herbal extract,0.0483656,3,0.0483656,49,16
+BEAS-2B,Norharmane,Heterocyclic compound,0.121262,5,0.121262,50,39
+Liver_cancer,Furan,Heterocyclic compound,0.112278,5,0.112278,51,16
+iPSC,Furan,Heterocyclic compound,0.0199772,3,0.112278,51,18
+BEAS-2B,Harmane,Heterocyclic compound,0.0261075,5,0.0261075,52,39
+iPSC,"2-amino-3,8-dimethylimidazo[4,5-f]quinoxaline",Heterocyclic compound,0.0206824,3,0.0206824,53,18
+iPSC,"7H-Dibenzo[c,g]carbazole",Heterocyclic compound,0.0104726,5,0.0104726,54,18
+iPSC,"2-amino-3-methyl-9H-pyrido[2,3-b]indole",Heterocyclic compound,0.00900355,2,0.00900355,55,18
+iPSC,"2-amino-3-methylimidazo[4,5-f]quinoline",Heterocyclic compound,0.0087665,2,0.0087665,56,18
+iPSC,"1,2-Dimethylhydrazine",Hydrazine derivative,0.283829,5,0.283829,57,18
+Lung_cancer,Antimony trioxide,Inorganic compound,0.0793285,5,0.0793285,58,14
+Liver_cancer,Antimony trioxide,Inorganic compound,0.0698401,6,0.0793285,58,16
+NTERT1,Sodium arsenite,Inorganic compound,0.0349484,3,0.0349484,59,8
+iPSC,Sodium arsenite,Inorganic compound,0.0116015,3,0.0349484,59,18
+iPSC,Cadmium chloride,Inorganic compound,0.0104889,2,0.0104889,60,18
+iPSC,Cobalt chloride,Inorganic compound,0.00838716,2,0.00838716,61,18
+iPSC,Lead acetate,Lead compound,0.0157021,3,0.0157021,62,18
+iPSC,Lead nitrate,Lead compound,0.0101759,2,0.0101759,63,18
+Lung_cancer,Cobalt metal,Metal,0.400714,6,0.400714,64,14
+Liver_cancer,Cobalt metal,Metal,0.0919241,5,0.400714,64,16
+MEF,Aflatoxin B1,Mycotoxin,2.85761,3,9.17146,65,10
+Liver_HBV_cancer,Aflatoxin B1,Mycotoxin,0.64208,6,9.17146,65,15
+Liver_cancer,Aflatoxin B1,Mycotoxin,2.55427,3,9.17146,65,16
+iPSC,Aflatoxin B1,Mycotoxin,0.0415541,2,9.17146,65,18
+HepG2,Aflatoxin B1,Mycotoxin,3.5675,3,9.17146,65,23
+HepaRG,Aflatoxin B1,Mycotoxin,9.17146,3,9.17146,65,24
+C. elegans,Aflatoxin B1,Mycotoxin,0.126289,11,9.17146,65,33
+iPSC,Ochratoxin A,Mycotoxin,0.00908332,2,0.00908332,66,18
+Lung_cancer,Nickel oxide,Nickel compound,0.0523104,5,0.209301,67,14
+Liver_cancer,Nickel oxide,Nickel compound,0.209301,4,0.209301,67,16
+Lung_cancer,Nickel sulfate hexahydrate,Nickel compound,0.0708933,6,0.0939,68,14
+Liver_cancer,Nickel sulfate hexahydrate,Nickel compound,0.0939,6,0.0939,68,16
+Lung_cancer,Nickel subsulfide,Nickel compound,0.0424266,4,0.0621046,69,14
+Liver_cancer,Nickel subsulfide,Nickel compound,0.0621046,3,0.0621046,69,16
+iPSC,Nickel chloride,Nickel compound,0.00823446,4,0.00823446,70,18
+Lung_cancer,Isobutyl nitrite,Nitrite ester,0.117266,6,0.142621,71,14
+Liver_cancer,Isobutyl nitrite,Nitrite ester,0.142621,6,0.142621,71,16
+Tongue_cancer,4-Nitroquinoline N-oxide,Nitroaromatic compound,79.1869,8,79.1869,72,1
+MEF,4-Nitroquinoline N-oxide,Nitroaromatic compound,5.20954,3,79.1869,72,10
+HFF,4-Nitroquinoline N-oxide,Nitroaromatic compound,0.998795,3,79.1869,72,22
+Esophagus_HPV_cancer,4-Nitroquinoline N-oxide,Nitroaromatic compound,48.7074,9,79.1869,72,28
+Esophagus_cancer,4-Nitroquinoline N-oxide,Nitroaromatic compound,8.26667,1,79.1869,72,29
+MEF,3-Nitrobenzanthrone,Nitroaromatic compound,2.78159,8,2.78159,73,10
+iPSC,3-Nitrobenzanthrone,Nitroaromatic compound,0.131562,6,2.78159,73,18
+iPSC,6-Nitrochrysene,Nitroaromatic compound,0.427059,10,0.427059,74,18
+iPSC,"1,8-Dinitropyrene",Nitroaromatic compound,0.18324,6,0.18324,75,18
+iPSC,"1,6-Dinitropyrene",Nitroaromatic compound,0.0336554,3,0.0336554,76,18
+iPSC,2-Nitrofluorene,Nitroaromatic compound,0.0119567,5,0.0119567,77,18
+iPSC,1-Nitropyrene,Nitroaromatic compound,0.0096711,4,0.0096711,78,18
+iPSC,2-Nitrotoluene,Nitroaromatic compound,0.0085684,2,0.0085684,79,18
+iPSC,Melphalan,Nitrogen mustard,0.0232064,3,0.0232064,80,18
+MEF,N-methyl-N-nitro-nitrosoguanidine,Nitrosamine,24.861,4,24.861,81,10
+iPSC,N-methyl-N-nitro-nitrosoguanidine,Nitrosamine,0.00908177,2,24.861,81,18
+BEAS-2B,N-methyl-N-nitro-nitrosoguanidine,Nitrosamine,0.264569,5,24.861,81,39
+Liver_cancer,Diethylnitrosamine,Nitrosamine,19.4443,23,19.4443,82,16
+BEAS-2B,4-(methylnitrosamino)-1-(3-pyridyl)-1-butanone,Nitrosamine,1.67087,5,1.67087,83,39
+MEF,N-Nitrosopyrrolidine,Nitrosamine,0.655397,3,0.655397,84,10
+iPSC,N-Nitrosopyrrolidine,Nitrosamine,0.0181468,3,0.655397,84,18
+Stomach_cancer,"1,2,3-Trichloropropane",Organochlorine compound,13.0356,5,13.0356,85,4
+Liver_cancer,"1,2,3-Trichloropropane",Organochlorine compound,3.65113,4,13.0356,85,16
+TK6,"4,4'-Dichlorodiphenyltrichloroethane",Organochlorine insecticide,0.0392135,3,0.0392135,86,2
+TK6,Dieldrin,Organochlorine insecticide,0.0194368,3,0.0194368,87,2
+TK6,Malathion,Organophosphate insecticide,0.0814815,3,0.0814815,88,2
+TK6,Diazinon,Organophosphate insecticide,0.0344797,3,0.0344797,89,2
+TK6,Glyphosate,Organophosphorus herbicide,0.0310888,3,0.0310888,90,2
+C. elegans,PFNA,Per- and polyfluoroalkyl substances,0.046,15,0.046,91,33
+C. elegans,PFDA,Per- and polyfluoroalkyl substances,0.0371429,14,0.0371429,92,33
+C. elegans,PFOA,Per- and polyfluoroalkyl substances,0.035,14,0.035,93,33
+C. elegans,PFOS,Per- and polyfluoroalkyl substances,0.0346667,15,0.0346667,94,33
+HEK293T,Bisphenol A,Phenol,0.0625979,3,0.0625979,95,25
+iPSC,Catechol,Phenol,0.00942751,2,0.00942751,96,18
+iPSC,Methyleugenol,Phenylpropene,0.00872344,6,0.00872344,97,18
+Liver_cancer,Pyrrolizidine Alkaloid,Phytotoxin,163.262,3,163.262,98,16
+HepaRG,Pyrrolizidine Alkaloid,Phytotoxin,1.60448,3,163.262,98,24
+MEF,Aristolochic acid I,Phytotoxin,6.92881,8,8.63333,99,10
+iPSC,Aristolochic acid I,Phytotoxin,0.457382,3,8.63333,99,18
+HK2,Aristolochic acid I,Phytotoxin,8.63333,2,8.63333,99,21
+C. elegans,Aristolochic acid I,Phytotoxin,0.289289,12,8.63333,99,33
+iPSC,Aristolochic acid II,Phytotoxin,0.0335901,3,0.0335901,100,18
+Liver_cancer,Pentabromodiphenyl ether,Polybrominated diphenyl ether (PBDE),0.0684169,5,0.0684169,101,16
+Skin_cancer,"9,10-dimethyl-1,2-benzanthracene",Polycyclic aromatic hydrocarbon,12.679,89,12.679,102,7
+Lymph_Node_cancer,"9,10-dimethyl-1,2-benzanthracene",Polycyclic aromatic hydrocarbon,0.371177,4,12.679,102,13
+Lung_cancer,"9,10-dimethyl-1,2-benzanthracene",Polycyclic aromatic hydrocarbon,0.246963,3,12.679,102,14
+NHU,Benzo[a]pyrene,Polycyclic aromatic hydrocarbon,0.312068,4,8.91098,103,9
+MEF,Benzo[a]pyrene,Polycyclic aromatic hydrocarbon,8.91098,4,8.91098,103,10
+iPSC,Benzo[a]pyrene,Polycyclic aromatic hydrocarbon,0.123316,6,8.91098,103,18
+HMEC,Benzo[a]pyrene,Polycyclic aromatic hydrocarbon,4.23274,7,8.91098,103,20
+BEAS-2B,Benzo[a]pyrene,Polycyclic aromatic hydrocarbon,4.54397,10,8.91098,103,39
+iPSC,5-Methylchrysene,Polycyclic aromatic hydrocarbon,0.361382,3,0.361382,104,18
+iPSC,"Dibenz[a,h]anthracene",Polycyclic aromatic hydrocarbon,0.347331,3,0.347331,105,18
+iPSC,"Dibenzo[a,l]pyrene",Polycyclic aromatic hydrocarbon,0.0705213,6,0.0705213,106,18
+iPSC,"Dibenz(a,j)acridine",Polycyclic aromatic hydrocarbon,0.055001,3,0.055001,107,18
+Liver_cancer,Theaphenon E,Polyphenol,0.272018,4,0.272018,108,16
+Liver_cancer,Anthraquinone,Quinone,0.142835,5,0.142835,109,16
+iPSC,"1,4-BenzoquiNone",Quinone,0.00682842,2,0.00682842,110,18
+Skin_cancer,Sodium_arsenite_Simulated solar radiation,Radiation,29.6584,3,29.6584,111,7
+NTERT1,Sodium_arsenite_Simulated solar radiation,Radiation,1.205,3,29.6584,111,8
+iPSC,GammaRay,Radiation,0.0103068,2,15.9148,112,18
+Colon_organoids,GammaRay,Radiation,0.993501,3,15.9148,112,31
+C. elegans,GammaRay,Radiation,0.365799,48,15.9148,112,33
+Breast_organoids,GammaRay,Radiation,15.9148,4,15.9148,112,34
+Breast_cancer,GammaRay,Radiation,0.852445,12,15.9148,112,35
+Soft_tissue_cancer,Ionizing radiation,Radiation,2.60667,15,6.2992,113,6
+Skin_cancer,Ionizing radiation,Radiation,6.2992,2,6.2992,113,7
+Blood_cancer,Ionizing radiation,Radiation,3.24444,6,6.2992,113,38
+Adrenal_gland_cancer,Ionizing radiation,Radiation,3.08333,2,6.2992,113,40
+Skin_cancer,UVB,Radiation,5.78039,13,5.78039,114,7
+C. elegans,UVB,Radiation,1.31566,11,5.78039,114,33
+Skin_cancer,Simulated solar radiation,Radiation,5.01583,4,5.01583,115,7
+NTERT1,Simulated solar radiation,Radiation,0.557634,3,5.01583,115,8
+iPSC,Simulated solar radiation,Radiation,0.580354,3,5.01583,115,18
+MEF,UVC,Radiation,4.49147,3,4.49147,116,10
+Breast_cancer,Fe-ions,Radiation,2.37862,8,2.37862,117,35
+Skin_cancer,UVA,Radiation,0.338148,12,1.18312,118,7
+MEF,UVA,Radiation,1.18312,10,1.18312,118,10
+HFF,UVA,Radiation,0.107254,10,1.18312,118,22
+C. elegans,Xray,Radiation,0.198232,3,0.198232,119,33
+iPSC,Hydrogen peroxide,Reactive oxygen species (ROS),0.0108601,2,0.0108601,120,18
+iPSC,Peroxynitrite,Reactive oxygen species (ROS),0.0106651,2,0.0106651,121,18
+Liver_cancer,Indium phosphide,Semiconductor,0.0475147,5,0.0475147,122,16
+hTERT-RPE1,CX-5461,Therapy drug,8.22484,12,8.22484,123,19
+HAP1,CX-5461,Therapy drug,1.08234,2,8.22484,123,26
+C. elegans,CX-5461,Therapy drug,1.06,4,8.22484,123,33
+MCF10A,Cisplatin,Therapy drug,1.06411,5,6.98854,124,11
+iPSC,Cisplatin,Therapy drug,0.145097,6,6.98854,124,18
+HepG2,Cisplatin,Therapy drug,6.98854,3,6.98854,124,23
+DT40,Cisplatin,Therapy drug,0.660429,3,6.98854,124,30
+C. elegans,Cisplatin,Therapy drug,0.0786797,17,6.98854,124,33
+iPSC,Mitomycin C,Therapy drug,0.0134326,3,0.283333,125,18
+C. elegans,Mitomycin C,Therapy drug,0.283333,1,0.283333,125,33
+iPSC,Cyclophosphamide,Therapy drug,0.00966823,4,0.197478,126,18
+DT40,Cyclophosphamide,Therapy drug,0.197478,3,0.197478,126,30
+h_Intestinal_organoids,5-fluorouracil,Therapy drug,0.141613,2,0.141613,127,27
+DT40,5-fluorouracil,Therapy drug,0.0324028,3,0.141613,127,30
+DT40,Hydroxyurea,Therapy drug,0.0374804,3,0.139233,128,30
+C. elegans,Hydroxyurea,Therapy drug,0.139233,6,0.139233,128,33
+hTERT-RPE1,Pyridostatin,Therapy drug,0.103967,12,0.103967,129,19
+Liver_cancer,Primaclone,Therapy drug,0.0936157,5,0.0936157,130,16
+iPSC,Mechlorethamine,Therapy drug,0.0376121,3,0.0859195,131,18
+C. elegans,Mechlorethamine,Therapy drug,0.0859195,3,0.0859195,131,33
+iPSC,Etoposide,Therapy drug,0.0121874,2,0.0754689,132,18
+hTERT-RPE1,Etoposide,Therapy drug,0.0754689,12,0.0754689,132,19
+DT40,Etoposide,Therapy drug,0.0500891,3,0.0754689,132,30
+iPSC,Carboplatin,Therapy drug,0.057293,3,0.057293,133,18
+iPSC,AZD7762,Therapy drug,0.0506132,2,0.0506132,134,18
+DT40,Paclitaxel,Therapy drug,0.0445754,2,0.0445754,135,30
+DT40,Gemcitabine,Therapy drug,0.0340134,3,0.0340134,136,30
+DT40,Doxorubicin,Therapy drug,0.0286249,3,0.0286249,137,30
+iPSC,Olaparib,Therapy drug,0.0111909,2,0.0111909,138,18
+iPSC,AZ20,Therapy drug,0.00773181,2,0.00773181,139,18
+iPSC,Bleomycin,Therapy drug,0.00566944,2,0.00566944,140,18
+MEF,Activation-induced cytidine deaminase,Transgene,3.41293,2,3.41293,141,10
+Lung_cancer,Sodium tungstate dihydrate,Tungstate,0.0295219,6,0.0723733,142,14
+Liver_cancer,Sodium tungstate dihydrate,Tungstate,0.0723733,6,0.0723733,142,16
+Lung_cancer,Vanadium pentoxide,Vanadium oxide,0.126913,3,0.126913,143,14
+Liver_cancer,Vanadium pentoxide,Vanadium oxide,0.108798,6,0.126913,143,16
+Lung_cancer,Vinylidene chloride,Vinyl halide,0.249823,5,3.55544,144,14
+Liver_cancer,Vinylidene chloride,Vinyl halide,0.26649,7,3.55544,144,16
+Kidney_cancer,Vinylidene chloride,Vinyl halide,3.55544,6,3.55544,144,17
