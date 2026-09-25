@@ -90,6 +90,35 @@ comparison — adjust for your own analysis as needed.
 
 Each run writes to `results/<MUTATION_TYPE>/` automatically.
 
+### Reproducing the published clusters
+
+The canonical SBS clustering uses:
+
+| Setting | Value | Where it's defined |
+|---|---|---|
+| Cosine similarity threshold | `0.9` (distance `0.1`), average linkage | `--cosine_similarity` default in `perform_clustering.py` |
+| Per-cluster custom thresholds | `Aristolochic_acid_I: 0.095`, `Dibenzo[a,l]pyrene: 0.095` (cosine distance) | `default_custom_thresholds` in `pipeline/utils/mutation_type.py` |
+| Sample mapping | `config/sample_mapping.tsv` | `--mapping_file` default |
+
+The custom thresholds re-split any main cluster that contains a sample
+matching the pattern, using the tighter distance. They're applied by default,
+so these two commands give **identical** clusters. With the current
+`data/input/SBS` that's **49 main clusters, 16 small clusters and 131
+singletons**:
+
+```bash
+bash run_pipeline.sh SBS 0.9 0.85
+python pipeline/perform_clustering.py --mutation_type SBS --output_dir results
+```
+
+To override the custom thresholds, pass `--custom_thresholds 'pattern:value,...'`.
+To turn them off, pass `--custom_thresholds none`, which gives 48 main clusters.
+
+The clustering has no random step, so the same input and settings always give
+the same clusters. Cluster IDs (`eSS1`, `eSS2`, …) are numbered left to right
+along the dendrogram. Adding or removing a sample, or changing a threshold, can
+renumber them. Compare runs by which samples are in each cluster, not by ID.
+
 **Preprocessing is automatic** — if `config/preprocessing.yaml` exists and defines
 exclusion patterns for the mutation type, samples will be filtered before clustering.
 See [Preprocessing](#preprocessing) below.

@@ -8,9 +8,13 @@
 #   bash run_pipeline.sh <mutation-type> <cosine-clust> <cosine-heatmap>
 #
 # Examples:
-#   bash run_pipeline.sh SBS 0.85 0.85
-#   bash run_pipeline.sh DBS 0.85 0.85
-#   bash run_pipeline.sh ID  0.85 0.85
+#   bash run_pipeline.sh SBS 0.9 0.85
+#   bash run_pipeline.sh DBS 0.9 0.85
+#   bash run_pipeline.sh ID  0.9 0.85
+#
+# The canonical clustering threshold is 0.9 — this is also the default of
+# perform_clustering.py, so running that script directly gives the same
+# clusters. See "Reproducing the published clusters" in README.md.
 
 set -euo pipefail
 
@@ -21,7 +25,7 @@ if [ "$#" -ne 3 ]; then
     echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap>"
     echo "  mutation-type : SBS | DBS | ID"
     echo ""
-    echo "Example: $0 SBS 0.85 0.85"
+    echo "Example: $0 SBS 0.9 0.85"
     exit 1
 fi
 
@@ -126,9 +130,10 @@ CLUSTERING_ARGS=(
     --mapping_file "${MAPPING_FILE}"
 )
 
-if [ "${MUTATION_TYPE}" == "SBS" ]; then
-    CLUSTERING_ARGS+=(--custom_thresholds "Aristolochic_acid_I:0.095,Dibenzo[a,l]pyrene:0.095")
-fi
+# Per-cluster custom thresholds (SBS: Aristolochic_acid_I and
+# Dibenzo[a,l]pyrene at 0.095) are not passed here: perform_clustering.py
+# applies them by default from pipeline/utils/mutation_type.py, so the
+# script and this wrapper cannot drift apart.
 
 python "${PERFORM_CLUSTERING_PY}" "${CLUSTERING_ARGS[@]}"
 

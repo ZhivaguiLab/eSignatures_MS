@@ -31,6 +31,7 @@ from pdf2image import convert_from_path
 from scipy.spatial.distance import pdist
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from utils.naming import remove_replicate_suffix
 from utils.mutation_type import get_config, call_plot_function
 
@@ -325,7 +326,8 @@ def cluster_signatures_with_custom_thresholds(X, output_dir, output_name,
         # Add more patterns here as needed
     ]
 
-    np.random.seed(42)
+    # Average-linkage clustering is deterministic: identical input gives
+    # identical clusters, so no random seed is involved.
     D = pdist(X.T, 'cosine')
     Z = sch.linkage(D, 'average')
 
@@ -889,9 +891,14 @@ def main():
                              "Specific mutation type directory will be appended automatically.")
     parser.add_argument("--cosine_similarity", type=float, default=0.9,
                         help="Main cosine similarity threshold for clustering.")
-    parser.add_argument("--custom_thresholds", default="",
-                        help="Custom thresholds: 'pattern:value,pattern:value'.")
-    parser.add_argument("--mapping_file",     default="sample_mapping.tsv",
+    parser.add_argument("--custom_thresholds", default=None,
+                        help="Custom thresholds: 'pattern:value,pattern:value'. "
+                             "If omitted, uses the mutation type's canonical "
+                             "defaults from utils/mutation_type.py (SBS: "
+                             "Aristolochic_acid_I:0.095,Dibenzo[a,l]pyrene:0.095). "
+                             "Pass 'none' to disable.")
+    parser.add_argument("--mapping_file",
+                        default=os.path.join(REPO_ROOT, "config", "sample_mapping.tsv"),
                         help="Path to sample name mapping TSV.")
     parser.add_argument("--use_original_names", action="store_true",
                         help="Show original (pre-mapping) names in dendrogram.")
@@ -906,7 +913,8 @@ def main():
                              "dominate). Does not affect cluster membership.")
 
     # Preprocessing options
-    parser.add_argument("--preprocessing_config", default="config/preprocessing.yaml",
+    parser.add_argument("--preprocessing_config",
+                        default=os.path.join(REPO_ROOT, "config", "preprocessing.yaml"),
                         help="Path to preprocessing configuration file.")
     parser.add_argument("--force_preprocess", action="store_true",
                         help="Force reprocessing even if cleaned data exists.")
@@ -921,8 +929,11 @@ def main():
     args.data_dir = validate_data_dir_argument(args.data_dir, cfg.name)
 
     # Parse custom thresholds
-    custom_thresholds = {}
-    if args.custom_thresholds:
+    if args.custom_thresholds is None:
+        custom_thresholds = dict(cfg.default_custom_thresholds)
+    else:
+        custom_thresholds = {}
+    if args.custom_thresholds and args.custom_thresholds.strip().lower() != 'none':
         for item in args.custom_thresholds.split(','):
             if ':' in item:
                 pat, val = item.split(':', 1)

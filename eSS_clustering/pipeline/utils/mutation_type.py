@@ -73,6 +73,13 @@ class MutationTypeConfig:
     mouse_exclude_pattern : str or None
         Regex passed to DataFrame.filter(regex=...) to drop unwanted mouse
         columns.  None means no filtering.
+    cluster_prefix : str
+        Label prefix in output IDs: "eSS", "eDS", "eIS".
+    default_custom_thresholds : dict[str, float]
+        Canonical per-cluster cosine-distance thresholds ({sample-name
+        substring: distance}) applied when --custom_thresholds is not given.
+        A main cluster containing a matching sample is re-split at this
+        tighter distance.
     """
     name:                  str
     n_contexts:            int
@@ -85,6 +92,7 @@ class MutationTypeConfig:
     norm_file_suffix:      Optional[str]
     mouse_exclude_pattern: Optional[str]
     cluster_prefix:        str   # Label prefix in output IDs: "eSS", "eDS", "eIS"
+    default_custom_thresholds: dict = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +112,10 @@ _CONFIGS = {
         norm_file_suffix      = "_307.tsv",           # prefixed with "normalized_filtered_"
         mouse_exclude_pattern = "Xenon|deoxynivalenol|Deoxynivalenol",
         cluster_prefix        = "eSS",
+        default_custom_thresholds = {
+            "Aristolochic_acid_I": 0.095,
+            "Dibenzo[a,l]pyrene":  0.095,
+        },
     ),
     "DBS": MutationTypeConfig(
         name                  = "DBS",
