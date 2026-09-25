@@ -33,17 +33,6 @@ figures/
 `run2_generate.py` and `spa_generate_all_plots.py` in `fig06_pancancer_attribution/`
 hold the shared pooling and plotting routines the other Figure 6 scripts import.
 
-## Pan-cancer statistics in R
-
-`fig06_pancancer_attribution/pancancer_smoking_cancertype_stats.R` re-derives the
-Figure 6 smoking statistics with CRAN packages only. Per eSS it fits a
-cancer-type and cohort adjusted logistic regression
-(`detected ~ smoker + age + sex + cancer_type + cohort`), a Mann-Whitney U test,
-and Benjamini-Hochberg FDR, then localises the signal with a per-cancer-type
-model. It reproduces the Python results: eSS18 (SBS100) log2 OR 4.21, q = 9.7e-21;
-eSS47 log2 OR 3.44, q = 5.7e-4; eSS17 (SBS4) log2 OR 1.67, q = 1.4e-3; eSS33
-(SBS22a) log2 OR 0.87, q = 1.3e-3.
-
 ## Software
 
 Python 3.10: SigProfilerMatrixGenerator 1.3.6, SigProfilerAssignment 1.1.4,
