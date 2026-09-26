@@ -14,9 +14,14 @@ ID:
     - hTumor          # Remove anything containing 'hTumour'
     # Add more ID-specific patterns here
 
-# SBS: No preprocessing needed (already clean)
-# SBS:
-#   exclude: []
+SBS:
+  exclude:
+    # Study decision: these mouse MEF exposures are not part of the eSignature
+    # atlas (removes 10 MEF samples: Xenon, Xenon XPA-/-, Deoxynivalenol,
+    # Deoxynivalenol + Patulin). Previously hard-coded in
+    # pipeline/utils/mutation_type.py.
+    - Xenon
+    - Deoxynivalenol
 
 # Pattern matching is case-insensitive by default
 # 'hTumour', 'htumour', 'HTUMOUR' all match
@@ -26,4 +31,5 @@ case_sensitive: false
 # - Patterns are matched as substrings
 # - If no patterns defined for a mutation type, no preprocessing occurs
 # - Cleaned data is cached in data/input_cleaned/<TYPE>/ for reuse
-# - Use --force_preprocess to regenerate cleaned data
+# - The cache is rebuilt automatically when the input files or patterns change;
+#   use --force_preprocess to rebuild it anyway

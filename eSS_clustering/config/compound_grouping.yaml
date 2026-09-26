@@ -50,7 +50,7 @@ explicit_mappings:
   CHF: 'Cyclophosphamide'
   AAI: 'Aristolochic_acid_I'
   AFB1: 'Aflatoxin_B1'
-  ATC: 'Acrolein'
+  ATC: '5-aza-4-thio-2-deoxycytidine'
   
   # Correct inconsistent spellings
   BaP: 'Benzo[a]pyrene'

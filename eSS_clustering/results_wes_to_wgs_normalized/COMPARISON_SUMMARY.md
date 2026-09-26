@@ -1,5 +1,9 @@
 # `results_wes_to_wgs_normalized` vs `results_default`
 
+> **Note:** this comparison was run with `pooled` averaging. The pipeline
+> default is now `equal_replicate`, which gives 26/49 COSMIC-matched clusters
+> (≥0.85) for the default baseline, not the 27/49 below.
+
 **Same for both:** dataset (main 4,282-sample SBS atlas), clustering threshold
 (0.9), averaging method (pooled), COSMIC comparison threshold (0.85). The only
 difference is that 152 WES samples (9 human, 143 mouse) had their profiles

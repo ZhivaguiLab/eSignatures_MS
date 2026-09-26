@@ -38,7 +38,7 @@ def generate_interactive_heatmap(esignature_path, cosmic_path, image_dir,
     sim_matrix = cosine_similarity(A_t, B_t)
     sim_df     = pd.DataFrame(sim_matrix, index=A_t.index, columns=B_t.index)
 
-    print(f"Filtering eSignatures with similarity > {threshold}...")
+    print(f"Filtering eSignatures with similarity >= {threshold}...")
     rows_to_keep = (sim_df >= threshold).any(axis=1)
 
     high_sigs = rows_to_keep[rows_to_keep].index
@@ -199,14 +199,14 @@ def generate_interactive_heatmap(esignature_path, cosmic_path, image_dir,
   });
 
   function getColor(cos) {
-    if (cos <= 0.80) return '#440154';
-    if (cos <= 0.85) return '#3b528b';
-    if (cos <= 0.90) return '#21918c';
-    if (cos <= 0.95) return '#5ec962';
+    if (cos < 0.80) return '#440154';
+    if (cos < 0.85) return '#3b528b';
+    if (cos < 0.90) return '#21918c';
+    if (cos < 0.95) return '#5ec962';
     return '#fde725';
   }
 
-  function getTextColor(cos) { return cos <= 0.90 ? 'white' : 'black'; }
+  function getTextColor(cos) { return cos < 0.90 ? 'white' : 'black'; }
 
   const zoomBtn    = document.getElementById("zoom-btn");
   const details    = document.getElementById("details");

@@ -208,7 +208,7 @@ python "${GENERATE_MATRIX_PY}" \
     --output_path "${FILTER_DIR}/species_compound_matrix.pdf" \
     --mutation_type "${MUTATION_TYPE}" \
     --abbreviation_file "${ABBREVIATION_FILE}" \
-    --compound_grouping "config/compound_grouping.yaml" 
+    --compound_grouping "${CONFIG_DIR}/compound_grouping.yaml"
 
 # ---------------------------------------------------------------------------
 # Done

@@ -13,10 +13,18 @@ FIXED VERSION: Exact dendrogram-based label matching + corrected data directory 
 
 import argparse
 import glob
+import hashlib
+import json
 import os
 import re
 import sys
 import shutil
+
+# The pinned packages in requirements.txt / requirements-lock.txt are
+# verified on Python 3.11 only (scipy 1.13.1 has no Python 3.13 build).
+if sys.version_info[:2] != (3, 11):
+    sys.exit(f"eSignatures clustering requires Python 3.11 "
+             f"(running {sys.version.split()[0]}).")
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -195,10 +203,6 @@ def _load_species_files(data_dir, cfg, mapping_dict):
         df = pd.read_csv(path, sep='\t', index_col=0)
         print(f"  {species} ({basename}): {df.shape[1]} samples loaded")
 
-        if species == 'mouse' and cfg.mouse_exclude_pattern:
-            df = df.loc[:, ~df.columns.str.contains(cfg.mouse_exclude_pattern)]
-            print(f"  Mouse after exclusion filter: {df.shape[1]} samples")
-
         if species == 'celegans':
             original_cols = df.columns.tolist()
             df.columns = [prefix + c for c in original_cols]
@@ -254,9 +258,6 @@ def load_data(data_dir, cfg, mapping_file_path):
             df = pd.read_csv(path, sep='\t', index_col=0)
             print(f"  {species} normalised ({basename}): {df.shape[1]} samples loaded")
 
-            if species == 'mouse' and cfg.mouse_exclude_pattern:
-                df = df.loc[:, ~df.columns.str.contains(cfg.mouse_exclude_pattern)]
-
             if species == 'celegans':
                 df.columns = [prefix + c for c in df.columns]
             else:
@@ -285,6 +286,47 @@ def load_data(data_dir, cfg, mapping_file_path):
         print("Normalisation complete.")
 
     return counts_df, normalized_df, all_mappings
+
+
+def check_loaded_data(counts_df, normalized_df):
+    """
+    Check that raw counts and normalized profiles describe the same samples.
+
+    Raw and normalized files are loaded separately and renamed independently,
+    so a sample missing from one file, a duplicated name, or a column order
+    difference would otherwise pair a sample's counts with another sample's
+    profile.
+    """
+    for label, df in (("counts", counts_df), ("normalized", normalized_df)):
+        dups = df.columns[df.columns.duplicated()].tolist()
+        if dups:
+            raise AssertionError(f"Duplicate sample names in {label} data: {dups}")
+
+    only_counts = sorted(set(counts_df.columns) - set(normalized_df.columns))
+    only_norm   = sorted(set(normalized_df.columns) - set(counts_df.columns))
+    if only_counts or only_norm:
+        raise AssertionError(
+            f"Counts and normalized data have different samples.\n"
+            f"  Only in counts ({len(only_counts)}): {only_counts}\n"
+            f"  Only in normalized ({len(only_norm)}): {only_norm}")
+
+    if not counts_df.index.equals(normalized_df.index):
+        raise AssertionError(
+            "Counts and normalized data have different mutation-context rows.")
+
+    # Each normalized profile must be its own counts divided by their total.
+    col_sums = counts_df.sum(axis=0)
+    nonzero  = col_sums[col_sums > 0].index
+    expected = counts_df[nonzero].div(col_sums[nonzero], axis=1)
+    diff     = (expected - normalized_df[nonzero]).abs().max()
+    bad      = diff[diff > 1e-9]
+    if not bad.empty:
+        raise AssertionError(
+            f"{len(bad)} normalized profiles don't match their raw counts "
+            f"(counts / total), e.g. {bad.sort_values(ascending=False).head(5).to_dict()}")
+
+    print(f"Data check passed: {counts_df.shape[1]} samples, counts and "
+          f"normalized profiles match.")
 
 
 def filter_zero_columns(df, output_dir):
@@ -331,6 +373,32 @@ def cluster_signatures_with_custom_thresholds(X, output_dir, output_name,
     D = pdist(X.T, 'cosine')
     Z = sch.linkage(D, 'average')
 
+    # ── Cluster membership: cut the tree ────────────────────────────────────
+    # Membership comes from cutting the tree with fcluster; the dendrogram's
+    # colours are only used for plotting. scipy's dendrogram colours a merge
+    # only if its height is strictly below the threshold, whereas fcluster
+    # (criterion='distance') joins merges at or below it. Cutting one float
+    # below the threshold makes the two agree exactly.
+    cut_height = np.nextafter(cos_dist_threshold, -np.inf)
+    labels = sch.fcluster(Z, cut_height, criterion='distance')
+    label_sizes = pd.Series(labels).value_counts()
+    n_multi = int((label_sizes > 1).sum())
+    print(f"Tree cut at cosine distance < {cos_dist_threshold:.4f}: "
+          f"{n_multi} clusters with ≥2 samples, "
+          f"{int((label_sizes == 1).sum())} singletons")
+
+    heights = Z[:, 2]
+    below = heights[heights < cos_dist_threshold]
+    above = heights[heights >= cos_dist_threshold]
+    print(f"Nearest merges to the threshold: "
+          f"{below.max() if below.size else float('nan'):.5f} (joined) / "
+          f"{above.min() if above.size else float('nan'):.5f} (not joined)")
+
+    # Every cluster needs its own plot colour, so enlarge the palette only if
+    # there are more clusters than colours. (Custom-threshold sub-clusters use
+    # the leftover colours; an error is raised if they run out.)
+    if n_multi >= num_colors:
+        num_colors = 2 * n_multi
     palette   = sns.color_palette("husl", num_colors)
     hex_colors = [mcolors.rgb2hex(c) for c in palette]
     sch.set_link_color_palette(hex_colors)
@@ -353,14 +421,46 @@ def cluster_signatures_with_custom_thresholds(X, output_dir, output_name,
                             leaf_label_func=llf, ax=ax_tmp)
     plt.close(fig_tmp)
 
-    initial_clusters = {}
-    initial_colors   = {}
+    # Group samples by fcluster label, ordered left to right along the
+    # dendrogram (cluster order sets the eSS numbering downstream).
+    members_by_label = {}
+    leaf_color = {}
     for color, leaf_idx in zip(R_orig["leaves_color_list"], R_orig['leaves']):
         name = X.columns[leaf_idx]
-        initial_clusters.setdefault(color, []).append(name)
-        initial_colors[name] = color
+        members_by_label.setdefault(labels[leaf_idx], []).append(name)
+        leaf_color[name] = color
 
-    true_singletons = initial_clusters.pop('gray', [])
+    # Attach each cluster's dendrogram colour for plotting, checking that the
+    # plotted colours show exactly the same clusters as the tree cut.
+    initial_clusters = {}
+    initial_colors   = {}
+    true_singletons  = []
+    for label, samples in members_by_label.items():
+        colors = {leaf_color[s] for s in samples}
+        if len(samples) == 1:
+            if colors != {'gray'}:
+                raise AssertionError(
+                    f"Singleton {samples[0]} is coloured {colors} in the "
+                    f"dendrogram; expected gray.")
+            true_singletons.append(samples[0])
+            continue
+        if len(colors) != 1 or 'gray' in colors:
+            raise AssertionError(
+                f"Cluster {samples} has dendrogram colours {colors}; expected "
+                f"one non-gray colour.")
+        color = colors.pop()
+        if color in initial_clusters:
+            raise AssertionError(
+                f"Dendrogram colour {color} is shared by two clusters: "
+                f"{initial_clusters[color]} and {samples}.")
+        initial_clusters[color] = samples
+        for s in samples:
+            initial_colors[s] = color
+
+    if len(initial_clusters) != n_multi:
+        raise AssertionError(
+            f"{len(initial_clusters)} coloured clusters but fcluster found "
+            f"{n_multi}.")
     print(f"True singletons (gray): {len(true_singletons)}")
 
     # ── Apply custom thresholds ──────────────────────────────────────────────
@@ -387,14 +487,21 @@ def cluster_signatures_with_custom_thresholds(X, output_dir, output_name,
                 subclusters = {}
                 for i, lbl in enumerate(labels):
                     subclusters.setdefault(lbl, []).append(samples[i])
+                if sorted(s for v in subclusters.values() for s in v) != sorted(samples):
+                    raise AssertionError(
+                        f"Custom-threshold split of cluster {color} did not "
+                        f"preserve its samples.")
                 for k, (_, sub_samps) in enumerate(
                         sorted(subclusters.items(),
                                key=lambda x: len(x[1]), reverse=True)):
-                    sub_color = color if k == 0 else (
-                        unused[next_idx] if next_idx < len(unused)
-                        else available[next_idx % len(available)]
-                    )
-                    if k > 0:
+                    if k == 0:
+                        sub_color = color
+                    else:
+                        if next_idx >= len(unused):
+                            raise AssertionError(
+                                "Ran out of unused colours for custom-threshold "
+                                "sub-clusters; increase num_colors.")
+                        sub_color = unused[next_idx]
                         next_idx += 1
                     final_clusters[sub_color] = sub_samps
                     for s in sub_samps:
@@ -406,6 +513,13 @@ def cluster_signatures_with_custom_thresholds(X, output_dir, output_name,
     else:
         final_clusters = dict(initial_clusters)
         final_colors   = dict(initial_colors)
+
+    # Every sample must end up in exactly one cluster or be a singleton.
+    assigned = [s for v in final_clusters.values() for s in v] + true_singletons
+    if sorted(assigned) != sorted(X.columns):
+        raise AssertionError(
+            f"{len(assigned)} samples assigned to clusters/singletons, "
+            f"expected each of the {X.shape[1]} input samples exactly once.")
 
     # ── Final dendrogram plot ────────────────────────────────────────────────
     fig, ax = plt.subplots(figsize=(60, 6), dpi=400)
@@ -549,8 +663,21 @@ def summarize_and_average_clusters(clusters, normalized_df, counts_df,
     for num, (color, sigs) in enumerate(clusters.items()):
         cluster_id = f"{cluster_prefix}{num + 1}"
 
+        # DataFrame.filter silently skips names it can't find, so check every
+        # cluster member is present before averaging.
+        for label, df in (("counts", counts_df), ("normalized", normalized_df)):
+            missing = [s for s in sigs if s not in df.columns]
+            if missing:
+                raise AssertionError(
+                    f"{cluster_id}: {len(missing)} of {len(sigs)} samples "
+                    f"missing from {label} data: {missing}")
         counts_sub = counts_df.filter(sigs)
         norm_sub   = normalized_df.filter(sigs)
+        if counts_sub.shape[1] != len(sigs) or norm_sub.shape[1] != len(sigs):
+            raise AssertionError(
+                f"{cluster_id}: expected {len(sigs)} samples, got "
+                f"{counts_sub.shape[1]} (counts) / {norm_sub.shape[1]} "
+                f"(normalized).")
 
         # Per-sample mutation counts
         per_sample = counts_sub.sum(axis=0)
@@ -558,10 +685,11 @@ def summarize_and_average_clusters(clusters, normalized_df, counts_df,
 
         print(f"\n  {cluster_id}: {len(sigs)} samples, "
               f"{cluster_total:,} total mutations")
+        # per_sample follows counts_df column order, so label from its index.
         if all_mappings:
-            display = convert_to_original_names(sigs, all_mappings)
+            display = convert_to_original_names(per_sample.index, all_mappings)
         else:
-            display = sigs
+            display = per_sample.index
         for dname, count in zip(display, per_sample):
             print(f"    {dname:50s} {int(count):>10,}")
 
@@ -768,6 +896,23 @@ def run_preprocessing(input_dir, output_dir, exclusion_patterns, case_sensitive=
     return True
 
 
+PREPROCESSING_STAMP = "preprocessing_stamp.json"
+
+
+def preprocessing_stamp(input_dir, exclusion_patterns, case_sensitive):
+    """Record of the inputs and settings a cleaned-data cache was built from."""
+    files = {}
+    for path in sorted(glob.glob(os.path.join(input_dir, '*.txt')) +
+                       glob.glob(os.path.join(input_dir, '*.tsv'))):
+        with open(path, 'rb') as f:
+            files[os.path.basename(path)] = hashlib.sha256(f.read()).hexdigest()
+    return {
+        'exclusion_patterns': list(exclusion_patterns),
+        'case_sensitive': bool(case_sensitive),
+        'input_files_sha256': files,
+    }
+
+
 def determine_data_directory(base_input_dir, mutation_type, preprocessing_config_path, 
                              force_preprocess=False, skip_preprocessing=False):
     """
@@ -810,42 +955,45 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
     
     print(f"✓ Exclusion patterns for {mutation_type}: {exclusion_patterns}")
     
-    # Check if cleaned directory already exists (and we're not forcing reprocessing)
-    cleaned_exists = os.path.exists(cleaned_dir)
-    has_cleaned_files = False
-    
-    if cleaned_exists:
-        has_cleaned_files = any(
-            glob.glob(os.path.join(cleaned_dir, ext))
-            for ext in ['*.txt', '*.tsv']
-        )
-    
-    if cleaned_exists and has_cleaned_files and not force_preprocess:
-        print(f"✓ Using cached cleaned data: {cleaned_dir}")
-        print("  (Use --force_preprocess to regenerate)")
-        return cleaned_dir
-    
-    # Need to run preprocessing
-    if force_preprocess and cleaned_exists:
-        print(f"⚠️  Forcing reprocessing (cleaning existing directory)")
-        shutil.rmtree(cleaned_dir)
-    
-    print(f"\nRunning preprocessing...")
     case_sensitive = config.get('case_sensitive', False)
-    
+
+    # The cached cleaned data is reused only if it was built from the same
+    # input files and the same exclusion patterns; otherwise it is rebuilt.
+    stamp = preprocessing_stamp(original_dir, exclusion_patterns, case_sensitive)
+    stamp_path = os.path.join(cleaned_dir, PREPROCESSING_STAMP)
+    cached_stamp = None
+    if os.path.exists(stamp_path):
+        with open(stamp_path) as f:
+            cached_stamp = json.load(f)
+
+    if cached_stamp == stamp and not force_preprocess:
+        print(f"✓ Using cached cleaned data: {cleaned_dir}")
+        print("  (built from the current input files and exclusion patterns)")
+        return cleaned_dir
+
+    if os.path.exists(cleaned_dir):
+        reason = "--force_preprocess" if force_preprocess else \
+                 "input files or exclusion patterns changed"
+        print(f"⚠️  Rebuilding cleaned data ({reason})")
+        shutil.rmtree(cleaned_dir)
+
+    print(f"\nRunning preprocessing...")
     success = run_preprocessing(
         original_dir,
         cleaned_dir,
         exclusion_patterns,
         case_sensitive
     )
-    
-    if success:
-        print(f"✓ Using cleaned data: {cleaned_dir}")
-        return cleaned_dir
-    else:
-        print(f"⚠️  Preprocessing failed, falling back to original data")
-        return original_dir
+
+    if not success:
+        # Falling back to the unfiltered data would silently cluster samples
+        # the config says to exclude.
+        raise RuntimeError(f"Preprocessing failed for {original_dir}")
+
+    with open(stamp_path, 'w') as f:
+        json.dump(stamp, f, indent=2)
+    print(f"✓ Using cleaned data: {cleaned_dir}")
+    return cleaned_dir
 
 
 def validate_data_dir_argument(data_dir_arg, mutation_type):
@@ -968,6 +1116,7 @@ def main():
         data_dir, cfg, args.mapping_file
     )
 
+    check_loaded_data(counts_df, normalized_df)
     counts_df     = filter_zero_columns(counts_df, typed_output_dir)
     normalized_df = normalized_df[counts_df.columns]
 

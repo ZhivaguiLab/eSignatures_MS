@@ -35,6 +35,7 @@ esignatures-pipeline/
       DBS/
       ID/
     input_cleaned/            ← auto-generated preprocessed data (NOT tracked)
+      SBS/
       DBS/
       ID/
     filtered_mouse_307.txt
@@ -46,7 +47,12 @@ esignatures-pipeline/
     DBS/
     ID/
 
-  requirements.txt
+  tests/
+    test_clustering_reproducibility.py  ← checks a run reproduces the published clusters
+    expected/SBS_cluster_membership.tsv ← published sample → cluster assignments
+
+  requirements.txt            ← direct dependencies (pinned)
+  requirements-lock.txt       ← full locked environment for exact reproduction
   .gitignore
 ```
 
@@ -58,14 +64,31 @@ esignatures-pipeline/
 git clone https://github.com/<org>/eSignatures-clustering-analysis.git
 cd eSignatures-clustering-analysis
 
-conda create -n esig python=3.10
+conda create -n esig python=3.11
 conda activate esig
 
 # poppler required by pdf2image
 brew install poppler          # macOS
 # sudo apt-get install poppler-utils  # Linux
 
-pip install -r requirements.txt
+# Exact environment used for the published results (recommended)
+pip install -r requirements-lock.txt
+```
+
+The pipeline requires Python 3.11 and stops at start-up on any other version.
+There are two requirements files:
+
+- `requirements-lock.txt` pins every package, including indirect
+  dependencies, to the versions that reproduce the published clusters. Use
+  this to reproduce the manuscript results.
+- `requirements.txt` pins only the packages the pipeline imports directly.
+  Edit this one when updating a dependency, then regenerate the lock file
+  (instructions at the top of `requirements-lock.txt`).
+
+After installing, check the install reproduces the published clusters:
+
+```bash
+python -m unittest discover tests
 ```
 
 Then populate `data/` with your input files — see `data/README.md` for the
@@ -98,7 +121,11 @@ The canonical SBS clustering uses:
 |---|---|---|
 | Cosine similarity threshold | `0.9` (distance `0.1`), average linkage | `--cosine_similarity` default in `perform_clustering.py` |
 | Per-cluster custom thresholds | `Aristolochic_acid_I: 0.095`, `Dibenzo[a,l]pyrene: 0.095` (cosine distance) | `default_custom_thresholds` in `pipeline/utils/mutation_type.py` |
+| Main vs small clusters | main: ≥3 samples; small: 2 samples (`MEF_AID` and `MCF10_cisplatin` 2-sample clusters are kept as main) | `special_patterns` in `perform_clustering.py` |
+| Excluded samples | 10 mouse MEF samples (Xenon, Deoxynivalenol) | `SBS` section of `config/preprocessing.yaml` |
 | Sample mapping | `config/sample_mapping.tsv` | `--mapping_file` default |
+| Consensus profile | `equal_replicate` | `--averaging_method` default |
+| COSMIC match | max cosine similarity ≥ `0.85` to any COSMIC v3.6 SBS signature, artifact signatures included | `MATCH_THRESHOLD` in `generate_static_heatmap.py`; `--threshold` in `generate_interactive_heatmap.py` |
 
 The custom thresholds re-split any main cluster that contains a sample
 matching the pattern, using the tighter distance. They're applied by default,
@@ -114,10 +141,68 @@ python pipeline/perform_clustering.py --mutation_type SBS --output_dir results
 To override the custom thresholds, pass `--custom_thresholds 'pattern:value,...'`.
 To turn them off, pass `--custom_thresholds none`, which gives 48 main clusters.
 
+With these settings, 671 profiles are clustered and **26 of the 49 main
+clusters match COSMIC (≥0.85); 23 don't**. Both heatmap scripts report the same
+split. Four clusters sit just under the cutoff (eSS7, eSS20, eSS22, eSS25 at
+0.847–0.848) and are counted as not matched, even though the static heatmap
+shows their value rounded to "0.85".
+
 The clustering has no random step, so the same input and settings always give
 the same clusters. Cluster IDs (`eSS1`, `eSS2`, …) are numbered left to right
-along the dendrogram. Adding or removing a sample, or changing a threshold, can
+along the dendrogram. When a custom threshold splits a cluster, the pieces keep
+that cluster's place and are numbered largest first. Adding or removing a sample, or changing a threshold, can
 renumber them. Compare runs by which samples are in each cluster, not by ID.
+
+### How clusters are defined
+
+1. **Distances.** Cosine distance (1 − cosine similarity) between every pair
+   of normalized SBS96 profiles.
+2. **Tree.** Average-linkage hierarchical clustering of those distances
+   (`scipy.cluster.hierarchy.linkage`).
+3. **Cut.** The tree is cut at cosine distance 0.1 with
+   `scipy.cluster.hierarchy.fcluster`. Two samples are in the same cluster if
+   the tree joins them below that height: every merge inside a cluster joins
+   two groups whose average pairwise cosine distance is below 0.1 (similarity
+   above 0.9). Membership comes straight from the tree; nobody picks clusters
+   by hand.
+4. **Custom thresholds.** Clusters containing an AAI or DBP sample are cut
+   again, on their own, at distance 0.095.
+5. **Group.** Clusters with ≥3 samples are main clusters (eSS), 2-sample
+   clusters are small clusters, 1-sample clusters are singletons.
+
+The dendrogram colours are only for the figure. The code checks that every
+cluster from the tree cut is drawn in exactly one colour and every singleton
+is drawn gray, and stops with an error if the figure and the clusters ever
+disagree.
+
+The log reports the closest merges on either side of the cutoff. For the
+current data they are 0.09851 (joined) and 0.10039 (not joined), so a cutoff
+anywhere between cosine similarity 0.8996 and 0.9015 gives the same clusters.
+
+### Checking a run reproduces the published clusters
+
+```bash
+python -m unittest discover tests -v
+```
+
+The tests run the clustering on `data/input/SBS` and check it against
+`tests/expected/SBS_cluster_membership.tsv` (every sample's cluster and eSS
+number). They also check the 49 / 16 / 131 counts (48 without custom
+thresholds), the 26 / 23 COSMIC split, the mouse exclusions, and that the
+safety checks below stop the run on bad input. If you change the input data
+or settings on purpose, regenerate the expected file and review the diff.
+
+### Safety checks
+
+The run stops with an error, rather than continuing, if:
+
+- a sample is in the raw counts but not the normalized profiles (or the
+  reverse), a sample name is duplicated, or a normalized profile doesn't equal
+  its own counts divided by their total
+- a cluster member can't be found when building the consensus profile
+- the tree cut and the dendrogram colours disagree, or a sample ends up in
+  more than one cluster or in none
+- preprocessing fails (it used to fall back to the unfiltered data)
 
 **Preprocessing is automatic** — if `config/preprocessing.yaml` exists and defines
 exclusion patterns for the mutation type, samples will be filtered before clustering.
@@ -153,15 +238,12 @@ profile used for plotting and COSMIC comparison.
 
 `cluster_signatures_with_custom_thresholds()` in `perform_clustering.py` draws
 one distinct color per colored cluster (main + small combined — true
-singletons are always drawn gray, not from this palette) from a fixed-size
-`seaborn` "husl" palette, set by the `num_colors` parameter (currently `100`,
-not exposed via CLI — edit the function default directly). It only needs to
-exceed however many colored clusters a run actually produces (main + small
-clusters -- run `perform_clustering.py` and check the printed "Main clusters"
-/ "Small clusters" counts, or count unique values in the `Color` column of
-`main_clusters_summary.tsv` + `small_clusters_summary.tsv`); a *smaller*
-`num_colors` spaces the palette's hues further apart for better visual
-differentiation, as long as it still exceeds that count.
+singletons are always drawn gray, not from this palette) from a
+`seaborn` "husl" palette of `num_colors` colours (default `100`, not exposed
+via CLI). Colours only affect the figure and the `Color` column of the
+summary TSVs, never cluster membership. If a run produces 100 or more
+clusters, the palette is enlarged automatically so no two clusters share a
+colour.
 
 ---
 
@@ -176,7 +258,8 @@ samples that should not be included in the analysis.
 1. **Edit the preprocessing config:**
 
 `config/preprocessing.yaml` is already tracked in git with the exclusion
-patterns currently in use. To change them, edit it directly:
+patterns currently in use. For SBS these remove 10 mouse MEF samples (Xenon,
+Deoxynivalenol) that are not part of the atlas. To change them, edit it directly:
 
 ```yaml
 # config/preprocessing.yaml
@@ -198,7 +281,8 @@ bash run_pipeline.sh DBS 0.9 0.85
 The pipeline will:
 - Check if `config/preprocessing.yaml` exists
 - If exclusion patterns are defined for DBS → preprocess and save to `data/input_cleaned/DBS/`
-- If cleaned data already exists → reuse it (cached)
+- If cleaned data already exists and was built from the same input files and
+  patterns → reuse it (cached); otherwise rebuild it
 - If no patterns defined → use original data
 
 ### How It Works
@@ -213,8 +297,13 @@ results/DBS/main_clusters/...
 ```
 
 **Subsequent runs (cached):**
+
+`data/input_cleaned/<TYPE>/preprocessing_stamp.json` records the patterns
+and a SHA-256 hash of each input file. The cache is reused only if both still
+match; otherwise it is deleted and rebuilt.
+
 ```
-data/input_cleaned/DBS/ already exists
+data/input_cleaned/DBS/ exists, stamp matches
   ↓ skip preprocessing, use cached data
   ↓ clustering
 results/DBS/main_clusters/...
@@ -552,6 +641,9 @@ python pipeline/perform_clustering.py --mutation_type DBS --output_dir results -
 ```
 
 **Want to use original data (skip preprocessing):**
+
+For SBS this puts the excluded mouse samples back in, so it won't reproduce
+the published clusters.
 ```bash
 python pipeline/perform_clustering.py --mutation_type DBS --output_dir results --skip_preprocessing
 ```

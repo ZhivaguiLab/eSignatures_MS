@@ -1,0 +1,672 @@
+sample	group	cluster
+Mouse_7298_5-aza-4-thio-2-deoxycytidine	main	eSS1
+Mouse_7298_5-aza-4-thio-2-deoxycytidine_2	main	eSS1
+Mouse_7298_5-aza-4-thio-2-deoxycytidine_1	main	eSS1
+Mouse_7298_5-aza-4-thio-2-deoxycytidine_4	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_7	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_1	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_2	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_4	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_5	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_3	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_6	main	eSS1
+Mouse_Lymph_Node_5-aza-4-thio-2-deoxycytidine_1	main	eSS1
+Mouse_Spleen_5-aza-4-thio-2-deoxycytidine_2	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_23	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_20	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_16	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_18	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_8	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_13	main	eSS1
+Mouse_Lymph_Node_5-aza-4-thio-2-deoxycytidine	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_9	main	eSS1
+Mouse_Bone_Marrow_5-aza-4-thio-2-deoxycytidine_1	main	eSS1
+Mouse_Spleen_5-aza-4-thio-2-deoxycytidine_1	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_15	main	eSS1
+Mouse_Bone_Marrow_5-aza-4-thio-2-deoxycytidine	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_24	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_10	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_19	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_12	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_11	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_25	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_17	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_22	main	eSS1
+Mouse_7298_5-aza-4-thio-2-deoxycytidine_3	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_21	main	eSS1
+Mouse_Thymus_5-aza-4-thio-2-deoxycytidine_14	main	eSS1
+Mouse_7298_5-aza-4-thio-2-deoxycytidine_5	main	eSS1
+Mouse_Spleen_5-aza-4-thio-2-deoxycytidine	main	eSS1
+Mouse_7298_5-aza-4-thio-2-deoxycytidine_6	main	eSS1
+Human_U937_5-aza-4-thio-2-deoxycytidine_1	main	eSS1
+Human_U937_5-aza-4-thio-2-deoxycytidine	main	eSS1
+Human_U937_5-aza-4-thio-2-deoxycytidine_2	main	eSS1
+Human_CEM_5-aza-4-thio-2-deoxycytidine_3	main	eSS1
+Human_CEM_5-aza-4-thio-2-deoxycytidine_4	main	eSS1
+Human_CEM_5-aza-4-thio-2-deoxycytidine_1	main	eSS1
+Human_CEM_5-aza-4-thio-2-deoxycytidine	main	eSS1
+Human_CEM_5-aza-4-thio-2-deoxycytidine_2	main	eSS1
+Mouse_Lung_Cobalt_metal	main	eSS2
+Mouse_Lung_Cobalt_metal_3	main	eSS2
+Mouse_Lung_Cobalt_metal_4	main	eSS2
+Mouse_Lung_Cobalt_metal_5	main	eSS2
+Mouse_Breast_GammaRay_8	main	eSS3
+Mouse_Breast_Fe-ions_3	main	eSS3
+Mouse_Breast_GammaRay_3	main	eSS3
+Mouse_Breast_GammaRay_4	main	eSS4
+Mouse_Breast_Fe-ions_6	main	eSS4
+Mouse_Breast_GammaRay_9	main	eSS4
+Mouse_Breast_Fe-ions_5	main	eSS4
+Mouse_Breast_Fe-ions_7	main	eSS4
+Mouse_Breast_GammaRay_7	main	eSS4
+Mouse_Breast_Fe-ions_1	main	eSS4
+Mouse_Breast_GammaRay_10	main	eSS4
+Mouse_Breast_GammaRay	main	eSS4
+Mouse_Breast_GammaRay_6	main	eSS4
+Mouse_Breast_GammaRay_11	main	eSS4
+Mouse_Breast_GammaRay_2	main	eSS4
+Mouse_Breast_GammaRay_5	main	eSS4
+Mouse_Breast_Fe-ions_2	main	eSS4
+Mouse_Breast_GammaRay_1	main	eSS4
+Human_Colon_organoids_GammaRay_2	main	eSS5
+Human_Colon_organoids_GammaRay	main	eSS5
+Human_Colon_organoids_GammaRay_1	main	eSS5
+Human_Breast_organoids_GammaRay	main	eSS6
+Mouse_Breast_Fe-ions	main	eSS6
+Mouse_Breast_Fe-ions_4	main	eSS6
+Human_Breast_organoids_GammaRay_1	main	eSS6
+Human_Breast_organoids_GammaRay_2	main	eSS6
+Human_Breast_organoids_GammaRay_3	main	eSS6
+Mouse_m_Intestinal_organoids_High_fat_diet_1	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_3	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_16	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_17	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_18	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_7	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_5	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_6	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_4	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_11	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_14	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_12	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_10	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_8	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_9	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_10	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_5	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_1	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_19	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_2	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_3	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_4	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_7	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_13	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_18	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_16	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_15	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_17	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_8	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_14	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_15	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_2	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_6	main	eSS7
+Mouse_m_Intestinal_organoids_Normal_fat_diet_13	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_9	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_12	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet	main	eSS7
+Mouse_m_Intestinal_organoids_High_fat_diet_11	main	eSS7
+Mouse_MEF_UVA_1	main	eSS8
+Mouse_MEF_UVA_8	main	eSS8
+Mouse_MEF_UVA_7	main	eSS8
+Mouse_MEF_UVA_5	main	eSS8
+Mouse_MEF_UVA_3	main	eSS8
+Mouse_MEF_UVA_4	main	eSS8
+Mouse_MEF_4-aminobiphenyl_1	main	eSS9
+Mouse_MEF_Acrylamide_6	main	eSS9
+Mouse_MEF_4-aminobiphenyl_2	main	eSS9
+Mouse_MEF_Acrylamide_5	main	eSS9
+Mouse_MEF_2-amino-1-methyl-6-phenylimidazo[4,5-b]pyridine_1	main	eSS9
+Mouse_MEF_4-aminobiphenyl	main	eSS9
+Mouse_Liver_HBV_Aflatoxin_B1	main	eSS10
+Mouse_Liver_Aflatoxin_B1_1	main	eSS10
+Mouse_Liver_HBV_Aflatoxin_B1_2	main	eSS10
+Mouse_Liver_Aflatoxin_B1	main	eSS11
+Mouse_Liver_HBV_Aflatoxin_B1_1	main	eSS11
+Mouse_Liver_Aflatoxin_B1_2	main	eSS11
+Mouse_Liver_HBV_Aflatoxin_B1_3	main	eSS11
+Human_HepaRG_Aflatoxin_B1_2	main	eSS11
+Human_HepG2_Aflatoxin_B1_1	main	eSS11
+Human_HepG2_Aflatoxin_B1	main	eSS11
+Human_HepG2_Aflatoxin_B1_2	main	eSS11
+Mouse_Tongue_4-Nitroquinoline_N-oxide_5	main	eSS12
+Mouse_Tongue_4-Nitroquinoline_N-oxide_6	main	eSS12
+Mouse_Tongue_4-Nitroquinoline_N-oxide_4	main	eSS12
+Mouse_Tongue_4-Nitroquinoline_N-oxide_7	main	eSS12
+Mouse_Liver_Pyrrolizidine_Alkaloid_1	main	eSS13
+Mouse_Liver_Pyrrolizidine_Alkaloid	main	eSS13
+Mouse_Liver_Pyrrolizidine_Alkaloid_2	main	eSS13
+Human_HepaRG_Pyrrolizidine_Alkaloid	main	eSS13
+Human_HepaRG_Pyrrolizidine_Alkaloid_1	main	eSS13
+Human_HepaRG_Pyrrolizidine_Alkaloid_2	main	eSS13
+Chicken_DT40_Cisplatin	main	eSS14
+Chicken_DT40_Cisplatin_1	main	eSS14
+Chicken_DT40_Cisplatin_2	main	eSS14
+Human_iPSC_Potassium_bromate	main	eSS15
+Human_iPSC_Potassium_bromate_1	main	eSS15
+Human_iPSC_Potassium_bromate_2	main	eSS15
+Mouse_MEF_3-Nitrobenzanthrone_7	main	eSS16
+Mouse_MEF_3-Nitrobenzanthrone_1	main	eSS16
+Mouse_MEF_3-Nitrobenzanthrone_5	main	eSS16
+Mouse_MEF_3-Nitrobenzanthrone_2	main	eSS16
+Mouse_MEF_3-Nitrobenzanthrone_3	main	eSS16
+Mouse_MEF_Benzo[a]pyrene_2	main	eSS17
+Mouse_MEF_Benzo[a]pyrene-7,8-diol-9,10-epoxide_4	main	eSS17
+Mouse_MEF_Benzo[a]pyrene-7,8-diol-9,10-epoxide_5	main	eSS17
+Mouse_MEF_Benzo[a]pyrene-7,8-diol-9,10-epoxide_6	main	eSS17
+Mouse_MEF_Benzo[a]pyrene-7,8-diol-9,10-epoxide_2	main	eSS17
+Mouse_MEF_Benzo[a]pyrene-7,8-diol-9,10-epoxide_1	main	eSS17
+Mouse_MEF_Benzo[a]pyrene-7,8-diol-9,10-epoxide_3	main	eSS17
+Mouse_MEF_2-hydroxyamino-1-methyl-6-phenylimidazo[4,5-b]pyridine_1	main	eSS18
+Mouse_MEF_2-hydroxyamino-1-methyl-6-phenylimidazo[4,5-b]pyridine	main	eSS18
+Mouse_MEF_2-hydroxyamino-1-methyl-6-phenylimidazo[4,5-b]pyridine_2	main	eSS18
+Mouse_Tongue_4-Nitroquinoline_N-oxide	main	eSS18
+Mouse_Tongue_4-Nitroquinoline_N-oxide_1	main	eSS18
+Mouse_Tongue_4-Nitroquinoline_N-oxide_2	main	eSS18
+Mouse_MEF_4-Nitroquinoline_N-oxide	main	eSS18
+Mouse_MEF_4-Nitroquinoline_N-oxide_1	main	eSS18
+Mouse_Esophagus_HPV_4-Nitroquinoline_N-oxide_1	main	eSS18
+Mouse_Esophagus_HPV_4-Nitroquinoline_N-oxide_5	main	eSS18
+Mouse_Esophagus_HPV_4-Nitroquinoline_N-oxide_4	main	eSS18
+Mouse_Esophagus_HPV_4-Nitroquinoline_N-oxide_2	main	eSS18
+Mouse_Esophagus_HPV_4-Nitroquinoline_N-oxide	main	eSS18
+Mouse_Tongue_4-Nitroquinoline_N-oxide_3	main	eSS18
+Mouse_Esophagus_HPV_4-Nitroquinoline_N-oxide_3	main	eSS18
+Mouse_Esophagus_HPV_4-Nitroquinoline_N-oxide_6	main	eSS18
+Human_iPSC_5-Methylchrysene_1	main	eSS19
+Human_iPSC_5-Methylchrysene	main	eSS19
+Human_iPSC_5-Methylchrysene_2	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene_1	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene-diol_epoxide_3	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene-diol_epoxide_5	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene-diol_epoxide_4	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene-diol_epoxide_1	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene-diol_epoxide	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene-diol_epoxide_2	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene	main	eSS19
+Human_iPSC_Dibenz[a,h]anthracene_2	main	eSS19
+Human_iPSC_1,8-Dinitropyrene_2	main	eSS20
+Human_iPSC_1,8-Dinitropyrene	main	eSS20
+Human_iPSC_1,8-Dinitropyrene_1	main	eSS20
+Human_iPSC_Benzo[a]pyrene-7,8-diol-9,10-epoxide_1	main	eSS21
+Human_iPSC_Benzo[a]pyrene-7,8-diol-9,10-epoxide	main	eSS21
+Human_iPSC_Benzo[a]pyrene-7,8-diol-9,10-epoxide_2	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_2	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_4	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_5	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_9	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_1	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_8	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_3	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_6	main	eSS21
+Human_BEAS-2B_Benzo[a]pyrene_7	main	eSS21
+Human_NHU_Benzo[a]pyrene_2	main	eSS21
+Human_NHU_Benzo[a]pyrene_1	main	eSS21
+Human_NHU_Benzo[a]pyrene	main	eSS21
+Human_NHU_Benzo[a]pyrene_3	main	eSS21
+Human_iPSC_Benzo[a]pyrene_3	main	eSS21
+Human_iPSC_Benzo[a]pyrene_2	main	eSS21
+Human_iPSC_Benzo[a]pyrene	main	eSS21
+Human_iPSC_Benzo[a]pyrene_1	main	eSS21
+Human_iPSC_2-amino-1-methyl-6-phenylimidazo[4,5-b]pyridine_1	main	eSS22
+Human_iPSC_2-amino-1-methyl-6-phenylimidazo[4,5-b]pyridine_2	main	eSS22
+Human_iPSC_2-amino-1-methyl-6-phenylimidazo[4,5-b]pyridine_4	main	eSS22
+Human_iPSC_2-amino-1-methyl-6-phenylimidazo[4,5-b]pyridine	main	eSS22
+Human_iPSC_2-amino-1-methyl-6-phenylimidazo[4,5-b]pyridine_3	main	eSS22
+celegans_cku-80_TMP-UVA200J_genome_5	main	eSS23
+celegans_atm-1-xpc-1_TMP-UVA200J_genome_9	main	eSS23
+celegans_ced-4_TMP-UVA200J_genome_2	main	eSS23
+Mouse_Stomach_1,2,3_trichloropropane_1	main	eSS24
+Mouse_Stomach_1,2,3_trichloropropane_4	main	eSS24
+Mouse_Stomach_1,2,3_trichloropropane	main	eSS24
+Mouse_Stomach_1,2,3_trichloropropane_2	main	eSS24
+Mouse_Stomach_1,2,3_trichloropropane_3	main	eSS24
+Mouse_Liver_1,2,3_trichloropropane_3	main	eSS25
+Mouse_Liver_1,2,3_trichloropropane_1	main	eSS25
+Mouse_Liver_1,2,3_trichloropropane	main	eSS25
+Mouse_Liver_1,2,3_trichloropropane_2	main	eSS25
+Mouse_Skin_UVB	main	eSS26
+Mouse_Skin_UVB_1	main	eSS26
+Mouse_MEF_UVC	main	eSS26
+Mouse_Skin_Sodium_arsenite_simulated_solar_radiation_1	main	eSS26
+Mouse_Skin_Sodium_arsenite_simulated_solar_radiation_2	main	eSS26
+Mouse_Skin_Simulated_solar_radiation_2	main	eSS26
+Mouse_Skin_Simulated_solar_radiation_1	main	eSS26
+Mouse_Skin_Simulated_solar_radiation_3	main	eSS26
+Mouse_Skin_Sodium_arsenite_simulated_solar_radiation	main	eSS26
+Mouse_Skin_Simulated_solar_radiation	main	eSS26
+Human_NTERT1_Simulated_solar_radiation	main	eSS27
+Human_NTERT1_Simulated_solar_radiation_1	main	eSS27
+Human_NTERT1_Simulated_solar_radiation_2	main	eSS27
+Human_NTERT1_Sodium_arsenite_simulated_solar_radiation	main	eSS27
+Human_NTERT1_Sodium_arsenite_simulated_solar_radiation_1	main	eSS27
+Human_NTERT1_Sodium_arsenite_simulated_solar_radiation_2	main	eSS27
+Human_iPSC_Simulated_solar_radiation_2	main	eSS27
+Human_iPSC_Simulated_solar_radiation	main	eSS27
+Human_iPSC_Simulated_solar_radiation_1	main	eSS27
+Mouse_Lung_N-methyl-N-nitrosourea	main	eSS28
+Mouse_Lung_N-methyl-N-nitrosourea_1	main	eSS28
+Mouse_Lung_N-methyl-N-nitrosourea_5	main	eSS28
+Mouse_MEF_N-methyl-N-nitro-nitrosoguanidine	main	eSS28
+Mouse_Lung_N-methyl-N-nitrosourea_6	main	eSS28
+Mouse_MEF_N-methyl-N-nitro-nitrosoguanidine_2	main	eSS28
+Mouse_Lung_N-methyl-N-nitrosourea_2	main	eSS28
+Mouse_MEF_N-methyl-N-nitro-nitrosoguanidine_1	main	eSS28
+Mouse_MEF_N-methyl-N-nitro-nitrosoguanidine_3	main	eSS28
+Mouse_Lung_N-methyl-N-nitrosourea_4	main	eSS28
+Mouse_Lung_N-methyl-N-nitrosourea_3	main	eSS28
+Mouse_Lung_N-methyl-N-nitrosourea_7	main	eSS28
+celegans_xpc-1_EMS_genome_1	main	eSS29
+celegans_xpa-1_EMS_genome_1	main	eSS29
+celegans_xpf-1_EMS_genome_1	main	eSS29
+celegans_brc-1_EMS_genome_1	main	eSS29
+celegans_rev-1_EMS_genome_1	main	eSS29
+celegans_polq-1_EMS_genome_1	main	eSS29
+celegans_tdp-1_EMS_genome_1	main	eSS29
+celegans_ung-1_EMS_genome_1	main	eSS29
+celegans_agt-2_EMS_genome_1	main	eSS29
+celegans_parp-2_EMS_genome_1	main	eSS29
+celegans_parp-1_EMS_genome_1	main	eSS29
+celegans_wildType_EMS_genome_1	main	eSS29
+celegans_him-6_EMS_genome_1	main	eSS29
+celegans_slx-1_EMS_genome_1	main	eSS29
+celegans_fan-1_EMS_genome_1	main	eSS29
+celegans_wrn-1_EMS_genome_1	main	eSS29
+celegans_mrt-2_EMS_genome_1	main	eSS29
+celegans_ndx-4_EMS_genome_1	main	eSS29
+celegans_pole-4_EMS_genome_1	main	eSS29
+celegans_apn-1_EMS_genome_1	main	eSS29
+celegans_brd-1_EMS_genome_1	main	eSS29
+celegans_exo-3_EMS_genome_1	main	eSS29
+celegans_helq-1_EMS_genome_1	main	eSS29
+celegans_rev-3_EMS_genome_1	main	eSS29
+celegans_mlh-1_EMS_genome_1	main	eSS29
+celegans_agt-1_EMS_genome_1	main	eSS29
+celegans_ced-4_EMS_genome_1	main	eSS29
+celegans_rcq-5_EMS_genome_1	main	eSS29
+celegans_cep-1_EMS_genome_1	main	eSS29
+celegans_csb-1_EMS_genome_1	main	eSS29
+celegans_polh-1_EMS_genome_1	main	eSS29
+Human_iPSC_Cisplatin_1	main	eSS30
+Human_iPSC_Cisplatin	main	eSS30
+Human_iPSC_Cisplatin_2	main	eSS30
+Human_HepG2_Cisplatin	main	eSS31
+Human_HepG2_Cisplatin_1	main	eSS31
+Human_HepG2_Cisplatin_2	main	eSS31
+Human_MCF10A_Cisplatin	main	eSS31
+Human_MCF10A_Cisplatin_4	main	eSS31
+Mouse_Lymph_Node_9,10-dimethyl-1,2-benzanthracene	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_31	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_33	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_36	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_32	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_34	main	eSS32
+Mouse_Lymph_Node_9,10-dimethyl-1,2-benzanthracene_1	main	eSS32
+Mouse_Lymph_Node_9,10-dimethyl-1,2-benzanthracene_2	main	eSS32
+Mouse_Lymph_Node_9,10-dimethyl-1,2-benzanthracene_3	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_35	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_14	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_24	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_11	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_26	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_29	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_28	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_27	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_30	main	eSS32
+Mouse_Lung_9,10-dimethyl-1,2-benzanthracene_2	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_62	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_63	main	eSS32
+Mouse_Lung_9,10-dimethyl-1,2-benzanthracene	main	eSS32
+Mouse_Lung_9,10-dimethyl-1,2-benzanthracene_1	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_13	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_23	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_20	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_21	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_22	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_25	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_5	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_3	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_4	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_2	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_6	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_16	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_18	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_15	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_17	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_19	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_38	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_37	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_40	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_39	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_41	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_10	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_8	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_9	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_7	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_12	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_56	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_48	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_1	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_46	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_53	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_64	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_60	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_61	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_55	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_54	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_57	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_50	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_49	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_51	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_52	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_59	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_58	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_45	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_42	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_47	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_43	main	eSS32
+Mouse_Skin_9,10-dimethyl-1,2-benzanthracene_44	main	eSS32
+Human_HK2_Aristolochic_acid_I	main	eSS33
+Mouse_MEF_Aristolochic_acid_I_1	main	eSS33
+Human_iPSC_Aristolochic_acid_I	main	eSS33
+Human_iPSC_Aristolochic_acid_I_1	main	eSS33
+Human_iPSC_Aristolochic_acid_I_2	main	eSS33
+Mouse_MEF_Aristolochic_acid_I	main	eSS33
+Human_iPSC_Dibenzo[a,l]pyrene-diol_epoxide_3	main	eSS33
+Human_iPSC_Dibenzo[a,l]pyrene	main	eSS33
+Human_iPSC_Dibenzo[a,l]pyrene-diol_epoxide_2	main	eSS34
+Human_iPSC_Dibenzo[a,l]pyrene-diol_epoxide	main	eSS34
+Human_iPSC_Dibenzo[a,l]pyrene-diol_epoxide_1	main	eSS34
+Human_HepG2_Duocarmycin_1	main	eSS35
+Human_HepG2_Duocarmycin_2	main	eSS35
+Human_HepG2_Duocarmycin_3	main	eSS35
+Human_h_Intestinal_organoids_Colibactin_1	main	eSS36
+Human_h_Intestinal_organoids_Colibactin_5	main	eSS36
+Human_h_Intestinal_organoids_Colibactin	main	eSS36
+Human_h_Intestinal_organoids_Colibactin_2	main	eSS36
+Mouse_Liver_Bromochloroacetic_acid_3	main	eSS37
+Mouse_Liver_Bromochloroacetic_acid_1	main	eSS37
+Mouse_Liver_Bromochloroacetic_acid	main	eSS37
+Mouse_Liver_Bromochloroacetic_acid_2	main	eSS37
+Human_iPSC_6-Nitrochrysene_2	main	eSS38
+Human_iPSC_6-Nitrochrysene_1	main	eSS38
+Human_iPSC_6-Nitrochrysene_3	main	eSS38
+Human_iPSC_6-Nitrochrysene_7	main	eSS38
+Human_iPSC_6-Nitrochrysene_8	main	eSS38
+Human_iPSC_6-Nitrochrysene	main	eSS38
+Human_iPSC_6-Nitrochrysene_4	main	eSS38
+Mouse_MEF_Glycidamide_3	main	eSS39
+Mouse_MEF_Glycidamide_1	main	eSS39
+Mouse_MEF_Acrylamide_2	main	eSS39
+Mouse_MEF_Glycidamide	main	eSS39
+Mouse_MEF_Glycidamide_2	main	eSS39
+Mouse_Liver_Vinylidene_chloride_1	main	eSS40
+Mouse_Lung_Vinylidene_chloride_1	main	eSS40
+Mouse_Lung_Vinylidene_chloride_2	main	eSS40
+Mouse_Kidney_Vinylidene_chloride	main	eSS40
+Mouse_Kidney_Vinylidene_chloride_4	main	eSS40
+Mouse_Kidney_Vinylidene_chloride_5	main	eSS40
+Mouse_Kidney_Vinylidene_chloride_3	main	eSS40
+Mouse_Kidney_Vinylidene_chloride_1	main	eSS40
+Mouse_Kidney_Vinylidene_chloride_2	main	eSS40
+Mouse_Liver_Vinylidene_chloride_4	main	eSS41
+Mouse_Liver_Vinylidene_chloride	main	eSS41
+Mouse_Liver_Vinylidene_chloride_2	main	eSS41
+Human_iPSC_N-ethyl-N-nitrosourea_1	main	eSS42
+Human_iPSC_N-ethyl-N-nitrosourea	main	eSS42
+Human_iPSC_N-ethyl-N-nitrosourea_2	main	eSS42
+Human_BEAS-2B_N-methyl-N-nitro-nitrosoguanidine_2	main	eSS43
+Human_iPSC_Temozolomide_2	main	eSS43
+Human_BEAS-2B_N-methyl-N-nitro-nitrosoguanidine_4	main	eSS43
+Human_iPSC_N-methyl-N-nitrosourea_1	main	eSS43
+Human_iPSC_N-methyl-N-nitrosourea	main	eSS43
+Human_BEAS-2B_N-methyl-N-nitro-nitrosoguanidine_3	main	eSS43
+Human_BEAS-2B_N-methyl-N-nitro-nitrosoguanidine	main	eSS43
+Human_iPSC_Temozolomide	main	eSS43
+Human_iPSC_Temozolomide_4	main	eSS43
+Human_iPSC_Temozolomide_1	main	eSS43
+Human_iPSC_Temozolomide_3	main	eSS43
+Mouse_Liver_Diethylnitrosamine_3	main	eSS44
+Mouse_Liver_Diethylnitrosamine_8	main	eSS44
+Mouse_Liver_Diethylnitrosamine_11	main	eSS44
+Mouse_Liver_Diethylnitrosamine_16	main	eSS44
+Mouse_Liver_Diethylnitrosamine_17	main	eSS44
+Mouse_Liver_Diethylnitrosamine_20	main	eSS44
+Mouse_Liver_Diethylnitrosamine_21	main	eSS44
+Mouse_Liver_Diethylnitrosamine_14	main	eSS44
+Mouse_Liver_Diethylnitrosamine_15	main	eSS44
+Mouse_Liver_Diethylnitrosamine_10	main	eSS44
+Mouse_Liver_Diethylnitrosamine_18	main	eSS44
+Mouse_Liver_Diethylnitrosamine_19	main	eSS44
+Mouse_Liver_Diethylnitrosamine_1	main	eSS44
+Mouse_Liver_Diethylnitrosamine_12	main	eSS44
+Human_BEAS-2B_4-(methylnitrosamino)-1-(3-pyridyl)-1-butanone	main	eSS45
+Human_BEAS-2B_4-(methylnitrosamino)-1-(3-pyridyl)-1-butanone_2	main	eSS45
+Human_BEAS-2B_4-(methylnitrosamino)-1-(3-pyridyl)-1-butanone_3	main	eSS45
+Human_BEAS-2B_4-(methylnitrosamino)-1-(3-pyridyl)-1-butanone_1	main	eSS45
+Human_BEAS-2B_4-(methylnitrosamino)-1-(3-pyridyl)-1-butanone_4	main	eSS45
+Rat_Brain_N-ethyl-N-nitrosourea_1	main	eSS46
+Rat_Brain_N-ethyl-N-nitrosourea_2	main	eSS46
+Rat_Brain_N-ethyl-N-nitrosourea	main	eSS46
+Rat_Brain_N-ethyl-N-nitrosourea_3	main	eSS46
+Rat_Brain_N-ethyl-N-nitrosourea_4	main	eSS46
+celegans_ced-4_MMS_genome_1	main	eSS47
+celegans_pole-4_MMS_genome_1	main	eSS47
+celegans_brc-1_DMS_genome_1	main	eSS47
+celegans_wildType_DMS_genome_1	main	eSS47
+celegans_xpa-1_MMS_genome_1	main	eSS47
+celegans_xpf-1_MMS_genome_1	main	eSS47
+celegans_slx-1_MMS_genome_1	main	eSS47
+celegans_cku-80_MMS_genome_1	main	eSS47
+celegans_xpc-1_MMS_genome_1	main	eSS47
+celegans_agt-2_MMS_genome_1	main	eSS47
+celegans_csb-1_MMS_genome_1	main	eSS47
+celegans_dna-2_MMS_genome_1	main	eSS47
+celegans_brc-1_MMS_genome_1	main	eSS47
+celegans_apn-1_MMS_genome_1	main	eSS47
+celegans_ndx-4_MMS_genome_1	main	eSS47
+celegans_brd-1_MMS_genome_1	main	eSS47
+celegans_wildType_MMS_genome_1	main	eSS47
+celegans_exo-3_MMS_genome_1	main	eSS47
+celegans_smg-1_MMS_genome_1	main	eSS47
+Human_hTERT-RPE1_CX-5461_11	main	eSS48
+Human_hTERT-RPE1_CX-5461_9	main	eSS48
+Human_hTERT-RPE1_CX-5461_10	main	eSS48
+Human_hTERT-RPE1_CX-5461_2	main	eSS48
+Human_hTERT-RPE1_CX-5461_8	main	eSS48
+Human_hTERT-RPE1_CX-5461	main	eSS48
+Human_hTERT-RPE1_CX-5461_7	main	eSS48
+Human_hTERT-RPE1_CX-5461_4	main	eSS48
+Human_hTERT-RPE1_CX-5461_5	main	eSS48
+Human_hTERT-RPE1_CX-5461_6	main	eSS48
+Human_hTERT-RPE1_CX-5461_1	main	eSS48
+Human_hTERT-RPE1_CX-5461_3	main	eSS48
+celegans_CX-5461_UVA9	main	eSS49
+celegans_CX-5461_UVA16	main	eSS49
+celegans_CX-5461_NO_UVA1	main	eSS49
+celegans_CX-5461_UVA4	main	eSS49
+celegans_CX-5461_UVA14	main	eSS49
+celegans_CX-5461_UVA6	main	eSS49
+celegans_CX-5461_UVA10	main	eSS49
+celegans_CX-5461_UVA19	main	eSS49
+celegans_CX-5461_UVA15	main	eSS49
+celegans_CX-5461_UVA17	main	eSS49
+celegans_CX-5461_UVA18	main	eSS49
+celegans_CX-5461_UVA11	main	eSS49
+celegans_CX-5461_UVA3	main	eSS49
+Mouse_Liver_Cobalt_metal	small	small1
+Mouse_Liver_Cobalt_metal_1	small	small1
+Human_TK6_Captafol_1	small	small2
+Human_TK6_Captafol_2	small	small2
+Mouse_MEF_UVA	small	small3
+Mouse_MEF_UVA_6	small	small3
+Human_HepaRG_Aflatoxin_B1	small	small4
+Human_HepaRG_Aflatoxin_B1_1	small	small4
+Human_iPSC_3-Nitrobenzanthrone	small	small5
+Human_iPSC_3-Nitrobenzanthrone_1	small	small5
+Human_BEAS-2B_Norharmane_2	small	small6
+Human_BEAS-2B_Norharmane_3	small	small6
+Human_iPSC_Propylene_oxide_1	small	small7
+Human_iPSC_Propylene_oxide_2	small	small7
+Human_iPSC_1,2-Dimethylhydrazine_1	small	small8
+Human_iPSC_1,2-Dimethylhydrazine_2	small	small8
+celegans_xpc-1_UVB_genome_1	small	small9
+celegans_xpf-1_UVB_genome_1	small	small9
+Human_HFF_4-Nitroquinoline_N-oxide	small	small10
+Human_HFF_4-Nitroquinoline_N-oxide_1	small	small10
+celegans_polk-1_DMS_genome_1	small	small11
+celegans_polk-1_MMS_genome_1	small	small11
+Human_iPSC_6-Nitrochrysene_5	small	small12
+Human_iPSC_6-Nitrochrysene_6	small	small12
+Mouse_Liver_Diethylnitrosamine_6	small	small13
+Mouse_Liver_Diethylnitrosamine_9	small	small13
+celegans_rev-1_DMS_genome_1	small	small14
+celegans_rev-1_MMS_genome_1	small	small14
+celegans_rcq-5_MMS_genome_1	small	small15
+celegans_wrn-1_MMS_genome_1	small	small15
+Human_HAP1_CX-5461	small	small16
+Human_HAP1_CX-5461_1	small	small16
+Mouse_Liver_Antimony_trioxide	singleton	
+Mouse_Liver_Vanadium_pentoxide_1	singleton	
+Mouse_Liver_Isobutyl_nitrite	singleton	
+Mouse_Liver_Isobutyl_nitrite_1	singleton	
+Mouse_Liver_Furan	singleton	
+Mouse_Liver_Antimony_trioxide_1	singleton	
+Mouse_Liver_Nickel_oxide_1	singleton	
+Mouse_Lung_Vanadium_pentoxide_1	singleton	
+Mouse_Lung_Vanadium_pentoxide	singleton	
+Mouse_Liver_Vanadium_pentoxide	singleton	
+Mouse_Liver_Pentabromodiphenyl_ether_1	singleton	
+Mouse_Liver_Primaclone	singleton	
+celegans_atm-1-xpc-1_TMP-UVA200J_genome_10	singleton	
+Human_hTERT-RPE1_Etoposide	singleton	
+Human_HFF_UVA_3	singleton	
+Human_HFF_UVA_4	singleton	
+Mouse_Liver_Furan_1	singleton	
+Human_hTERT-RPE1_Etoposide_1	singleton	
+Mouse_Liver_Anthraquinone_1	singleton	
+Human_TK6_Captafol	singleton	
+celegans_mlh-1_GammaRay_genome_1	singleton	
+Mouse_MEF_3-Nitrobenzanthrone_6	singleton	
+Mouse_MEF_Benzo[a]pyrene-7,8-diol-9,10-epoxide	singleton	
+celegans_wrn-1_GammaRay_genome_1	singleton	
+celegans_bub-3_GammaRay_genome_1	singleton	
+celegans_wildType_GammaRay_genome_1	singleton	
+celegans_rad-51_GammaRay_genome_1	singleton	
+celegans_brc-1_GammaRay_genome_1	singleton	
+celegans_dog-1_GammaRay_genome_1	singleton	
+celegans_rip-1_GammaRay_genome_1	singleton	
+celegans_xpa-1_GammaRay_genome_1	singleton	
+Mouse_Lung_Cobalt_metal_2	singleton	
+Mouse_Lung_Cobalt_metal_1	singleton	
+Human_MCF10A_Cisplatin_2	singleton	
+Mouse_MEF_UVA_2	singleton	
+Mouse_MEF_UVA_9	singleton	
+Human_HFF_UVA	singleton	
+Mouse_Liver_Anthraquinone_2	singleton	
+Mouse_MEF_N-Nitrosopyrrolidine_2	singleton	
+Mouse_MEF_Acrylamide_1	singleton	
+Mouse_MEF_4-Nitroquinoline_N-oxide_2	singleton	
+Human_BEAS-2B_Norharmane_1	singleton	
+Mouse_MEF_Benzo[a]pyrene	singleton	
+Mouse_MEF_Benzo[a]pyrene_1	singleton	
+Mouse_MEF_3-Nitrobenzanthrone	singleton	
+Mouse_MEF_3-Nitrobenzanthrone_4	singleton	
+Human_BEAS-2B_Norharmane	singleton	
+Human_iPSC_3-Nitrobenzanthrone_2	singleton	
+Human_iPSC_3-Chloro-4-(dichloromethyl)-5-hydroxy-2(5H)-furanone	singleton	
+celegans_fcd-2_cisplatin_genome_1	singleton	
+Human_iPSC_Benzo[a]pyrene_4	singleton	
+celegans_wrn-1_TMP-UVA200J_genome_3	singleton	
+celegans_pcn-1_TMP-UVA200J_genome_1	singleton	
+Human_iPSC_Diethyl_sulfate_1	singleton	
+Human_iPSC_Diethyl_sulfate	singleton	
+Human_iPSC_Propylene_oxide	singleton	
+Human_iPSC_Glycidamide	singleton	
+Mouse_Lung_Isobutyl_nitrite	singleton	
+celegans_pole-4_UVB_genome_1	singleton	
+celegans_rev-1_UVB_genome_1	singleton	
+Human_BEAS-2B_3-aminobiphenyl	singleton	
+Mouse_Lung_Antimony_trioxide	singleton	
+Mouse_Lung_Isobutyl_nitrite_1	singleton	
+Mouse_Lung_Vinylidene_chloride_3	singleton	
+celegans_polk-1_EMS_genome_1	singleton	
+celegans_agt-1_MMS_genome_1	singleton	
+Mouse_Liver_Pentabromodiphenyl_ether	singleton	
+Human_MCF10A_Cisplatin_3	singleton	
+Human_MCF10A_Cisplatin_1	singleton	
+Human_HEK293T_Styrene_Oxide	singleton	
+Human_hTERT-RPE1_Pyridostatin_3	singleton	
+Human_hTERT-RPE1_Pyridostatin_4	singleton	
+Human_hTERT-RPE1_Pyridostatin_5	singleton	
+Human_hTERT-RPE1_Pyridostatin_6	singleton	
+Mouse_MEF_Acrylamide	singleton	
+Mouse_MEF_Acrylamide_3	singleton	
+Human_h_Intestinal_organoids_Colibactin_7	singleton	
+Human_h_Intestinal_organoids_5-Fluorouracil	singleton	
+Human_h_Intestinal_organoids_5-Fluorouracil_1	singleton	
+Mouse_Liver_Anthraquinone	singleton	
+Mouse_MEF_Acrylamide_4	singleton	
+celegans_rad-54B_GammaRay_genome_1	singleton	
+Human_HFF_UVA_2	singleton	
+Human_HFF_UVA_1	singleton	
+celegans_mlh-1_DMS_genome_1	singleton	
+celegans_smg-1_AristolochicAcid_genome_1	singleton	
+Human_HepG2_Duocarmycin	singleton	
+Human_hTERT-RPE1_Pyridostatin	singleton	
+Human_hTERT-RPE1_Pyridostatin_2	singleton	
+Human_h_Intestinal_organoids_Colibactin_8	singleton	
+Human_h_Intestinal_organoids_Colibactin_6	singleton	
+Human_h_Intestinal_organoids_Colibactin_3	singleton	
+Human_h_Intestinal_organoids_Colibactin_4	singleton	
+Mouse_Lung_Vinylidene_chloride	singleton	
+Mouse_Lung_Isobutyl_nitrite_2	singleton	
+Mouse_Lung_Nickel_sulfate_hexahydrate	singleton	
+Mouse_Liver_Cumene_1	singleton	
+Mouse_Liver_Cumene_3	singleton	
+Mouse_Liver_Cumene	singleton	
+Mouse_Liver_Cumene_2	singleton	
+Mouse_MEF_2-amino-1-methyl-6-phenylimidazo[4,5-b]pyridine	singleton	
+Mouse_MEF_2-amino-1-methyl-6-phenylimidazo[4,5-b]pyridine_2	singleton	
+Mouse_MEF_N-Nitrosopyrrolidine	singleton	
+Mouse_MEF_N-Nitrosopyrrolidine_1	singleton	
+Mouse_Liver_Vinylidene_chloride_3	singleton	
+Human_iPSC_1,2-Dimethylhydrazine	singleton	
+Human_BEAS-2B_N-methyl-N-nitro-nitrosoguanidine_1	singleton	
+Mouse_Liver_Diethanolamine	singleton	
+Mouse_Liver_Nickel_oxide	singleton	
+Mouse_Liver_Nickel_sulfate_hexahydrate	singleton	
+celegans_CX-5461_NO_UVA19	singleton	
+Human_hTERT-RPE1_Pyridostatin_1	singleton	
+Mouse_Liver_Diethylnitrosamine_2	singleton	
+Mouse_Liver_Diethylnitrosamine_4	singleton	
+Mouse_Liver_Diethylnitrosamine_5	singleton	
+Mouse_Liver_Diethylnitrosamine_7	singleton	
+Mouse_Liver_Diethylnitrosamine	singleton	
+Mouse_Liver_Diethylnitrosamine_13	singleton	
+celegans_xpc-1_DMS_genome_1	singleton	
+celegans_xpf-1_DMS_genome_1	singleton	
+celegans_parp-2_DMS_genome_1	singleton	
+celegans_helq-1_MMS_genome_1	singleton	
+celegans_ced-3_MMS_genome_1	singleton	
+celegans_ung-1_MMS_genome_1	singleton	
+celegans_CX-5461_UVA7	singleton	
+celegans_CX-5461_NO_UVA20	singleton	
+celegans_CX-5461_NO_UVA2	singleton	
+celegans_CX-5461_UVA13	singleton	
+celegans_CX-5461_UVA8	singleton	
+celegans_CX-5461_UVA12	singleton	
+celegans_CX-5461_UVA5	singleton	

@@ -70,9 +70,6 @@ class MutationTypeConfig:
         e.g. "_307.txt" → "filtered_mouse_307.txt"
     norm_file_suffix : str or None
         Suffix for the pre-normalised file (SBS only).  None for DBS/ID.
-    mouse_exclude_pattern : str or None
-        Regex passed to DataFrame.filter(regex=...) to drop unwanted mouse
-        columns.  None means no filtering.
     cluster_prefix : str
         Label prefix in output IDs: "eSS", "eDS", "eIS".
     default_custom_thresholds : dict[str, float]
@@ -90,7 +87,6 @@ class MutationTypeConfig:
     has_prenormalized_files: bool
     raw_file_suffix:       str
     norm_file_suffix:      Optional[str]
-    mouse_exclude_pattern: Optional[str]
     cluster_prefix:        str   # Label prefix in output IDs: "eSS", "eDS", "eIS"
     default_custom_thresholds: dict = field(default_factory=dict)
 
@@ -110,7 +106,6 @@ _CONFIGS = {
         has_prenormalized_files = True,
         raw_file_suffix       = "_307.txt",
         norm_file_suffix      = "_307.tsv",           # prefixed with "normalized_filtered_"
-        mouse_exclude_pattern = "Xenon|deoxynivalenol|Deoxynivalenol",
         cluster_prefix        = "eSS",
         default_custom_thresholds = {
             "Aristolochic_acid_I": 0.095,
@@ -127,7 +122,6 @@ _CONFIGS = {
         has_prenormalized_files = False,
         raw_file_suffix       = "_DBS.txt",
         norm_file_suffix      = None,
-        mouse_exclude_pattern = None,
         cluster_prefix        = "eDS",
     ),
     "ID": MutationTypeConfig(
@@ -140,7 +134,6 @@ _CONFIGS = {
         has_prenormalized_files = False,
         raw_file_suffix       = "_ID.txt",
         norm_file_suffix      = None,
-        mouse_exclude_pattern = None,
         cluster_prefix        = "eIS",
     ),
 }

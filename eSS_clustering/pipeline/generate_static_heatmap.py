@@ -4,6 +4,7 @@ import argparse
 import sys
 import os
 import math
+import re
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 import seaborn as sns
@@ -12,6 +13,10 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from utils.mutation_type import get_config
+
+# eSignatures with max cosine similarity >= this to any COSMIC signature
+# count as COSMIC-matched (same rule as generate_interactive_heatmap.py).
+MATCH_THRESHOLD = 0.85
 
 
 def generate_static_heatmap(esignature_path, cosmic_path, output_path, cfg):
@@ -27,10 +32,10 @@ def generate_static_heatmap(esignature_path, cosmic_path, output_path, cfg):
     def _create_and_save_plot(sim_df, file_path, plot_title):
         print(f"\n--- Generating Plot: {plot_title} ---")
 
-        annot_mask = sim_df.applymap(lambda x: f"{x:.2f}" if x >= 0.8 else "")
+        annot_mask = sim_df.map(lambda x: f"{x:.2f}" if x >= 0.8 else "")
 
         colors     = ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725']
-        boundaries = [0, 0.8, 0.845, 0.895, 0.945, 1.0]
+        boundaries = [0, 0.8, MATCH_THRESHOLD, 0.9, 0.95, 1.0]
         cmap       = ListedColormap(colors)
         norm       = BoundaryNorm(boundaries, cmap.N, clip=True)
 
@@ -47,7 +52,7 @@ def generate_static_heatmap(esignature_path, cosmic_path, output_path, cfg):
         tick_fontsize  = 14
 
         cbar_ax   = fig.add_axes([0.95, 0.11, 0.02, 0.25])
-        cbar_ticks = [0, 0.8, 0.845, 0.895, 0.945, 1.0]
+        cbar_ticks = boundaries
         cbar = fig.colorbar(ax.collections[0], cax=cbar_ax,
                             orientation='vertical', ticks=cbar_ticks)
         cbar.ax.set_yticklabels(['0.00', '0.80', '0.85', '0.90', '0.95', '1.00'])
@@ -63,13 +68,13 @@ def generate_static_heatmap(esignature_path, cosmic_path, output_path, cfg):
             brightness = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
             text_obj.set_color("black" if brightness > 0.6 else "white")
 
-        matched_esigs  = sim_df.index[sim_df.max(axis=1) >= 0.845]
-        de_novo_esigs  = sim_df.index[sim_df.max(axis=1) <  0.845]
-        print(f"eSignatures with matches >=0.85: {list(matched_esigs)}")
+        matched_esigs  = sim_df.index[sim_df.max(axis=1) >= MATCH_THRESHOLD]
+        de_novo_esigs  = sim_df.index[sim_df.max(axis=1) <  MATCH_THRESHOLD]
+        print(f"eSignatures with matches >={MATCH_THRESHOLD}: {list(matched_esigs)}")
         print(f"De novo eSignatures:             {list(de_novo_esigs)}")
 
         # Dynamic axis labels based on mutation type
-        x_label = f"COSMIC v3.5 {cfg.name} Signatures"
+        x_label = f"{cosmic_label} {cfg.name} Signatures"
         ax.set_xlabel(x_label, fontsize=label_fontsize,
                       fontweight='bold', labelpad=20)
         ax.set_ylabel("eSignature clusters", fontsize=label_fontsize,
@@ -83,7 +88,7 @@ def generate_static_heatmap(esignature_path, cosmic_path, output_path, cfg):
 
         fig.text(-0.06, 0.09, r"$\mathbf{bold}$: indicates",
                  fontsize=12, ha='left', va='center')
-        fig.text(-0.04, 0.08, r"similarity ≥0.85",
+        fig.text(-0.04, 0.08, f"similarity ≥{MATCH_THRESHOLD}",
                  fontsize=12, ha='left', va='center')
 
         print(f"--- Saving plot to {file_path} ---")
@@ -98,6 +103,10 @@ def generate_static_heatmap(esignature_path, cosmic_path, output_path, cfg):
     except FileNotFoundError as e:
         print(f"❌ ERROR: Input file not found.\nDetails: {e}")
         return
+
+    # Label axes with the COSMIC version in the reference file name.
+    version = re.search(r'v\d+(?:\.\d+)*', os.path.basename(cosmic_path))
+    cosmic_label = f"COSMIC {version.group(0)}" if version else "COSMIC"
 
     a_t = a_df.T
     b_t = b_df.T
