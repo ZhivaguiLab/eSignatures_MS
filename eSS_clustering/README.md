@@ -9,51 +9,47 @@ signature clustering.
 ## Repository structure
 
 ```
-esignatures-pipeline/
+eSS_clustering/
   run_pipeline.sh              ← entry point — run this
 
   pipeline/                   ← all Python scripts
     utils/
       __init__.py
       naming.py               ← shared sample-name parsing
-      mutation_type.py        ← per-type constants (contexts, artifacts, file suffixes)
+      mutation_type.py        ← per-type constants (contexts, artifacts, file suffixes, custom thresholds)
     perform_clustering.py     ← Step 1: hierarchical clustering (with integrated preprocessing)
     generate_summary.py       ← Step 2: HTML reports
     generate_images_heatmap.py       ← Step 3: PDF → PNG
     generate_interactive_heatmap.py  ← Step 4: interactive heatmap
     generate_static_heatmap.py       ← Step 5: static heatmap
     species_compound_matrix.py       ← Step 6: species × compound matrix
+    normalize_wes_to_wgs.py          ← experimental opportunity normalization (not in default run)
+    normalize_by_own_opportunity.py  ← experimental opportunity normalization (not in default run)
+    build_translation_verification_matrices.py
+    archive/                  ← superseded scripts, kept for reference
 
-  config/                     ← tracked in git
+  config/                     ← tracked in git (see config/README.md)
+    preprocessing.yaml        ← samples excluded before clustering
     sample_mapping.tsv        ← original → standardised sample name lookup
-    compound_grouping.yaml    ← compound variant collapsing rules (optional)
+    compound_grouping.yaml    ← compound variant collapsing rules
     abv_table_clusters.txt    ← compound → acronym abbreviations
 
-  data/                       ← NOT tracked (too large; see data/README.md)
-    input/                    ← original data files
-      SBS/
-      DBS/
-      ID/
+  data/                       ← see data/README.md
+    input/SBS/                ← SBS count + normalized matrices (tracked)
+    input/DBS/, input/ID/     ← not included; add your own
+    references/               ← COSMIC v3.6 SBS/DBS/ID profiles (tracked)
     input_cleaned/            ← auto-generated preprocessed data (NOT tracked)
-      SBS/
-      DBS/
-      ID/
-    filtered_mouse_307.txt
-    COSMIC_v3.6_SBS_GRCh38.txt
-    ... (see data/README.md for full list)
 
   results/                    ← NOT tracked (generated at runtime)
-    SBS/
-    DBS/
-    ID/
 
   tests/
     test_clustering_reproducibility.py  ← checks a run reproduces the published clusters
     expected/SBS_cluster_membership.tsv ← published sample → cluster assignments
 
+  NORMALIZATION_APPROACH.md   ← experimental normalization methods and results
+  results_*_normalized/       ← comparison summaries for those methods
   requirements.txt            ← direct dependencies (pinned)
   requirements-lock.txt       ← full locked environment for exact reproduction
-  .gitignore
 ```
 
 ---
@@ -61,8 +57,8 @@ esignatures-pipeline/
 ## Installation
 
 ```bash
-git clone https://github.com/<org>/eSignatures-clustering-analysis.git
-cd eSignatures-clustering-analysis
+git clone https://github.com/ZhivaguiLab/eSignatures_MS.git
+cd eSignatures_MS/eSS_clustering
 
 conda create -n esig python=3.11
 conda activate esig
@@ -91,15 +87,17 @@ After installing, check the install reproduces the published clusters:
 python -m unittest discover tests
 ```
 
-Then populate `data/` with your input files — see `data/README.md` for the
-full list of required files and where to download COSMIC profiles.
+The SBS input matrices and COSMIC v3.6 references used for the manuscript are
+included in `data/`, so the SBS pipeline runs as soon as the environment is
+installed. DBS and ID inputs are not included; see `data/README.md` for the
+expected files.
 
 ---
 
 ## Running the pipeline
 
 ```bash
-# From the repo root — no arguments needed beyond type and thresholds
+# From eSS_clustering/ (run_pipeline.sh also works from any other directory)
 bash run_pipeline.sh SBS 0.9 0.85
 bash run_pipeline.sh DBS 0.9 0.85
 bash run_pipeline.sh ID  0.9 0.85
@@ -219,7 +217,7 @@ script directly:
 python pipeline/perform_clustering.py \
     --mutation_type SBS \
     --output_dir results \
-    --data_dir data/input/SBS \
+    --data_dir data/input \
     --averaging_method pooled
 ```
 
@@ -247,11 +245,13 @@ colour.
 
 ---
 
-## Preprocessing (Optional)
+## Preprocessing
 
 The pipeline includes integrated preprocessing to filter out unwanted samples before
 clustering. This is useful for removing experimental artifacts, controls, or other
-samples that should not be included in the analysis.
+samples that should not be included in the analysis. For SBS it is part of the
+published analysis: it removes the 10 excluded mouse MEF samples, so skipping it
+does not reproduce the published clusters.
 
 ### Quick Start
 
@@ -263,13 +263,16 @@ Deoxynivalenol) that are not part of the atlas. To change them, edit it directly
 
 ```yaml
 # config/preprocessing.yaml
+SBS:
+  exclude:
+    - Xenon
+    - Deoxynivalenol
 DBS:
   exclude:
-    - hTumour
-    - experimental
+    - hTumor
 ID:
   exclude:
-    - hTumour
+    - hTumor
 ```
 
 2. **Run pipeline normally:**
@@ -324,8 +327,11 @@ ID:
   exclude:
     - hTumour
 
-# SBS: omit if no preprocessing needed
-# Alternatively, use empty list:
+SBS:
+  exclude:
+    - Xenon
+
+# To exclude nothing for a type, omit it or use an empty list:
 # SBS:
 #   exclude: []
 
@@ -371,49 +377,40 @@ This means:
 
 ### Example Output
 
-```
-==========================================================
-DATA DIRECTORY SELECTION
-==========================================================
-✓ Found preprocessing config: config/preprocessing.yaml
-✓ Exclusion patterns for DBS: ['hTumour', 'experimental']
+From an SBS run with the current config (paths shortened):
 
-Checking for cached cleaned data...
-✗ Not found: data/input_cleaned/DBS/
+```
+======================================================================
+DATA DIRECTORY SELECTION
+======================================================================
+✓ Found preprocessing config: config/preprocessing.yaml
+✓ Exclusion patterns for SBS: ['Xenon', 'Deoxynivalenol']
 
 Running preprocessing...
 
-==========================================================
+======================================================================
 PREPROCESSING
-==========================================================
-Input:  data/input/DBS
-Output: data/input_cleaned/DBS
-Exclusion patterns: ['hTumour', 'experimental']
-==========================================================
-
-  Processing: human_DBS_data.txt
-    Original: 450 samples
-    Removed:  23 samples
-    Kept:     427 samples
-    Matched patterns (first 3):
-      - Human_hTumour_sample1 ('hTumour')
-      - Human_hTumour_sample2 ('hTumour')
-      - Mouse_experimental_1 ('experimental')
-
-==========================================================
-PREPROCESSING COMPLETE
-  Total samples: 450
-  Removed: 23
-  Kept: 427
-  Cleaned data saved to: data/input_cleaned/DBS
-==========================================================
-
-✓ Using cleaned data: data/input_cleaned/DBS
-
-Loading DBS data from: data/input_cleaned/DBS
-  human (human_DBS_data.txt): 427 samples loaded
+======================================================================
+Input:  data/input/SBS
+Output: data/input_cleaned/SBS
+Exclusion patterns: ['Xenon', 'Deoxynivalenol']
+======================================================================
   ...
+  Processing: filtered_mouse_307.txt
+    Original: 371 samples
+    Removed:  10 samples
+    Kept:     361 samples
+    Matched patterns (first 3):
+      - MEF_Deoxynivalenol_Patulin__Genome_1 ('deoxynivalenol')
+      - MEF_Deoxynivalenol_Patulin__Genome_2 ('deoxynivalenol')
+      - MEF_Deoxynivalenol_Patulin__Genome_3 ('deoxynivalenol')
+      ... and 7 more
+  ...
+✓ Using cleaned data: data/input_cleaned/SBS
 ```
+
+On later runs with unchanged inputs and patterns, the log shows
+`✓ Using cached cleaned data` instead.
 
 ---
 
@@ -456,7 +453,7 @@ By default, compound names may include replicate numbers or technical suffixes t
 B2D12_CX1, B2D12_CX2, B2D12_CX3, B2D12_CX4  ← 4 separate columns
 ```
 
-**Solution:** Create `config/compound_grouping.yaml`:
+**Solution:** Add rules to `config/compound_grouping.yaml`:
 
 ```yaml
 # Regex-based pattern matching
@@ -585,7 +582,7 @@ On Linux, use `google-chrome --headless ...` instead of the macOS app path above
 | Cluster prefix | `eSS` | `eDS` | `eIS` |
 | Normalisation | pre-computed file | internal (col sum → 1) | internal (col sum → 1) |
 | Artifact signatures | SBS27, 43, 45–60, 95 | *(none)* | ID9 |
-| Typical preprocessing | *(none)* | hTumour exclusion | hTumour exclusion |
+| Preprocessing | 10 mouse MEF samples (Xenon, Deoxynivalenol) | hTumor exclusion | hTumor exclusion |
 | Matrix generation | ✓ | ✓ | ✓ |
 
 All type-specific constants are in `pipeline/utils/mutation_type.py`.
@@ -612,10 +609,11 @@ builds, no chicken/C. elegans opportunity tables yet).
 
 1. Add a `MutationTypeConfig` entry in `pipeline/utils/mutation_type.py`
 2. Add input files to `data/input/<TYPE>/` following the naming convention in `data/README.md`
-3. Add the COSMIC file path to the `COSMIC_FILES` array in `run_pipeline.sh`
+3. Add the COSMIC file path to the `COSMIC_PROFILE` `case` statement in `run_pipeline.sh`
 4. (Optional) Add preprocessing patterns to `config/preprocessing.yaml`
 
-No other scripts need changes.
+No other scripts need changes. If the new type should be protected like SBS,
+add an expected-membership file and tests under `tests/`.
 
 --- 
 ## Input Data
@@ -662,3 +660,16 @@ python pipeline/perform_clustering.py --mutation_type DBS --output_dir results -
 **Clustering errors:**
 - Check data dimensions match expected contexts (96/78/83)
 - Verify no all-zero samples (auto-removed with warning)
+
+**"requires Python 3.11":** the pipeline only runs on Python 3.11, the version
+the pinned packages are verified on. Create the environment as in
+[Installation](#installation).
+
+**`AssertionError` during clustering:** one of the [safety checks](#safety-checks)
+found inconsistent data, such as a sample present in the raw counts but not the
+normalized profiles. The message names the samples involved; fix the input
+files rather than bypassing the check.
+
+**Tests fail after changing inputs or settings:** expected if the change was
+intentional. Check the reported differences, then regenerate
+`tests/expected/SBS_cluster_membership.tsv` from the new run.

@@ -8,6 +8,7 @@ downstream analysis, statistics, and figure generation.
 ## Layout
 
 ```
+eSS_clustering/                  eSS clustering pipeline (49 eSS, COSMIC matching)
 figures/
   fig02_composition_coverage/    Sankey, model/exposure coverage, pie legends
   fig03_mutational_landscapes/   per-model mutation-burden heatmap
@@ -15,6 +16,22 @@ figures/
   fig06_pancancer_attribution/   pan-cancer eSS attribution, TMB, smoking, geography
   fig07_organoid_validation/     organoid NanoSeq eSS decomposition
 ```
+
+## eSS clustering
+
+`eSS_clustering/` builds the eSS atlas: hierarchical clustering of the 671
+SBS96 profiles into 49 main clusters (eSS), 16 small clusters and 131
+singletons, and comparison of the eSS consensus profiles with COSMIC v3.6
+(26 matched at cosine similarity ≥0.85, 23 unmatched). It includes the SBS
+input matrices and COSMIC references, so it runs without external data:
+
+```bash
+cd eSS_clustering
+bash run_pipeline.sh SBS 0.9 0.85
+python -m unittest discover tests   # checks the run reproduces the published clusters
+```
+
+See `eSS_clustering/README.md` for installation, settings and outputs.
 
 ## Figures and scripts
 
@@ -38,6 +55,12 @@ hold the shared pooling and plotting routines the other Figure 6 scripts import.
 Python 3.10: SigProfilerMatrixGenerator 1.3.6, SigProfilerAssignment 1.1.4,
 SigProfilerPlotting 1.4.3, pandas 2.3.3, numpy 2.2.6, scipy 1.13.1, statsmodels,
 matplotlib. Reference genomes GRCh38 (human) and mm10 (mouse); SBS96 context.
+
+eSS clustering (`eSS_clustering/`): Python 3.11 only. Direct dependencies
+are pinned in `eSS_clustering/requirements.txt`; the complete environment
+(every package, including indirect dependencies) is frozen in
+`eSS_clustering/requirements-lock.txt`. Install from the lock file to
+reproduce the published clusters.
 
 R 4.4: readr, dplyr, tidyr, and base stats (glm, wilcox.test, p.adjust).
 
