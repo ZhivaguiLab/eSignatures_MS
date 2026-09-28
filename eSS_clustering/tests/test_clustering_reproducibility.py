@@ -10,6 +10,8 @@ profiles) and checks them against:
   species, no custom thresholds), with identical membership and eSS numbering;
 - tests/expected/SBS_cluster_membership_aai_split.tsv: the same with the
   optional 'aai-split' custom thresholds (49 / 16 / 123);
+- tests/expected/SBS_cluster_membership_per_species.tsv: the optional
+  'per-species' cutoffs (min_mutations_per_species; 674 profiles, 48 / 15 / 129);
 - tests/expected/published_307_input_samples.tsv: the samples in the
   previously published filtered_*_307.txt inputs, which preprocessing must
   reproduce when every species' cutoff is 307 (apart from the 18 C. elegans
@@ -50,11 +52,14 @@ except ImportError:
 import perform_clustering as pc  # noqa: E402
 import run_info  # noqa: E402
 from utils.mutation_type import get_config  # noqa: E402
+from utils import min_mutations as cutoff_config  # noqa: E402
 
 EXPECTED_MEMBERSHIP = os.path.join(REPO_ROOT, "tests", "expected",
                                    "SBS_cluster_membership.tsv")
 EXPECTED_MEMBERSHIP_AAI_SPLIT = os.path.join(REPO_ROOT, "tests", "expected",
                                              "SBS_cluster_membership_aai_split.tsv")
+EXPECTED_MEMBERSHIP_PER_SPECIES = os.path.join(REPO_ROOT, "tests", "expected",
+                                               "SBS_cluster_membership_per_species.tsv")
 PUBLISHED_307_INPUTS = os.path.join(REPO_ROOT, "tests", "expected",
                                     "published_307_input_samples.tsv")
 PREPROCESSING_CONFIG = os.path.join(REPO_ROOT, "config", "preprocessing.yaml")
@@ -87,6 +92,21 @@ def run_clustering(normalized_df, output_dir, custom_thresholds):
     )
 
 
+def assert_membership(test, result, expected_path):
+    """Cluster membership and numbering must equal an expected table."""
+    main, small, *_, singletons = result
+    got = membership_table(main, small, singletons)
+    expected = pd.read_csv(expected_path, sep="\t", keep_default_na=False)
+    merged = expected.merge(got, on="sample", how="outer",
+                            suffixes=("_expected", "_got"), indicator=True)
+    diff = merged[(merged["_merge"] != "both") |
+                  (merged["group_expected"] != merged["group_got"]) |
+                  (merged["cluster_expected"] != merged["cluster_got"])]
+    test.assertTrue(diff.empty,
+                    f"{len(diff)} samples differ from {os.path.basename(expected_path)}:"
+                    f"\n{diff.head(20).to_string()}")
+
+
 class ClusteringReproducibilityTest(unittest.TestCase):
 
     @classmethod
@@ -101,6 +121,7 @@ class ClusteringReproducibilityTest(unittest.TestCase):
         cls.data_base = data_base
         cls.raw_dir = os.path.join(data_base, "SBS")
         cls.pre_config = pc.load_preprocessing_config(PREPROCESSING_CONFIG)["SBS"]
+        cls.cutoffs = cutoff_config.resolve(cls.pre_config)
         data_dir = pc.determine_data_directory(data_base, "SBS", PREPROCESSING_CONFIG)
         cls.data_dir = data_dir
 
@@ -108,7 +129,7 @@ class ClusteringReproducibilityTest(unittest.TestCase):
             data_dir, cls.cfg,
             os.path.join(REPO_ROOT, "config", "sample_mapping.tsv"))
         pc.check_loaded_data(counts, normalized)
-        pc.check_min_mutations(counts, cls.mappings, cls.pre_config["min_mutations"])
+        pc.check_min_mutations(counts, cls.mappings, cls.cutoffs)
         cls.counts = pc.filter_zero_columns(counts, cls.tmp)
         cls.normalized = normalized[cls.counts.columns]
 
@@ -157,25 +178,11 @@ class ClusteringReproducibilityTest(unittest.TestCase):
 
     # ── Membership and numbering ─────────────────────────────────────────────
 
-    def _assert_membership(self, result, expected_path):
-        main, small, *_, singletons = result
-        got = membership_table(main, small, singletons)
-        expected = pd.read_csv(expected_path, sep="\t", keep_default_na=False)
-        merged = expected.merge(got, on="sample", how="outer",
-                                     suffixes=("_expected", "_got"),
-                                     indicator=True)
-        diff = merged[(merged["_merge"] != "both") |
-                      (merged["group_expected"] != merged["group_got"]) |
-                      (merged["cluster_expected"] != merged["cluster_got"])]
-        self.assertTrue(diff.empty,
-                        f"{len(diff)} samples differ from {os.path.basename(expected_path)}:"
-                        f"\n{diff.head(20).to_string()}")
-
     def test_membership_matches_expected(self):
-        self._assert_membership(self.default, EXPECTED_MEMBERSHIP)
+        assert_membership(self, self.default, EXPECTED_MEMBERSHIP)
 
     def test_membership_matches_expected_with_aai_split(self):
-        self._assert_membership(self.aai_split, EXPECTED_MEMBERSHIP_AAI_SPLIT)
+        assert_membership(self, self.aai_split, EXPECTED_MEMBERSHIP_AAI_SPLIT)
 
     def test_tree_cut_matches_dendrogram_colours(self):
         # Rebuild clusters the old way, from dendrogram leaf colours, and
@@ -269,7 +276,7 @@ class ClusteringReproducibilityTest(unittest.TestCase):
         self.assertTrue(any("Deoxynivalenol" in c for c in mouse.columns))
         self.assertFalse(any("Xenon" in c for c in mouse.columns))
         # No min_mutations in this config, so low-count samples come back.
-        self.assertLess(mouse.sum().min(), self.pre_config["min_mutations"]["mouse"])
+        self.assertLess(mouse.sum().min(), self.cutoffs["mouse"])
 
     # ── Preprocessing: per-species minimum mutation counts ──────────────────
 
@@ -278,7 +285,7 @@ class ClusteringReproducibilityTest(unittest.TestCase):
                 for f in sorted(os.listdir(self.raw_dir)) if f.endswith(".txt")}
 
     def test_every_sample_meets_species_cutoff(self):
-        cutoffs = self.pre_config["min_mutations"]
+        cutoffs = self.cutoffs
         totals = self.counts.sum(axis=0)
         for species, mapping in self.mappings.items():
             names = [n for n in mapping.values() if n in totals]
@@ -288,7 +295,7 @@ class ClusteringReproducibilityTest(unittest.TestCase):
     def test_preprocessing_matches_independent_filter(self):
         # Re-filter each unfiltered file from scratch and compare with the
         # cleaned files the pipeline clustered.
-        cutoffs = self.pre_config["min_mutations"]
+        cutoffs = self.cutoffs
         patterns = [p.lower() for p in self.pre_config["exclude"]]
         for species, path in self._raw_files().items():
             raw = pd.read_csv(path, sep="\t", index_col=0)
@@ -309,7 +316,7 @@ class ClusteringReproducibilityTest(unittest.TestCase):
 
     def test_removed_log_accounts_for_every_sample(self):
         log = pd.read_csv(os.path.join(self.data_dir, pc.PREPROCESSING_REMOVED_LOG))
-        cutoffs = self.pre_config["min_mutations"]
+        cutoffs = self.cutoffs
         for species, path in self._raw_files().items():
             raw = pd.read_csv(path, sep="\t", index_col=0)
             removed = log[log.species == species]
@@ -627,11 +634,103 @@ class OpportunityNormalizationTest(unittest.TestCase):
                                         PREPROCESSING_CONFIG, normalization="wes-to-wgs")
 
 
+class MinMutationsOptionTest(unittest.TestCase):
+    """The --min_mutations setting: the default, one number, or 'per-species'."""
+
+    PER_SPECIES = {"mouse": 235, "human": 295, "celegans": 451, "chicken": 300, "rat": 6354}
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="ess_clustering_min_")
+        cls.base = os.path.join(cls.tmp, "input")
+        cls.raw_dir = os.path.join(cls.base, "SBS")
+        shutil.copytree(os.path.join(REPO_ROOT, "data", "input", "SBS"), cls.raw_dir)
+        cls.pre_config = pc.load_preprocessing_config(PREPROCESSING_CONFIG)["SBS"]
+        build = lambda setting=None: pc.determine_data_directory(
+            cls.base, "SBS", PREPROCESSING_CONFIG, min_mutations_setting=setting)
+        cls.default_dir = build()
+        cls.default_stamp = pc.preprocessing_stamp(cls.default_dir, [], False)
+        cls.dirs = {s: build(s) for s in ("250", "307", "per-species")}
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def _cleaned(self, data_dir):
+        """{species: counts} of a cleaned folder."""
+        return {pc.detect_species(f)[0]: pd.read_csv(os.path.join(data_dir, f), sep="\t", index_col=0)
+                for f in sorted(os.listdir(data_dir))
+                if f.endswith(".txt") and not f.startswith("normaliz")}
+
+    def _assert_filtered(self, data_dir, cutoffs):
+        # Same as filtering each unfiltered file from scratch.
+        patterns = [p.lower() for p in self.pre_config["exclude"]]
+        cleaned = self._cleaned(data_dir)
+        for f in sorted(os.listdir(self.raw_dir)):
+            species = pc.detect_species(f)[0]
+            raw = pd.read_csv(os.path.join(self.raw_dir, f), sep="\t", index_col=0)
+            totals = raw.sum(axis=0)
+            keep = [c for c in raw.columns if totals[c] >= cutoffs[species]
+                    and not any(p in c.lower() for p in patterns)]
+            self.assertEqual(list(cleaned[species].columns), keep, species)
+
+    def test_default_is_307_for_every_species(self):
+        self.assertEqual(self.pre_config["min_mutations"], 307)
+        self.assertEqual(cutoff_config.resolve(self.pre_config),
+                         {sp: 307 for sp in ["mouse", "human", "celegans", "chicken", "rat"]})
+        self.assertEqual(os.path.basename(self.default_dir), "SBS")
+
+    def test_number_applies_to_every_species(self):
+        cutoffs = cutoff_config.resolve(self.pre_config, "250")
+        self.assertEqual(set(cutoffs.values()), {250})
+        self.assertEqual(os.path.basename(self.dirs["250"]), "SBS_min250")
+        self._assert_filtered(self.dirs["250"], cutoffs)
+
+    def test_number_equal_to_default_uses_default_cache(self):
+        self.assertEqual(self.dirs["307"], self.default_dir)
+
+    def test_per_species_uses_config_values(self):
+        cutoffs = cutoff_config.resolve(self.pre_config, "per-species")
+        self.assertEqual(cutoffs, self.PER_SPECIES)
+        self.assertEqual(os.path.basename(self.dirs["per-species"]), "SBS_min-per-species")
+        self._assert_filtered(self.dirs["per-species"], cutoffs)
+        self.assertEqual(sum(c.shape[1] for c in self._cleaned(self.dirs["per-species"]).values()), 674)
+
+    def test_other_cutoffs_leave_default_cache_alone(self):
+        self.assertEqual(pc.preprocessing_stamp(self.default_dir, [], False), self.default_stamp)
+        self._assert_filtered(self.default_dir, cutoff_config.resolve(self.pre_config))
+
+    def test_per_species_membership_matches_expected(self):
+        cfg = get_config("SBS")
+        counts, normalized, mappings = pc.load_data(
+            self.dirs["per-species"], cfg, os.path.join(REPO_ROOT, "config", "sample_mapping.tsv"))
+        pc.check_loaded_data(counts, normalized)
+        pc.check_min_mutations(counts, mappings, self.PER_SPECIES)
+        counts = pc.filter_zero_columns(counts, self.tmp)
+        result = run_clustering(normalized[counts.columns], self.tmp,
+                                dict(cfg.default_custom_thresholds))
+        main, small, *_, singletons = result
+        self.assertEqual((len(main), len(small), len(singletons)), (48, 15, 129))
+        assert_membership(self, result, EXPECTED_MEMBERSHIP_PER_SPECIES)
+
+    def test_invalid_setting_raises(self):
+        for bad in ("abc", "-5", "per_species"):
+            with self.assertRaises(ValueError, msg=bad):
+                cutoff_config.resolve(self.pre_config, bad)
+        with self.assertRaises(ValueError):   # no per-species values for DBS
+            cutoff_config.resolve({"exclude": ["hTumor"]}, "per-species")
+
+
 class RunNameTest(unittest.TestCase):
 
     def test_run_names(self):
         name = lambda **k: run_info.run_name("SBS", PREPROCESSING_CONFIG, **k)
         self.assertEqual(name(), "min307")
+        self.assertEqual(name(min_mutations="250"), "min250")
+        self.assertEqual(name(min_mutations="307"), "min307")
+        self.assertEqual(name(min_mutations="per-species"), "min-per-species")
+        self.assertEqual(name(min_mutations="per-species", normalization="wes-to-wgs"),
+                         "min-per-species_wes-to-wgs")
         self.assertEqual(name(custom_thresholds="aai-split"), "min307_aai-split")
         self.assertEqual(name(normalization="wes-to-wgs"), "min307_wes-to-wgs")
         self.assertEqual(name(normalization="own-opportunity"), "min307_own-opportunity")

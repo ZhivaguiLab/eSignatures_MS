@@ -23,7 +23,7 @@ filter, the name-based exclusions and the normalized profiles are all produced
 by preprocessing (`config/preprocessing.yaml`), so the files here are the
 starting point for the whole SBS analysis.
 
-| File | Profiles | Cutoff (`min_mutations`) | Clustered | Source |
+| File | Profiles | Default cutoff (`min_mutations`) | Clustered | Source |
 |------|---------:|-------------------------:|----------:|--------|
 | `unfiltered_mouse_SBS96.txt` | 723 | 307 | 361 (371 pass, then 10 MEF excluded by name) | `combined_mouse.txt` (`mouse_ind_stan.txt` + `mouse_ATC_samples.txt`) |
 | `unfiltered_human_SBS96.txt` | 486 | 307 | 194 | `human_ind_stan_nhu.txt` |
@@ -62,8 +62,8 @@ unfiltered_chicken_SBS96.txt
 unfiltered_rat_SBS96.txt
 ```
 
-Any file name works as long as it contains the species; every species needs a
-cutoff in `min_mutations`. Preprocessing writes the filtered counts and the
+Any file name works as long as it contains the species (and, for the
+`per-species` option, has a value in `min_mutations_per_species`). Preprocessing writes the filtered counts and the
 normalized profiles to `input_cleaned/SBS/`.
 
 ### DBS — raw counts only (normalised internally)

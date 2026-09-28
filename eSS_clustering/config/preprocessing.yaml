@@ -23,19 +23,30 @@ SBS:
     # pipeline/utils/mutation_type.py.
     - Xenon
     - Deoxynivalenol
-  # Minimum total SBS count: samples below it are removed. 307 is the
-  # Poisson-resampling stability threshold (the "SBS for 99% of simulations"
-  # value over all species), applied to every species. Every sample is
-  # tested, whatever its name; every species in data/input/SBS must be listed.
-  # To try other cutoffs (e.g. the per-species "SBS for 99% of simulations"
-  # values: mouse 235, human 295, celegans 451, chicken 300, rat 6354), edit
-  # the numbers below; the next run rebuilds the preprocessed data.
-  min_mutations:
-    mouse:    307
-    human:    307
-    celegans: 307
-    chicken:  307
-    rat:      307
+  # Minimum total SBS count per sample: samples below it are removed. Every
+  # sample is tested, whatever its name.
+  #
+  # DEFAULT: 307 for every species. 307 is the Poisson-resampling stability
+  # threshold (the "SBS for 99% of simulations" value over all samples).
+  # The tests and tests/expected/ results are for this default.
+  #
+  # To use another cutoff without editing this file, give run_pipeline.sh
+  # one of:
+  #   min=<N>      one cutoff for every species  -> results/min<N>/
+  #   per-species  the values in min_mutations_per_species below
+  #                                              -> results/min-per-species/
+  # min_mutations may also be written per species ({species: number}).
+  min_mutations: 307
+
+  # Used only with the 'per-species' option: the "SBS for 99% of simulations"
+  # value of each species' own samples. Every species in data/input/SBS must
+  # be listed.
+  min_mutations_per_species:
+    mouse:    235
+    human:    295
+    celegans: 451
+    chicken:  300
+    rat:      6354    # only 5 rat samples; equals the smallest, so all 5 are kept
 
 # Pattern matching is case-insensitive by default
 # 'hTumour', 'htumour', 'HTUMOUR' all match
@@ -44,11 +55,13 @@ case_sensitive: false
 # Notes:
 # - Patterns are matched as substrings
 # - min_mutations keeps samples with total >= the cutoff for their species
-#   (species is detected from the file name)
+#   (species is detected from the file name); a single number applies to
+#   every species
 # - For SBS, preprocessing also writes the normalized profiles (each sample's
 #   counts divided by its total)
 # - Removed samples are listed in data/input_cleaned/<TYPE>/preprocessing_removed_samples.csv
 # - If neither exclude nor min_mutations is defined for a type, no preprocessing occurs
-# - Cleaned data is cached in data/input_cleaned/<TYPE>/ for reuse
+# - Cleaned data is cached in data/input_cleaned/<TYPE>/ for reuse (another
+#   cutoff or a normalization gets its own folder, e.g. SBS_min-per-species/)
 # - The cache is rebuilt automatically when the input files or settings change;
 #   use --force_preprocess to rebuild it anyway

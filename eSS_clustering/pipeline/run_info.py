@@ -3,8 +3,10 @@
 run_info.py — run naming and the run parameter summary for run_pipeline.sh.
 
     python pipeline/run_info.py name --mutation_type SBS \\
-        [--custom_thresholds aai-split] [--normalization wes-to-wgs]
-        → prints e.g. "min307" or "min307_aai-split_wes-to-wgs"
+        [--min_mutations 250 | per-species] [--custom_thresholds aai-split] \\
+        [--normalization wes-to-wgs]
+        → prints e.g. "min307", "min250", "min-per-species" or
+          "min307_aai-split_wes-to-wgs"
 
 The name records the minimum mutation count and the optional extras. It does
 not include the clustering cosine threshold (0.9 by default), which is
@@ -26,23 +28,18 @@ import numpy as np
 import pandas as pd
 import yaml
 
+from utils import min_mutations as cutoff_config
+
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_PREPROCESSING = os.path.join(REPO_ROOT, "config", "preprocessing.yaml")
 
 
 def run_name(mutation_type, preprocessing_config=DEFAULT_PREPROCESSING,
-             custom_thresholds="none", normalization="none"):
+             custom_thresholds="none", normalization="none", min_mutations=None):
     with open(preprocessing_config) as f:
         config = yaml.safe_load(f) or {}
-    cutoffs = (config.get(mutation_type) or {}).get("min_mutations") or {}
-    values = set(cutoffs.values())
-    if not values:
-        min_label = "nomin"
-    elif len(values) == 1:
-        min_label = f"min{values.pop():g}"
-    else:
-        min_label = "min-per-species"
-    parts = [min_label]
+    cutoffs = cutoff_config.resolve(config.get(mutation_type), min_mutations)
+    parts = [cutoff_config.label(cutoffs)]
     if custom_thresholds and custom_thresholds != "none":
         parts.append(custom_thresholds if ":" not in custom_thresholds else "custom")
     if normalization and normalization != "none":
@@ -85,7 +82,8 @@ def readable(record):
         + (" (with uncommitted changes)" if record['code']['uncommitted_changes'] else ""),
         "",
         "PREPROCESSING",
-        f"  Minimum mutations per sample: {pre['min_mutations'] or 'none'}",
+        f"  Minimum mutations per sample: {cutoff_config.describe(pre['min_mutations'] or {})}"
+        f" ({'config default' if pre.get('min_mutations_setting', 'default') == 'default' else 'option: ' + pre['min_mutations_setting']})",
         f"  Excluded by name:             {pre['exclude'] or 'none'}",
         f"  Opportunity normalization:    {pre['normalization']}",
         f"  Config:                       {pre['config']}" + (" (skipped)" if pre['skipped'] else ""),
@@ -136,6 +134,7 @@ def main():
     n.add_argument("--preprocessing_config", default=DEFAULT_PREPROCESSING)
     n.add_argument("--custom_thresholds", default="none")
     n.add_argument("--normalization", default="none")
+    n.add_argument("--min_mutations", default=None)
 
     s = sub.add_parser("summary")
     s.add_argument("--output_dir", required=True, help="results/<run name>/<TYPE>")
@@ -146,7 +145,7 @@ def main():
     args = parser.parse_args()
     if args.command == "name":
         print(run_name(args.mutation_type.upper(), args.preprocessing_config,
-                       args.custom_thresholds, args.normalization))
+                       args.custom_thresholds, args.normalization, args.min_mutations))
         return
 
     json_path = os.path.join(args.output_dir, "run_parameters.json")

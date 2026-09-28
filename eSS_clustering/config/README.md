@@ -19,16 +19,20 @@ Decides which samples are clustered, per mutation type:
 - `exclude`: sample-name patterns (case-insensitive substrings). For SBS it
   excludes the 10 mouse MEF samples that are not part of the atlas (Xenon,
   Xenon XPA-/-, Deoxynivalenol, Deoxynivalenol + Patulin).
-- `min_mutations` (SBS): the minimum total SBS count per species — 307 for
-  every species (the Poisson-resampling stability threshold: 99% of
-  simulations stable, over all samples). Every sample is
-  tested, and every species in `data/input/SBS` must have a value. To try a
-  different cutoff (e.g. per-species values), edit the numbers here; the next
-  run rebuilds the preprocessed data. See "Changing the minimum mutation
-  cutoff" in the main README.
+- `min_mutations` (SBS): the **default** minimum total SBS count per sample —
+  307 for every species (the Poisson-resampling stability threshold: 99% of
+  simulations stable, over all samples). Every sample is tested. It may be a
+  single number (every species) or `{species: number}`.
+- `min_mutations_per_species` (SBS): used only with the `per-species` option
+  of `run_pipeline.sh` (mouse 235, human 295, celegans 451, chicken 300,
+  rat 6354); every species in `data/input/SBS` must be listed.
+
+  Another cutoff for every species needs no edit here: `run_pipeline.sh ...
+  min=<N>`. See "Changing the minimum mutation cutoff" in the main README.
 
 For SBS, preprocessing also writes the normalized profiles. The cleaned data
-is cached in `data/input_cleaned/<TYPE>/` and rebuilt automatically when the
+is cached in `data/input_cleaned/<TYPE>/` (another cutoff or normalization
+gets its own folder, e.g. `SBS_min-per-species/`) and rebuilt automatically when the
 settings or input files change; removed samples are listed in
 `preprocessing_removed_samples.csv` there. See the main README's
 Preprocessing section.

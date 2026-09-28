@@ -6,7 +6,15 @@
 # Usage:
 #   bash run_pipeline.sh <mutation-type> <cosine-clust> <cosine-heatmap> [options...]
 #
+# Default: minimum 307 SBSs per sample for every species, no manual split,
+# no opportunity normalization (config/preprocessing.yaml).
+#
 # Options (any combination, in any order):
+#   min=<N>          minimum <N> mutations per sample for every species,
+#                    instead of the default 307
+#   per-species      per-species minimums (SBS: min_mutations_per_species in
+#                    config/preprocessing.yaml: mouse 235, human 295,
+#                    celegans 451, chicken 300, rat 6354)
 #   aai-split        SBS, for testing: add the manual AAI/DBP split (the cluster
 #                    containing the Aristolochic acid I / Dibenzo[a,l]pyrene
 #                    samples is re-split at cosine distance 0.095)
@@ -16,18 +24,21 @@
 #                    its own genome/technology opportunity
 #
 # Each run writes to results/<run name>/<MUTATION_TYPE>/, where the run name
-# records the settings, e.g. results/min307/SBS/ or
-# results/min307_wes-to-wgs/SBS/, and a run_parameters.txt listing
+# records the settings, e.g. results/min307/SBS/, results/min250/SBS/,
+# results/min-per-species/SBS/ or results/min307_wes-to-wgs/SBS/, and a
+# run_parameters.txt listing
 # every setting, input file hash, software version and the result counts.
 #
 # Examples:
 #   bash run_pipeline.sh SBS 0.9 0.85                    # default
+#   bash run_pipeline.sh SBS 0.9 0.85 min=250            # 250 for every species
+#   bash run_pipeline.sh SBS 0.9 0.85 per-species        # per-species cutoffs
 #   bash run_pipeline.sh SBS 0.9 0.85 aai-split          # testing: AAI/DBP split
 #   bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs
 #   bash run_pipeline.sh SBS 0.9 0.85 own-opportunity
 #   bash run_pipeline.sh DBS 0.9 0.85
+#   bash run_pipeline.sh SBS 0.9 0.85 per-species wes-to-wgs
 #
-# The minimum mutation count per sample is set in config/preprocessing.yaml.
 # For SBS, the last step decomposes the COSMIC signatures into the run's eSS
 # with SigProfilerAssignment (Step 8).
 
@@ -37,8 +48,10 @@ set -euo pipefail
 # Argument validation
 # ---------------------------------------------------------------------------
 if [ "$#" -lt 3 ]; then
-    echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap> [aai-split] [wes-to-wgs | own-opportunity]"
+    echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap> [min=<N> | per-species] [aai-split] [wes-to-wgs | own-opportunity]"
     echo "  mutation-type   : SBS | DBS | ID"
+    echo "  min=<N>         : optional; minimum <N> mutations per sample for every species (default 307)"
+    echo "  per-species     : optional; per-species minimums from config/preprocessing.yaml"
     echo "  aai-split       : optional, SBS testing only; add the manual AAI/DBP split"
     echo "  wes-to-wgs      : optional, SBS; WES -> WGS opportunity normalization"
     echo "  own-opportunity : optional, SBS; per-sample opportunity normalization"
@@ -49,8 +62,23 @@ fi
 
 CUSTOM_THRESHOLDS="none"
 NORMALIZATION="none"
+MIN_MUTATIONS=""        # empty: the default from config/preprocessing.yaml
 for opt in "${@:4}"; do
     case "$opt" in
+        min=*|per-species)
+            if [ -n "${MIN_MUTATIONS}" ]; then
+                echo "Error: choose only one of min=<N> / per-species"
+                exit 1
+            fi
+            if [ "$opt" == "per-species" ]; then
+                MIN_MUTATIONS="per-species"
+            else
+                MIN_MUTATIONS="${opt#min=}"
+                if [[ ! "${MIN_MUTATIONS}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+                    echo "Error: min=<N> needs a number (got '$opt')"
+                    exit 1
+                fi
+            fi ;;
         aai-split) CUSTOM_THRESHOLDS="aai-split" ;;
         wes-to-wgs|own-opportunity)
             if [ "${NORMALIZATION}" != "none" ]; then
@@ -58,7 +86,7 @@ for opt in "${@:4}"; do
                 exit 1
             fi
             NORMALIZATION="$opt" ;;
-        *) echo "Error: unknown option '$opt' (expected aai-split, wes-to-wgs or own-opportunity)"
+        *) echo "Error: unknown option '$opt' (expected min=<N>, per-species, aai-split, wes-to-wgs or own-opportunity)"
            exit 1 ;;
     esac
 done
@@ -86,12 +114,17 @@ REFERENCES_DIR="${REPO_ROOT}/data/references"
 
 CONFIG_DIR="${REPO_ROOT}/config"
 PIPELINE_DIR="${REPO_ROOT}/pipeline"
+MIN_MUTATIONS_ARGS=()
+if [ -n "${MIN_MUTATIONS}" ]; then
+    MIN_MUTATIONS_ARGS=(--min_mutations "${MIN_MUTATIONS}")
+fi
 # Output folder named by the run's settings, e.g. results/min307/
 RUN_NAME=$(python "${REPO_ROOT}/pipeline/run_info.py" name \
     --mutation_type "${MUTATION_TYPE}" \
     --preprocessing_config "${REPO_ROOT}/config/preprocessing.yaml" \
     --custom_thresholds "${CUSTOM_THRESHOLDS}" \
-    --normalization "${NORMALIZATION}")
+    --normalization "${NORMALIZATION}" \
+    ${MIN_MUTATIONS_ARGS[@]+"${MIN_MUTATIONS_ARGS[@]}"})
 RESULTS_ROOT="${REPO_ROOT}/results/${RUN_NAME}"
 
 # Validate that input directory exists
@@ -152,6 +185,7 @@ echo "Typed output: ${FILTER_DIR}"
 echo "Cosine (clust):   ${COSINE_THRES_CLUST}"
 echo "Cosine (heatmap): ${COSINE_THRES_HEATMAP}"
 echo "Run name:         ${RUN_NAME}"
+echo "Min mutations:    ${MIN_MUTATIONS:-default (config/preprocessing.yaml)}"
 echo "Custom thresholds: ${CUSTOM_THRESHOLDS}"
 echo "Normalization:    ${NORMALIZATION}"
 echo "========================================"
@@ -178,6 +212,9 @@ if [ "${CUSTOM_THRESHOLDS}" != "none" ]; then
     CLUSTERING_ARGS+=(--custom_thresholds "${CUSTOM_THRESHOLDS}")
 fi
 CLUSTERING_ARGS+=(--normalization "${NORMALIZATION}")
+if [ -n "${MIN_MUTATIONS}" ]; then
+    CLUSTERING_ARGS+=(--min_mutations "${MIN_MUTATIONS}")
+fi
 
 python "${PERFORM_CLUSTERING_PY}" "${CLUSTERING_ARGS[@]}"
 

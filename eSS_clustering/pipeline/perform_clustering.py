@@ -43,6 +43,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from utils.naming import remove_replicate_suffix
 from utils.mutation_type import get_config, call_plot_function
 from utils import opportunity_normalization
+from utils import min_mutations as cutoff_config
 
 
 # ==============================================================================
@@ -1043,20 +1044,20 @@ def preprocessing_stamp(input_dir, exclusion_patterns, case_sensitive,
 
 def determine_data_directory(base_input_dir, mutation_type, preprocessing_config_path,
                              force_preprocess=False, skip_preprocessing=False,
-                             normalization=None):
+                             normalization=None, min_mutations_setting=None):
     """
     Determine which data directory to use based on preprocessing config.
-    
+
+    min_mutations_setting : None (the config's min_mutations), a number for
+        every species, or 'per-species' (the config's
+        min_mutations_per_species); see utils/min_mutations.py.
+
     Returns
     -------
     str : Path to data directory to use (either original or cleaned)
     """
     original_dir = os.path.join(base_input_dir, mutation_type)
-    # Each normalization gets its own cache so runs with different settings
-    # don't overwrite each other's preprocessed data.
-    cleaned_dir = os.path.join(base_input_dir + '_cleaned',
-                               mutation_type + (f"_{normalization}" if normalization else ""))
-    
+
     print("\n" + "="*70)
     print("DATA DIRECTORY SELECTION")
     print("="*70)
@@ -1069,18 +1070,31 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
     
     # Load preprocessing config
     config = load_preprocessing_config(preprocessing_config_path)
-    
+
     if config is None:
+        if min_mutations_setting is not None:
+            raise ValueError(f"--min_mutations needs a preprocessing config "
+                             f"({preprocessing_config_path} not found).")
         print(f"✗ No preprocessing config found: {preprocessing_config_path}")
         print(f"✓ Using original data: {original_dir}")
         return original_dir
-    
+
     print(f"✓ Found preprocessing config: {preprocessing_config_path}")
-    
+
     # Exclusion patterns and per-species minimum mutation counts for this type
     type_config = config.get(mutation_type) or {}
     exclusion_patterns = type_config.get('exclude') or []
-    min_mutations = type_config.get('min_mutations') or {}
+    min_mutations = cutoff_config.resolve(type_config, min_mutations_setting)
+
+    # Each cutoff and normalization gets its own cache so runs with different
+    # settings don't overwrite each other's preprocessed data. The config's
+    # own cutoff uses data/input_cleaned/<TYPE>[_<normalization>]/.
+    cache_name = mutation_type
+    if min_mutations != cutoff_config.resolve(type_config):
+        cache_name += "_" + cutoff_config.label(min_mutations)
+    if normalization:
+        cache_name += "_" + normalization
+    cleaned_dir = os.path.join(base_input_dir + '_cleaned', cache_name)
 
     if normalization and not get_config(mutation_type).has_prenormalized_files:
         raise ValueError(f"Opportunity normalization is only available for SBS, not {mutation_type}.")
@@ -1091,7 +1105,8 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
         return original_dir
 
     print(f"✓ Exclusion patterns for {mutation_type}: {exclusion_patterns}")
-    print(f"✓ Minimum mutations for {mutation_type}: {min_mutations or 'none'}")
+    print(f"✓ Minimum mutations for {mutation_type}: {cutoff_config.describe(min_mutations)}"
+          + (f" (--min_mutations {min_mutations_setting})" if min_mutations_setting else " (config default)"))
     print(f"✓ Opportunity normalization: {normalization or 'none'}")
 
     case_sensitive = config.get('case_sensitive', False)
@@ -1185,7 +1200,7 @@ def git_state():
         return {"commit": None, "uncommitted_changes": None}
 
 
-def write_run_parameters(path, args, cfg, custom_thresholds, data_dir,
+def write_run_parameters(path, args, cfg, custom_thresholds, data_dir, min_mutations,
                          n_samples, n_main, n_small, n_singletons):
     """Record the settings, inputs, software and cluster counts of this run."""
     import datetime
@@ -1213,7 +1228,8 @@ def write_run_parameters(path, args, cfg, custom_thresholds, data_dir,
         "preprocessing": {
             "skipped": args.skip_preprocessing,
             "config": os.path.relpath(args.preprocessing_config, REPO_ROOT),
-            "min_mutations": pre_cfg.get("min_mutations"),
+            "min_mutations": min_mutations or None,
+            "min_mutations_setting": args.min_mutations or "default",
             "exclude": pre_cfg.get("exclude"),
             "normalization": args.normalization,
         },
@@ -1318,6 +1334,11 @@ def main():
                         help="Force reprocessing even if cleaned data exists.")
     parser.add_argument("--skip_preprocessing", action="store_true",
                         help="Skip preprocessing even if config exists.")
+    parser.add_argument("--min_mutations", default=None,
+                        help="Minimum total mutations per sample, instead of the config's "
+                             "min_mutations (default: 307 for every species, SBS): a number "
+                             "for every species, e.g. 250, or 'per-species' for the config's "
+                             "min_mutations_per_species.")
     parser.add_argument("--normalization", default="none",
                         choices=["none"] + list(opportunity_normalization.METHODS),
                         help="Optional trinucleotide-opportunity normalization "
@@ -1341,7 +1362,13 @@ def main():
         force_preprocess=args.force_preprocess,
         skip_preprocessing=args.skip_preprocessing,
         normalization=None if args.normalization == "none" else args.normalization,
+        min_mutations_setting=args.min_mutations,
     )
+    # The cutoffs preprocessing applied (checked again on the loaded data).
+    min_mutations = {}
+    if not args.skip_preprocessing:
+        pre_cfg = load_preprocessing_config(args.preprocessing_config) or {}
+        min_mutations = cutoff_config.resolve(pre_cfg.get(cfg.name), args.min_mutations)
 
     # ── Output directory namespaced by mutation type ─────────────────────────
     typed_output_dir = os.path.join(args.output_dir, cfg.name)
@@ -1356,6 +1383,7 @@ def main():
           f"(distance < {1 - args.cosine_similarity:.4f})")
     print(f"Custom thresholds: {custom_thresholds}")
     print(f"Averaging method: {args.averaging_method}")
+    print(f"Minimum mutations: {cutoff_config.describe(min_mutations)}")
     print(f"Opportunity normalization: {args.normalization}")
     print("=" * 60)
 
@@ -1366,10 +1394,7 @@ def main():
 
     check_loaded_data(counts_df, normalized_df,
                       profiles_are_proportions=args.normalization != "own-opportunity")
-    if not args.skip_preprocessing:
-        pre_cfg = load_preprocessing_config(args.preprocessing_config) or {}
-        check_min_mutations(counts_df, all_mappings,
-                            (pre_cfg.get(cfg.name) or {}).get('min_mutations'))
+    check_min_mutations(counts_df, all_mappings, min_mutations)
     counts_df     = filter_zero_columns(counts_df, typed_output_dir)
     normalized_df = normalized_df[counts_df.columns]
 
@@ -1456,7 +1481,7 @@ def main():
 
     write_run_parameters(
         os.path.join(typed_output_dir, RUN_PARAMETERS_FILE), args, cfg,
-        custom_thresholds, data_dir,
+        custom_thresholds, data_dir, min_mutations,
         n_samples=normalized_df.shape[1], n_main=len(main_clusters),
         n_small=len(small_clusters), n_singletons=len(true_singletons))
 

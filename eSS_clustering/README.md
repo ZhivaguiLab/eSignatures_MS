@@ -109,6 +109,18 @@ expected files.
 
 ## Running the pipeline
 
+> **Default analysis (SBS)** — `bash run_pipeline.sh SBS 0.9 0.85`
+>
+> - Minimum **307 SBSs per sample, for every species** (every sample tested)
+> - 10 mouse MEF samples excluded by name (Xenon, Deoxynivalenol)
+> - Clustering: cosine similarity **0.90**, average linkage; no manual split
+> - COSMIC match: max cosine similarity **≥ 0.85** (artifact signatures included)
+> - COSMIC decomposition: SigProfilerAssignment 1.1.4, novelty threshold **0.8**
+> - No opportunity normalization
+>
+> Output: `results/min307/SBS/` — 653 profiles, 48 eSS, 25/23 COSMIC
+> matched/unmatched. The tests and `tests/expected/` are for this default.
+
 ```bash
 # From eSS_clustering/ (run_pipeline.sh also works from any other directory)
 bash run_pipeline.sh SBS 0.9 0.85
@@ -116,10 +128,15 @@ bash run_pipeline.sh DBS 0.9 0.85
 bash run_pipeline.sh ID  0.9 0.85
 
 # Optional extras (SBS), in any combination:
+bash run_pipeline.sh SBS 0.9 0.85 min=250            # another cutoff, every species
+bash run_pipeline.sh SBS 0.9 0.85 per-species        # per-species cutoffs
 bash run_pipeline.sh SBS 0.9 0.85 aai-split          # testing: manual AAI/DBP split
 bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs         # opportunity normalization
 bash run_pipeline.sh SBS 0.9 0.85 own-opportunity    # opportunity normalization
 ```
+
+See [Changing the minimum mutation cutoff](#changing-the-minimum-mutation-cutoff)
+for `min=<N>` and `per-species`.
 
 The second argument is the cosine similarity threshold used for clustering
 (`--cosine_similarity`); the third is the threshold used when comparing
@@ -136,12 +153,15 @@ never overwrite each other:
 | Command | Output folder |
 |---|---|
 | `bash run_pipeline.sh SBS 0.9 0.85` | `results/min307/SBS/` |
+| `... min=250` | `results/min250/SBS/` |
+| `... per-species` | `results/min-per-species/SBS/` |
 | `... aai-split` | `results/min307_aai-split/SBS/` |
 | `... wes-to-wgs` | `results/min307_wes-to-wgs/SBS/` |
 | `... own-opportunity` | `results/min307_own-opportunity/SBS/` |
 
-`min307` is the minimum mutation count from `config/preprocessing.yaml`
-(`min-per-species` if the species differ, `nomin` if none is set). The
+`min307` is the minimum mutation count per sample (`min<N>` for `min=<N>`,
+`min-per-species` for `per-species`, `nomin` if none is set). Options
+combine, e.g. `per-species wes-to-wgs` → `results/min-per-species_wes-to-wgs/`. The
 clustering cosine threshold (0.9) is not in the name, to avoid confusing it
 with the COSMIC match threshold; it is recorded in `run_parameters.txt`. Runs
 that differ only in the clustering threshold write to the same folder, so
@@ -211,7 +231,7 @@ The SBS clustering uses:
 
 | Setting | Value | Where it's defined |
 |---|---|---|
-| Minimum mutations per sample | 307 SBSs for every species (Poisson-resampling stability threshold: 99% of simulations stable, over all samples), applied to every sample | `SBS: min_mutations` in `config/preprocessing.yaml` |
+| Minimum mutations per sample | 307 SBSs for every species (Poisson-resampling stability threshold: 99% of simulations stable, over all samples), applied to every sample | `SBS: min_mutations` in `config/preprocessing.yaml`; options `min=<N>` / `per-species` |
 | Excluded samples | 10 mouse MEF samples (Xenon, Deoxynivalenol) | `SBS: exclude` in `config/preprocessing.yaml` |
 | Cosine similarity threshold | `0.9` (distance `0.1`), average linkage | `--cosine_similarity` default in `perform_clustering.py` |
 | Per-cluster custom thresholds | none (the AAI/DBP split is an optional testing preset, see below) | `default_custom_thresholds` / `custom_threshold_presets` in `pipeline/utils/mutation_type.py` |
@@ -261,25 +281,49 @@ thresholds can be passed as `--custom_thresholds 'pattern:value,...'`.
 
 ### Changing the minimum mutation cutoff
 
-The cutoff is set per species in `config/preprocessing.yaml`
-(`SBS: min_mutations`) and applied during preprocessing; no code change is
-needed. The default is 307 for every species. To try something else, for
-example the per-species "SBS for 99% of simulations" thresholds from the
-Poisson resampling, edit the values:
+**Default: 307 SBSs per sample for every species.** Two options change it
+without editing any file:
+
+| Cutoff | Command | Output folder | Clustered profiles |
+|---|---|---|---|
+| **307 for every species (default)** | `bash run_pipeline.sh SBS 0.9 0.85` | `results/min307/` | 653 |
+| One number for every species | `bash run_pipeline.sh SBS 0.9 0.85 min=250` | `results/min250/` | depends on N |
+| Per species | `bash run_pipeline.sh SBS 0.9 0.85 per-species` | `results/min-per-species/` | 674 |
+
+With `perform_clustering.py` directly, use `--min_mutations 250` or
+`--min_mutations per-species`.
+
+The numbers live in `config/preprocessing.yaml`:
 
 ```yaml
 SBS:
-  min_mutations:
+  min_mutations: 307                # DEFAULT: one cutoff for every species
+  min_mutations_per_species:        # used only with the 'per-species' option
     mouse:    235
     human:    295
     celegans: 451
     chicken:  300
-    rat:      6354   # only 5 rat samples: this is the smallest rat sample
+    rat:      6354    # only 5 rat samples; equals the smallest, so all 5 are kept
 ```
 
-The next run rebuilds the preprocessed data automatically. Every species in
-`data/input/SBS` must have a value. The tests are written for the default
-(307) and will report the differences if you change it.
+307 is the Poisson-resampling stability threshold ("SBS for 99% of
+simulations") over all samples; the per-species values are the same threshold
+computed from each species' own samples. `per-species` gives 674 profiles,
+48 eSS, 15 small clusters, 129 singletons and 25/23 COSMIC matched/unmatched
+(checked by the tests against `tests/expected/SBS_cluster_membership_per_species.tsv`).
+
+Notes:
+
+- Each cutoff gets its own preprocessing cache (`data/input_cleaned/SBS/` for
+  the default, `SBS_min250/`, `SBS_min-per-species/`, …), so runs don't
+  overwrite each other's data. `min=307` is the default and uses the default
+  cache and folder.
+- The cutoffs used are listed in each run's `run_parameters.txt`
+  ("Minimum mutations per sample", with "config default" or the option).
+- To try other per-species values, edit `min_mutations_per_species` (every
+  species in `data/input/SBS` must be listed) and run with `per-species`.
+  Changing `min_mutations` itself changes the default, and the tests will
+  report the differences.
 
 ### Cluster numbering
 
@@ -335,6 +379,11 @@ cluster and eSS number). They also check:
   file equals an independent re-filter of the unfiltered file (and each
   normalized file equals its counts / total); every input sample is either kept
   or listed in the removed-samples log; a cached rerun is identical
+- the cutoff options: `min=<N>` applies N to every species (checked against an
+  independent re-filter), `min=307` is the default, and `per-species` gives
+  674 profiles and 48 / 15 / 129 with the membership in
+  `tests/expected/SBS_cluster_membership_per_species.tsv`; other cutoffs use
+  their own cache and leave the default's alone
 - with 307 for every species, preprocessing keeps exactly the samples in the
   earlier published `filtered_*_307.txt` inputs
   (`tests/expected/published_307_input_samples.tsv`), except the 18 C. elegans
@@ -423,9 +472,10 @@ samples that should not be included in the analysis. For SBS it is part of the
 analysis: `data/input/SBS` holds the **unfiltered** profiles, and preprocessing
 
 1. removes the 10 excluded mouse MEF samples (by name), and
-2. removes every sample whose total SBS count is below its species' cutoff
-   (`min_mutations`: 307 SBSs for every species, the Poisson-resampling
-   stability threshold), and
+2. removes every sample whose total SBS count is below the cutoff
+   (default `min_mutations`: 307 SBSs for every species, the Poisson-resampling
+   stability threshold; see
+   [Changing the minimum mutation cutoff](#changing-the-minimum-mutation-cutoff)), and
 3. writes the normalized profiles (each sample's counts divided by its total).
 
 Every sample is tested against its cutoff, whatever its name. (The notebook
@@ -448,12 +498,10 @@ SBS:
   exclude:
     - Xenon
     - Deoxynivalenol
-  min_mutations:      # per species; species is detected from the file name
-    mouse:    307
-    human:    307
-    celegans: 307
-    chicken:  307
-    rat:      307
+  min_mutations: 307          # one number for every species, or {species: number}
+  min_mutations_per_species:  # only with the 'per-species' option
+    mouse: 235
+    ...
 DBS:
   exclude:
     - hTumor
@@ -476,9 +524,9 @@ The pipeline will:
 - If no patterns or cutoffs defined → use original data
 
 Removed samples, with the reason and their total mutation count, are listed in
-`data/input_cleaned/<TYPE>/preprocessing_removed_samples.csv`. If
-`min_mutations` is set, every species in the input folder must have a cutoff;
-a missing one stops the run.
+`data/input_cleaned/<TYPE>/preprocessing_removed_samples.csv`. If the
+cutoffs are given per species, every species in the input folder must have
+one; a missing one stops the run.
 
 ### How It Works
 
