@@ -33,12 +33,14 @@ starting point for the whole SBS analysis.
 | **Total** | **1,482** | | **653** | |
 
 Sources are the files the earlier filtering notebook (`filter_based_on_tmb.ipynb`)
-read, copied unchanged. All are background-subtracted profiles except the 21
-C. elegans CX-5461 samples, which are raw SigProfilerMatrixGenerator counts;
-18 of them are below 307 and removed, leaving UVA14, UVA17 and UVA18.
+read, copied unchanged; all are background-subtracted. The 21 C. elegans
+CX-5461 samples come from a separate file (`CX5461_UVA_c-elegans.SBS96.all`)
+and have whole-number counts, unlike the other profiles; 18 of them are below
+307 and removed, leaving UVA14, UVA17 and UVA18.
 
-The cutoff is 307 SBSs for every species, the Poisson-resampling stability
-threshold. It is the same threshold as the earlier inputs; the difference is
+The cutoff is 307 SBSs for every species: the Poisson-resampling stability
+threshold, i.e. the SBS count at which 99% of simulations are stable, over all
+samples. It is the same threshold as the earlier inputs; the difference is
 that every sample is now tested.
 
 The earlier inputs (`filtered_<species>_307.txt`, one cutoff of 307 for all

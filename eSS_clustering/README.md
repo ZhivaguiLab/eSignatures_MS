@@ -211,7 +211,7 @@ The SBS clustering uses:
 
 | Setting | Value | Where it's defined |
 |---|---|---|
-| Minimum mutations per sample | 307 SBSs for every species (Poisson-resampling stability threshold), applied to every sample | `SBS: min_mutations` in `config/preprocessing.yaml` |
+| Minimum mutations per sample | 307 SBSs for every species (Poisson-resampling stability threshold: 99% of simulations stable, over all samples), applied to every sample | `SBS: min_mutations` in `config/preprocessing.yaml` |
 | Excluded samples | 10 mouse MEF samples (Xenon, Deoxynivalenol) | `SBS: exclude` in `config/preprocessing.yaml` |
 | Cosine similarity threshold | `0.9` (distance `0.1`), average linkage | `--cosine_similarity` default in `perform_clustering.py` |
 | Per-cluster custom thresholds | none (the AAI/DBP split is an optional testing preset, see below) | `default_custom_thresholds` / `custom_threshold_presets` in `pipeline/utils/mutation_type.py` |

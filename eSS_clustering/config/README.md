@@ -20,7 +20,8 @@ Decides which samples are clustered, per mutation type:
   excludes the 10 mouse MEF samples that are not part of the atlas (Xenon,
   Xenon XPA-/-, Deoxynivalenol, Deoxynivalenol + Patulin).
 - `min_mutations` (SBS): the minimum total SBS count per species — 307 for
-  every species (the Poisson-resampling stability threshold). Every sample is
+  every species (the Poisson-resampling stability threshold: 99% of
+  simulations stable, over all samples). Every sample is
   tested, and every species in `data/input/SBS` must have a value. To try a
   different cutoff (e.g. per-species values), edit the numbers here; the next
   run rebuilds the preprocessed data. See "Changing the minimum mutation
