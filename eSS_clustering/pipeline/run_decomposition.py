@@ -13,12 +13,12 @@ not depend on the samples; only the activities do.
 
 Usage
 -----
-    # eSS from results/min307_cos0.90/SBS/; COSMIC is also used as the samples
-    python pipeline/run_decomposition.py --run_dir results/min307_cos0.90/SBS
+    # eSS from results/min307/SBS/; COSMIC is also used as the samples
+    python pipeline/run_decomposition.py --run_dir results/min307/SBS
 
     # assign to the samples clustered in that run, or any other matrix;
     # a different novelty threshold
-    python pipeline/run_decomposition.py --run_dir results/min307_cos0.90/SBS \\
+    python pipeline/run_decomposition.py --run_dir results/min307/SBS \\
         --samples clustered --threshold 0.85
 
 Output (default <run_dir>/decomposition/):
@@ -109,7 +109,7 @@ def summarize(output_dir, threshold):
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--run_dir", help="Pipeline output for one run, e.g. results/min307_cos0.90/SBS")
+    parser.add_argument("--run_dir", help="Pipeline output for one run, e.g. results/min307/SBS")
     parser.add_argument("--esignatures", help="eSS profiles TSV (default: the run's main-cluster profiles)")
     parser.add_argument("--cosmic", default=DEFAULT_COSMIC, help="COSMIC signatures to decompose")
     parser.add_argument("--samples", default="cosmic",

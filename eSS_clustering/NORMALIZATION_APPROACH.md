@@ -18,9 +18,9 @@ against the default run. Neither is the default; choosing one is a decision
 for the manuscript authors, informed by the results below.
 
 ```bash
-bash run_pipeline.sh SBS 0.9 0.85                   # default → results/min307_cos0.90/SBS/
-bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs        # Method 1 → results/min307_cos0.90_wes-to-wgs/SBS/
-bash run_pipeline.sh SBS 0.9 0.85 own-opportunity   # Method 2 → results/min307_cos0.90_own-opportunity/SBS/
+bash run_pipeline.sh SBS 0.9 0.85                   # default → results/min307/SBS/
+bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs        # Method 1 → results/min307_wes-to-wgs/SBS/
+bash run_pipeline.sh SBS 0.9 0.85 own-opportunity   # Method 2 → results/min307_own-opportunity/SBS/
 ```
 
 **Code:** [pipeline/utils/opportunity_normalization.py](pipeline/utils/opportunity_normalization.py)
@@ -125,7 +125,7 @@ suggested follow-up.
   filter.
 - Every corrected profile sums to 1.
 - Both ran through the full pipeline and were compared against the default
-  run with the same settings otherwise (`results/min307_cos0.90/SBS/`); each
+  run with the same settings otherwise (`results/min307/SBS/`); each
   run's settings and input hashes are in its `run_parameters.txt`.
 
 ## Status and open items

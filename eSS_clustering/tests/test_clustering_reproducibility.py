@@ -630,11 +630,11 @@ class OpportunityNormalizationTest(unittest.TestCase):
 class RunNameTest(unittest.TestCase):
 
     def test_run_names(self):
-        name = lambda **k: run_info.run_name("SBS", 0.9, PREPROCESSING_CONFIG, **k)
-        self.assertEqual(name(), "min307_cos0.90")
-        self.assertEqual(name(custom_thresholds="aai-split"), "min307_cos0.90_aai-split")
-        self.assertEqual(name(normalization="wes-to-wgs"), "min307_cos0.90_wes-to-wgs")
-        self.assertEqual(name(normalization="own-opportunity"), "min307_cos0.90_own-opportunity")
+        name = lambda **k: run_info.run_name("SBS", PREPROCESSING_CONFIG, **k)
+        self.assertEqual(name(), "min307")
+        self.assertEqual(name(custom_thresholds="aai-split"), "min307_aai-split")
+        self.assertEqual(name(normalization="wes-to-wgs"), "min307_wes-to-wgs")
+        self.assertEqual(name(normalization="own-opportunity"), "min307_own-opportunity")
 
 
 if __name__ == "__main__":

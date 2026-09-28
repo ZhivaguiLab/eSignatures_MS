@@ -1,7 +1,7 @@
 # `wes-to-wgs` normalization vs the default run
 
-**Runs compared:** `results/min307_cos0.90/SBS/` (default) and
-`results/min307_cos0.90_wes-to-wgs/SBS/`, made with
+**Runs compared:** `results/min307/SBS/` (default) and
+`results/min307_wes-to-wgs/SBS/`, made with
 
 ```bash
 bash run_pipeline.sh SBS 0.9 0.85

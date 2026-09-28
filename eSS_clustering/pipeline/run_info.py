@@ -2,11 +2,16 @@
 """
 run_info.py — run naming and the run parameter summary for run_pipeline.sh.
 
-    python pipeline/run_info.py name --mutation_type SBS --cosine_similarity 0.9 \\
+    python pipeline/run_info.py name --mutation_type SBS \\
         [--custom_thresholds aai-split] [--normalization wes-to-wgs]
-        → prints e.g. "min307_cos0.90" or "min307_cos0.90_aai-split_wes-to-wgs"
+        → prints e.g. "min307" or "min307_aai-split_wes-to-wgs"
 
-    python pipeline/run_info.py summary --output_dir results/min307_cos0.90/SBS \\
+The name records the minimum mutation count and the optional extras. It does
+not include the clustering cosine threshold (0.9 by default), which is
+recorded in run_parameters.txt; runs that differ only in that threshold would
+share a folder.
+
+    python pipeline/run_info.py summary --output_dir results/min307/SBS \\
         --cosmic_profiles data/references/COSMIC_v3.6_SBS_GRCh38.txt --cosmic_threshold 0.85
         → adds the COSMIC comparison to run_parameters.json and writes a
           readable run_parameters.txt next to it
@@ -25,7 +30,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_PREPROCESSING = os.path.join(REPO_ROOT, "config", "preprocessing.yaml")
 
 
-def run_name(mutation_type, cosine_similarity, preprocessing_config=DEFAULT_PREPROCESSING,
+def run_name(mutation_type, preprocessing_config=DEFAULT_PREPROCESSING,
              custom_thresholds="none", normalization="none"):
     with open(preprocessing_config) as f:
         config = yaml.safe_load(f) or {}
@@ -37,7 +42,7 @@ def run_name(mutation_type, cosine_similarity, preprocessing_config=DEFAULT_PREP
         min_label = f"min{values.pop():g}"
     else:
         min_label = "min-per-species"
-    parts = [min_label, f"cos{cosine_similarity:.2f}"]
+    parts = [min_label]
     if custom_thresholds and custom_thresholds != "none":
         parts.append(custom_thresholds if ":" not in custom_thresholds else "custom")
     if normalization and normalization != "none":
@@ -86,7 +91,7 @@ def readable(record):
         f"  Config:                       {pre['config']}" + (" (skipped)" if pre['skipped'] else ""),
         "",
         "CLUSTERING",
-        f"  Cosine similarity threshold:  {clu['cosine_similarity']} (distance {1 - clu['cosine_similarity']:.4g}), {clu['linkage']} linkage",
+        f"  Clustering cosine similarity: {clu['cosine_similarity']} (distance {1 - clu['cosine_similarity']:.4g}), {clu['linkage']} linkage",
         f"  Custom thresholds:            {clu['custom_thresholds'] or 'none'}",
         f"  Main cluster:                 >= {clu['main_cluster_min_samples']} samples",
         f"  Consensus profile:            {clu['averaging_method']}",
@@ -128,7 +133,6 @@ def main():
 
     n = sub.add_parser("name")
     n.add_argument("--mutation_type", required=True)
-    n.add_argument("--cosine_similarity", type=float, required=True)
     n.add_argument("--preprocessing_config", default=DEFAULT_PREPROCESSING)
     n.add_argument("--custom_thresholds", default="none")
     n.add_argument("--normalization", default="none")
@@ -141,8 +145,8 @@ def main():
 
     args = parser.parse_args()
     if args.command == "name":
-        print(run_name(args.mutation_type.upper(), args.cosine_similarity,
-                       args.preprocessing_config, args.custom_thresholds, args.normalization))
+        print(run_name(args.mutation_type.upper(), args.preprocessing_config,
+                       args.custom_thresholds, args.normalization))
         return
 
     json_path = os.path.join(args.output_dir, "run_parameters.json")

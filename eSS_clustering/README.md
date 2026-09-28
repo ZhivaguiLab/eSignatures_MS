@@ -128,19 +128,22 @@ comparison — adjust for your own analysis as needed.
 ### Output folders and run parameters
 
 Each run writes to `results/<run name>/<MUTATION_TYPE>/`, where the run name
-records the settings, so runs with different settings never overwrite each
-other:
+records the minimum mutation count and the optional extras, so those runs
+never overwrite each other:
 
 | Command | Output folder |
 |---|---|
-| `bash run_pipeline.sh SBS 0.9 0.85` | `results/min307_cos0.90/SBS/` |
-| `... aai-split` | `results/min307_cos0.90_aai-split/SBS/` |
-| `... wes-to-wgs` | `results/min307_cos0.90_wes-to-wgs/SBS/` |
-| `... own-opportunity` | `results/min307_cos0.90_own-opportunity/SBS/` |
+| `bash run_pipeline.sh SBS 0.9 0.85` | `results/min307/SBS/` |
+| `... aai-split` | `results/min307_aai-split/SBS/` |
+| `... wes-to-wgs` | `results/min307_wes-to-wgs/SBS/` |
+| `... own-opportunity` | `results/min307_own-opportunity/SBS/` |
 
 `min307` is the minimum mutation count from `config/preprocessing.yaml`
-(`min-per-species` if the species differ, `nomin` if none is set) and
-`cos0.90` the clustering threshold.
+(`min-per-species` if the species differ, `nomin` if none is set). The
+clustering cosine threshold (0.9) is not in the name, to avoid confusing it
+with the COSMIC match threshold; it is recorded in `run_parameters.txt`. Runs
+that differ only in the clustering threshold write to the same folder, so
+move or rename a run folder before rerunning with another threshold.
 
 Every run folder has **`run_parameters.txt`** (and the same in
 `run_parameters.json`) listing:
@@ -191,9 +194,9 @@ Settings (`pipeline/run_decomposition.py`):
 To rerun it on its own, or with other choices:
 
 ```bash
-python pipeline/run_decomposition.py --run_dir results/min307_cos0.90/SBS
-python pipeline/run_decomposition.py --run_dir results/min307_cos0.90/SBS \
-    --threshold 0.85 --samples clustered --output results/min307_cos0.90/SBS/decomposition_085
+python pipeline/run_decomposition.py --run_dir results/min307/SBS
+python pipeline/run_decomposition.py --run_dir results/min307/SBS \
+    --threshold 0.85 --samples clustered --output results/min307/SBS/decomposition_085
 ```
 
 `--samples clustered` assigns the samples clustered in that run instead of
@@ -236,8 +239,8 @@ is not part of the default analysis; use it to test how that split changes the
 results:
 
 ```bash
-bash run_pipeline.sh SBS 0.9 0.85 aai-split        # → results/min307_cos0.90_aai-split/SBS/
-python pipeline/perform_clustering.py --mutation_type SBS --output_dir results/min307_cos0.90_aai-split \
+bash run_pipeline.sh SBS 0.9 0.85 aai-split        # → results/min307_aai-split/SBS/
+python pipeline/perform_clustering.py --mutation_type SBS --output_dir results/min307_aai-split \
     --custom_thresholds aai-split
 ```
 
@@ -736,8 +739,8 @@ correctly (flexbox reflows row by row; CSS Grid does not paginate reliably and
 will scatter columns across separate pages).
 
 ```bash
-HTML_PATH="results/min307_cos0.90/SBS/reports/cluster_summary.html"   # input — swap for the report/run you're rendering
-PDF_PATH="results/min307_cos0.90/SBS/reports/cluster_summary.pdf"      # output
+HTML_PATH="results/min307/SBS/reports/cluster_summary.html"   # input — swap for the report/run you're rendering
+PDF_PATH="results/min307/SBS/reports/cluster_summary.pdf"      # output
 
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --headless --disable-gpu --no-sandbox \
@@ -788,8 +791,8 @@ Neither is part of the default run; each is an option that is applied in
 preprocessing, after the 307 filter:
 
 ```bash
-bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs        # → results/min307_cos0.90_wes-to-wgs/SBS/
-bash run_pipeline.sh SBS 0.9 0.85 own-opportunity   # → results/min307_cos0.90_own-opportunity/SBS/
+bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs        # → results/min307_wes-to-wgs/SBS/
+bash run_pipeline.sh SBS 0.9 0.85 own-opportunity   # → results/min307_own-opportunity/SBS/
 ```
 
 - **`wes-to-wgs`**: human and mouse WES samples are rescaled onto their own

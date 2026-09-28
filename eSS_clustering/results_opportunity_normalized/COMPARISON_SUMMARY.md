@@ -1,7 +1,7 @@
 # `own-opportunity` normalization vs the default run
 
-**Runs compared:** `results/min307_cos0.90/SBS/` (default) and
-`results/min307_cos0.90_own-opportunity/SBS/`, made with
+**Runs compared:** `results/min307/SBS/` (default) and
+`results/min307_own-opportunity/SBS/`, made with
 
 ```bash
 bash run_pipeline.sh SBS 0.9 0.85

@@ -33,7 +33,7 @@ python -m unittest discover tests   # checks the run reproduces the expected clu
 ```
 
 Results go to `eSS_clustering/results/<run name>/SBS/` (e.g.
-`results/min307_cos0.90/SBS/`), with a `run_parameters.txt` listing every
+`results/min307/SBS/`), with a `run_parameters.txt` listing every
 setting, input file hash and software version. The last step decomposes each
 COSMIC v3.6 signature into the eSS with SigProfilerAssignment 1.1.4
 (`decomposition/`; novelty threshold 0.8; 50 of 101 COSMIC signatures

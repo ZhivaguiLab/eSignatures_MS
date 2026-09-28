@@ -16,8 +16,8 @@
 #                    its own genome/technology opportunity
 #
 # Each run writes to results/<run name>/<MUTATION_TYPE>/, where the run name
-# records the settings, e.g. results/min307_cos0.90/SBS/ or
-# results/min307_cos0.90_wes-to-wgs/SBS/, and a run_parameters.txt listing
+# records the settings, e.g. results/min307/SBS/ or
+# results/min307_wes-to-wgs/SBS/, and a run_parameters.txt listing
 # every setting, input file hash, software version and the result counts.
 #
 # Examples:
@@ -86,10 +86,9 @@ REFERENCES_DIR="${REPO_ROOT}/data/references"
 
 CONFIG_DIR="${REPO_ROOT}/config"
 PIPELINE_DIR="${REPO_ROOT}/pipeline"
-# Output folder named by the run's settings, e.g. results/min307_cos0.90/
+# Output folder named by the run's settings, e.g. results/min307/
 RUN_NAME=$(python "${REPO_ROOT}/pipeline/run_info.py" name \
     --mutation_type "${MUTATION_TYPE}" \
-    --cosine_similarity "${COSINE_THRES_CLUST}" \
     --preprocessing_config "${REPO_ROOT}/config/preprocessing.yaml" \
     --custom_thresholds "${CUSTOM_THRESHOLDS}" \
     --normalization "${NORMALIZATION}")
