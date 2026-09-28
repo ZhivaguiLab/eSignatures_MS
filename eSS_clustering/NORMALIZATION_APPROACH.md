@@ -60,7 +60,7 @@ genome-to-genome/exome signature-crossover method
 sample profiles instead of COSMIC reference signatures.
 
 **Option:** `wes-to-wgs`
-**Results:** [results_wes_to_wgs_normalized/COMPARISON_SUMMARY.md](results_wes_to_wgs_normalized/COMPARISON_SUMMARY.md)
+**Results:** [docs/normalization/wes-to-wgs_vs_default.md](docs/normalization/wes-to-wgs_vs_default.md)
 
 **Headline result** (653 samples, ≥307 SBSs, no custom thresholds): main
 clusters 48→50, COSMIC matches essentially unchanged (25/48→26/50); 45 of 48
@@ -97,7 +97,7 @@ C. elegans the moment their opportunity tables exist — no new design
 decision needed, just the missing input data.
 
 **Option:** `own-opportunity`
-**Results:** [results_opportunity_normalized/COMPARISON_SUMMARY.md](results_opportunity_normalized/COMPARISON_SUMMARY.md)
+**Results:** [docs/normalization/own-opportunity_vs_default.md](docs/normalization/own-opportunity_vs_default.md)
 
 **Headline result** (653 samples, ≥307 SBSs, no custom thresholds): main
 clusters 48→52, only 22 of 48 eSS keep identical members, and COSMIC matches

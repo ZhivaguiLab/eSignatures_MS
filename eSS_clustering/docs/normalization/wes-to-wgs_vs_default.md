@@ -15,7 +15,7 @@ included). The only difference: 152 WES samples (9 human, 143 mouse) have
 their counts moved onto their own genome's WGS trinucleotide basis (GRCh38,
 mm10) before clustering; each sample keeps its total. All WGS samples and all
 rat, chicken and C. elegans samples are unchanged. See
-[NORMALIZATION_APPROACH.md](../NORMALIZATION_APPROACH.md).
+[NORMALIZATION_APPROACH.md](../../NORMALIZATION_APPROACH.md).
 
 ## Headline numbers
 

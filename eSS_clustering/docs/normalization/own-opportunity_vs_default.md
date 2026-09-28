@@ -16,7 +16,7 @@ samples, WGS and WES) has its profile divided by its own genome and
 technology trinucleotide opportunity (GRCh38, mm10, rn7; genome or exome) and
 renormalized. Counts are unchanged. Chicken and C. elegans have no opportunity
 tables and keep their plain profiles. See
-[NORMALIZATION_APPROACH.md](../NORMALIZATION_APPROACH.md).
+[NORMALIZATION_APPROACH.md](../../NORMALIZATION_APPROACH.md).
 
 ## Headline numbers
 

@@ -55,7 +55,7 @@ eSS_clustering/
     expected/main_SBS_eSS_profiles.tsv        ← earlier eSS consensus profiles on main
 
   NORMALIZATION_APPROACH.md   ← experimental normalization methods and results
-  results_*_normalized/       ← comparison summaries for those methods
+  docs/normalization/         ← normalization runs compared with the default run
   requirements.txt            ← direct dependencies (pinned)
   requirements-lock.txt       ← full locked environment for exact reproduction
 ```
