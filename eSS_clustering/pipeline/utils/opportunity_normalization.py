@@ -130,6 +130,40 @@ def own_opportunity(counts, species, context_dir=DEFAULT_CONTEXT_DIR):
     return counts, normalized, summary
 
 
+SPECIES_PATTERNS = {
+    'mouse':    re.compile(r'mouse', re.I),
+    'rat':      re.compile(r'(?<![a-z])rat(?![a-z])', re.I),
+    'chicken':  re.compile(r'chicken', re.I),
+    'human':    re.compile(r'human', re.I),
+    'celegans': re.compile(r'c[._]?elegans?', re.I),
+}   # same rules as perform_clustering.SPECIES_PATTERNS
+
+
+def normalize_directory(method, input_dir, output_dir, context_dir=DEFAULT_CONTEXT_DIR):
+    """
+    Apply a method to every species count file in input_dir (a preprocessed
+    folder such as data/input_cleaned/SBS) and write the counts and
+    normalized_<name>.tsv profiles to output_dir, in the layout the pipeline
+    reads. Normalized files already in input_dir are replaced.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    files = sorted(f for f in os.listdir(input_dir)
+                   if f.endswith((".txt", ".tsv")) and "normaliz" not in f.lower())
+    if not files:
+        raise FileNotFoundError(f"No count files in {input_dir}")
+    for name in files:
+        species = next((k for k, pat in SPECIES_PATTERNS.items() if pat.search(name)), None)
+        if species is None:
+            print(f"  Skipping {name}: species not recognised")
+            continue
+        counts = pd.read_csv(os.path.join(input_dir, name), sep="\t", index_col=0)
+        counts, normalized, summary = normalize(method, counts, species, context_dir)
+        counts.to_csv(os.path.join(output_dir, name), sep="\t")
+        normalized.to_csv(os.path.join(output_dir, f"normalized_{os.path.splitext(name)[0]}.tsv"),
+                          sep="\t")
+        print(f"  {summary}")
+
+
 def normalize(method, counts, species, context_dir=DEFAULT_CONTEXT_DIR):
     if method == "wes-to-wgs":
         return wes_to_wgs(counts, species, context_dir)

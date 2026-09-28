@@ -1171,12 +1171,14 @@ RUN_PARAMETERS_FILE = "run_parameters.json"
 
 
 def git_state():
-    """Commit of the code that ran, and whether it had uncommitted changes."""
+    """Commit of the code that ran, and whether tracked files had uncommitted changes."""
     import subprocess
     try:
         commit = subprocess.run(["git", "-C", REPO_ROOT, "rev-parse", "HEAD"],
                                 capture_output=True, text=True, check=True).stdout.strip()
-        dirty = subprocess.run(["git", "-C", REPO_ROOT, "status", "--porcelain", "--", "."],
+        # Untracked files (e.g. scratch folders) don't change the code that ran.
+        dirty = subprocess.run(["git", "-C", REPO_ROOT, "status", "--porcelain",
+                                "--untracked-files=no", "--", "."],
                                capture_output=True, text=True, check=True).stdout.strip()
         return {"commit": commit, "uncommitted_changes": bool(dirty)}
     except (OSError, subprocess.CalledProcessError):

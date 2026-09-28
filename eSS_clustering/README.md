@@ -26,6 +26,8 @@ eSS_clustering/
     run_info.py                      ← run folder naming + run_parameters.txt (Step 7)
     run_decomposition.py             ← COSMIC decomposition into eSS, SigProfilerAssignment (Step 8)
     utils/opportunity_normalization.py ← optional wes-to-wgs / own-opportunity normalization
+    normalize_wes_to_wgs.py          ← standalone: wes-to-wgs copy of a preprocessed folder
+    normalize_by_own_opportunity.py  ← standalone: own-opportunity copy of a preprocessed folder
     build_translation_verification_matrices.py ← before/after check for wes-to-wgs
     archive/                  ← superseded scripts, kept for reference
 
@@ -156,7 +158,8 @@ Every run folder has **`run_parameters.txt`** (and the same in
 - results: samples clustered, main / small clusters, singletons, COSMIC
   matched / unmatched
 - SHA-256 of every input file, opportunity table and COSMIC reference
-- the git commit the code ran from (and whether it had uncommitted changes),
+- the git commit the code ran from (and whether tracked files had uncommitted
+  changes; untracked files are ignored),
   the date, and Python/package versions
 
 For SBS, the run folder also has `decomposition/` (Step 8, below), with its

@@ -25,6 +25,10 @@ bash run_pipeline.sh SBS 0.9 0.85 own-opportunity   # Method 2 → results/min30
 
 **Code:** [pipeline/utils/opportunity_normalization.py](pipeline/utils/opportunity_normalization.py)
 (both methods), called from preprocessing in `pipeline/perform_clustering.py`.
+The standalone scripts `pipeline/normalize_wes_to_wgs.py` and
+`pipeline/normalize_by_own_opportunity.py` use the same code to write a
+normalized copy of a preprocessed folder (e.g. `data/input_cleaned/SBS/`);
+their output is identical to what the pipeline options produce.
 **Opportunity tables:** `data/references/context_distributions/`
 (SigProfilerMatrixGenerator 1.3.6; GRCh38, mm10, rn7, genome and exome).
 
