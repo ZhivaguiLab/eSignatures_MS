@@ -48,6 +48,7 @@ except ImportError:
     sys.modules["pdf2image"] = types.SimpleNamespace(convert_from_path=None)
 
 import perform_clustering as pc  # noqa: E402
+import run_info  # noqa: E402
 from utils.mutation_type import get_config  # noqa: E402
 
 EXPECTED_MEMBERSHIP = os.path.join(REPO_ROOT, "tests", "expected",
@@ -531,6 +532,109 @@ class MatchesMainAt307Test(unittest.TestCase):
                 (cosmic.values / np.linalg.norm(cosmic.values, axis=0))).max(axis=1)
         self.assertEqual((int((best >= COSMIC_MATCH_THRESHOLD).sum()),
                           int((best < COSMIC_MATCH_THRESHOLD).sum())), (26, 23))
+
+
+
+CONTEXT_DIR = os.path.join(REPO_ROOT, "data", "references", "context_distributions")
+
+
+def opportunity(genome, exome, contexts):
+    """Independent re-implementation: per-context relative trinucleotide frequency."""
+    df = pd.read_csv(os.path.join(CONTEXT_DIR, f"context_counts_{genome}_96{'_exome' if exome else ''}.csv"),
+                     index_col=0).drop(columns=["Y"], errors="ignore")
+    freq = df.sum(axis=1) / df.sum(axis=1).sum()
+    return np.array([freq[c[0] + c[2] + c[6]] for c in contexts])   # "A[C>A]G" -> "ACG"
+
+
+class OpportunityNormalizationTest(unittest.TestCase):
+    """The optional wes-to-wgs / own-opportunity normalization in preprocessing."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="ess_clustering_norm_")
+        base = os.path.join(cls.tmp, "input")
+        shutil.copytree(os.path.join(REPO_ROOT, "data", "input", "SBS"), os.path.join(base, "SBS"))
+        cls.plain = pc.determine_data_directory(base, "SBS", PREPROCESSING_CONFIG)
+        cls.dirs = {m: pc.determine_data_directory(base, "SBS", PREPROCESSING_CONFIG, normalization=m)
+                    for m in ("wes-to-wgs", "own-opportunity")}
+        cls.species = ["celegans", "chicken", "human", "mouse", "rat"]
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def _read(self, d, sp, normalized=False):
+        name = f"normalized_{sp}_SBS96.tsv" if normalized else f"{sp}_SBS96.txt"
+        return pd.read_csv(os.path.join(d, name), sep="\t", index_col=0)
+
+    def test_separate_caches_same_samples(self):
+        self.assertEqual(len({self.plain, *self.dirs.values()}), 3)
+        for d in self.dirs.values():
+            for sp in self.species:
+                self.assertEqual(list(self._read(d, sp).columns), list(self._read(self.plain, sp).columns))
+
+    def test_wes_to_wgs_matches_independent_calculation(self):
+        d = self.dirs["wes-to-wgs"]
+        builds = {"human": "GRCh38", "mouse": "mm10"}
+        for sp in self.species:
+            before, after = self._read(self.plain, sp), self._read(d, sp)
+            np.testing.assert_allclose(after.sum().values, before.sum().values, rtol=1e-12)
+            for col in before.columns:
+                if sp in builds and "exome" in col.lower():
+                    ratio = (opportunity(builds[sp], False, before.index) /
+                             opportunity(builds[sp], True, before.index))
+                    expected = before[col].values * ratio
+                    expected = expected / expected.sum() * before[col].sum()
+                else:
+                    expected = before[col].values
+                np.testing.assert_allclose(after[col].values, expected, rtol=1e-10, err_msg=f"{sp} {col}")
+            norm = self._read(d, sp, normalized=True)
+            np.testing.assert_allclose(norm.values, (after / after.sum()).values, atol=1e-15)
+
+    def test_own_opportunity_matches_independent_calculation(self):
+        d = self.dirs["own-opportunity"]
+        builds = {"human": "GRCh38", "mouse": "mm10", "rat": "rn7"}
+        for sp in self.species:
+            before = self._read(self.plain, sp)
+            np.testing.assert_array_equal(self._read(d, sp).values, before.values)   # counts unchanged
+            norm = self._read(d, sp, normalized=True)
+            for col in before.columns:
+                tech = "WES" if "exome" in col.lower() else "WGS" if "genome" in col.lower() else None
+                if sp in builds and tech:
+                    rate = before[col].values / opportunity(builds[sp], tech == "WES", before.index)
+                    expected = rate / rate.sum()
+                else:
+                    expected = before[col].values / before[col].sum()
+                np.testing.assert_allclose(norm[col].values, expected, rtol=1e-10, err_msg=f"{sp} {col}")
+
+    def test_uncorrected_species_unchanged(self):
+        for d in self.dirs.values():
+            for sp in ["celegans", "chicken"]:
+                np.testing.assert_allclose(self._read(d, sp, True).values,
+                                           self._read(self.plain, sp, True).values, atol=1e-15)
+
+    def test_own_opportunity_profiles_pass_profile_check(self):
+        d = self.dirs["own-opportunity"]
+        counts, norm, _ = pc.load_data(d, get_config("SBS"),
+                                       os.path.join(REPO_ROOT, "config", "sample_mapping.tsv"))
+        with self.assertRaises(AssertionError):
+            pc.check_loaded_data(counts, norm)                 # not counts / total
+        pc.check_loaded_data(counts, norm, profiles_are_proportions=False)
+
+    def test_normalization_not_allowed_for_dbs(self):
+        with self.assertRaises(ValueError):
+            pc.determine_data_directory(os.path.join(self.tmp, "input"), "DBS",
+                                        PREPROCESSING_CONFIG, normalization="wes-to-wgs")
+
+
+class RunNameTest(unittest.TestCase):
+
+    def test_run_names(self):
+        name = lambda **k: run_info.run_name("SBS", 0.9, PREPROCESSING_CONFIG, **k)
+        self.assertEqual(name(), "min307_cos0.90")
+        self.assertEqual(name(custom_thresholds="aai-split"), "min307_cos0.90_aai-split")
+        self.assertEqual(name(normalization="wes-to-wgs"), "min307_cos0.90_wes-to-wgs")
+        self.assertEqual(name(normalization="own-opportunity"), "min307_cos0.90_own-opportunity")
 
 
 if __name__ == "__main__":

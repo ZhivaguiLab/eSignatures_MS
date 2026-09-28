@@ -2,46 +2,64 @@
 # run_pipeline.sh
 #
 # Runs the full eSignatures clustering and reporting pipeline for one mutation type.
-# Outputs are written to results/<MUTATION_TYPE>/ so separate runs are isolated.
 #
 # Usage:
-#   bash run_pipeline.sh <mutation-type> <cosine-clust> <cosine-heatmap> [aai-split]
+#   bash run_pipeline.sh <mutation-type> <cosine-clust> <cosine-heatmap> [options...]
 #
-# The optional 4th argument 'aai-split' (SBS, for testing) adds the manual
-# AAI/DBP split: the cluster containing the Aristolochic acid I /
-# Dibenzo[a,l]pyrene samples is re-split at cosine distance 0.095. It writes to
-# results/aai_split/ instead of results/, so both versions can be kept side by
-# side. The default run has no custom thresholds.
+# Options (any combination, in any order):
+#   aai-split        SBS, for testing: add the manual AAI/DBP split (the cluster
+#                    containing the Aristolochic acid I / Dibenzo[a,l]pyrene
+#                    samples is re-split at cosine distance 0.095)
+#   wes-to-wgs       SBS: opportunity normalization, WES samples moved onto the
+#                    WGS basis (see NORMALIZATION_APPROACH.md)
+#   own-opportunity  SBS: opportunity normalization, every sample normalized by
+#                    its own genome/technology opportunity
+#
+# Each run writes to results/<run name>/<MUTATION_TYPE>/, where the run name
+# records the settings, e.g. results/min307_cos0.90/SBS/ or
+# results/min307_cos0.90_wes-to-wgs/SBS/, and a run_parameters.txt listing
+# every setting, input file hash, software version and the result counts.
 #
 # Examples:
-#   bash run_pipeline.sh SBS 0.9 0.85
+#   bash run_pipeline.sh SBS 0.9 0.85                    # default
+#   bash run_pipeline.sh SBS 0.9 0.85 aai-split          # testing: AAI/DBP split
+#   bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs
+#   bash run_pipeline.sh SBS 0.9 0.85 own-opportunity
 #   bash run_pipeline.sh DBS 0.9 0.85
-#   bash run_pipeline.sh ID  0.9 0.85
-#   bash run_pipeline.sh SBS 0.9 0.85 aai-split     # testing: with the AAI/DBP split
 #
-# The canonical clustering threshold is 0.9 — this is also the default of
-# perform_clustering.py, so running that script directly gives the same
-# clusters. See "Reproducing the published clusters" in README.md.
+# The minimum mutation count per sample is set in config/preprocessing.yaml.
 
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
 # Argument validation
 # ---------------------------------------------------------------------------
-if [ "$#" -ne 3 ] && [ "$#" -ne 4 ]; then
-    echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap> [aai-split]"
-    echo "  mutation-type : SBS | DBS | ID"
-    echo "  aai-split     : optional, SBS testing only; add the manual AAI/DBP split"
+if [ "$#" -lt 3 ]; then
+    echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap> [aai-split] [wes-to-wgs | own-opportunity]"
+    echo "  mutation-type   : SBS | DBS | ID"
+    echo "  aai-split       : optional, SBS testing only; add the manual AAI/DBP split"
+    echo "  wes-to-wgs      : optional, SBS; WES -> WGS opportunity normalization"
+    echo "  own-opportunity : optional, SBS; per-sample opportunity normalization"
     echo ""
     echo "Example: $0 SBS 0.9 0.85"
     exit 1
 fi
 
-VARIANT="${4:-}"
-if [ -n "${VARIANT}" ] && [ "${VARIANT}" != "aai-split" ]; then
-    echo "Error: 4th argument must be 'aai-split' (got '${VARIANT}')"
-    exit 1
-fi
+CUSTOM_THRESHOLDS="none"
+NORMALIZATION="none"
+for opt in "${@:4}"; do
+    case "$opt" in
+        aai-split) CUSTOM_THRESHOLDS="aai-split" ;;
+        wes-to-wgs|own-opportunity)
+            if [ "${NORMALIZATION}" != "none" ]; then
+                echo "Error: choose only one of wes-to-wgs / own-opportunity"
+                exit 1
+            fi
+            NORMALIZATION="$opt" ;;
+        *) echo "Error: unknown option '$opt' (expected aai-split, wes-to-wgs or own-opportunity)"
+           exit 1 ;;
+    esac
+done
 
 MUTATION_TYPE=$(echo "$1" | tr '[:lower:]' '[:upper:]')   # uppercase
 COSINE_THRES_CLUST="$2"
@@ -66,10 +84,14 @@ REFERENCES_DIR="${REPO_ROOT}/data/references"
 
 CONFIG_DIR="${REPO_ROOT}/config"
 PIPELINE_DIR="${REPO_ROOT}/pipeline"
-RESULTS_ROOT="${REPO_ROOT}/results"
-if [ "${VARIANT}" == "aai-split" ]; then
-    RESULTS_ROOT="${REPO_ROOT}/results/aai_split"
-fi
+# Output folder named by the run's settings, e.g. results/min307_cos0.90/
+RUN_NAME=$(python "${REPO_ROOT}/pipeline/run_info.py" name \
+    --mutation_type "${MUTATION_TYPE}" \
+    --cosine_similarity "${COSINE_THRES_CLUST}" \
+    --preprocessing_config "${REPO_ROOT}/config/preprocessing.yaml" \
+    --custom_thresholds "${CUSTOM_THRESHOLDS}" \
+    --normalization "${NORMALIZATION}")
+RESULTS_ROOT="${REPO_ROOT}/results/${RUN_NAME}"
 
 # Validate that input directory exists
 if [ ! -d "${DATA_DIR}" ]; then
@@ -128,7 +150,9 @@ echo "COSMIC ref:   ${COSMIC_PROFILE}"
 echo "Typed output: ${FILTER_DIR}"
 echo "Cosine (clust):   ${COSINE_THRES_CLUST}"
 echo "Cosine (heatmap): ${COSINE_THRES_HEATMAP}"
-echo "Custom thresholds: $([ "${VARIANT}" == "aai-split" ] && echo "aai-split (manual AAI/DBP split, testing)" || echo "none (default)")"
+echo "Run name:         ${RUN_NAME}"
+echo "Custom thresholds: ${CUSTOM_THRESHOLDS}"
+echo "Normalization:    ${NORMALIZATION}"
 echo "========================================"
 
 # ---------------------------------------------------------------------------
@@ -149,9 +173,10 @@ CLUSTERING_ARGS=(
 )
 # The AAI/DBP split is passed by preset name; its thresholds are defined
 # once, in custom_threshold_presets in pipeline/utils/mutation_type.py.
-if [ "${VARIANT}" == "aai-split" ]; then
-    CLUSTERING_ARGS+=(--custom_thresholds aai-split)
+if [ "${CUSTOM_THRESHOLDS}" != "none" ]; then
+    CLUSTERING_ARGS+=(--custom_thresholds "${CUSTOM_THRESHOLDS}")
 fi
+CLUSTERING_ARGS+=(--normalization "${NORMALIZATION}")
 
 python "${PERFORM_CLUSTERING_PY}" "${CLUSTERING_ARGS[@]}"
 
@@ -227,6 +252,19 @@ python "${GENERATE_MATRIX_PY}" \
     --mutation_type "${MUTATION_TYPE}" \
     --abbreviation_file "${ABBREVIATION_FILE}" \
     --compound_grouping "${CONFIG_DIR}/compound_grouping.yaml"
+
+# ---------------------------------------------------------------------------
+# Step 7: Run parameter summary
+# ---------------------------------------------------------------------------
+echo ""
+echo "========================================"
+echo "Step 7: Run Parameters"
+echo "========================================"
+python "${REPO_ROOT}/pipeline/run_info.py" summary \
+    --output_dir "${FILTER_DIR}" \
+    --run_name "${RUN_NAME}" \
+    --cosmic_profiles "${COSMIC_PROFILE}" \
+    --cosmic_threshold "${COSINE_THRES_HEATMAP}"
 
 # ---------------------------------------------------------------------------
 # Done

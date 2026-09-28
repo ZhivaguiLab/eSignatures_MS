@@ -23,9 +23,9 @@ eSS_clustering/
     generate_interactive_heatmap.py  ← Step 4: interactive heatmap
     generate_static_heatmap.py       ← Step 5: static heatmap
     species_compound_matrix.py       ← Step 6: species × compound matrix
-    normalize_wes_to_wgs.py          ← experimental opportunity normalization (not in default run)
-    normalize_by_own_opportunity.py  ← experimental opportunity normalization (not in default run)
-    build_translation_verification_matrices.py
+    run_info.py                      ← run folder naming + run_parameters.txt (Step 7)
+    utils/opportunity_normalization.py ← optional wes-to-wgs / own-opportunity normalization
+    build_translation_verification_matrices.py ← before/after check for wes-to-wgs
     archive/                  ← superseded scripts, kept for reference
 
   config/                     ← tracked in git (see config/README.md)
@@ -38,9 +38,10 @@ eSS_clustering/
     input/SBS/                ← unfiltered SBS count matrices, one per species (tracked)
     input/DBS/, input/ID/     ← not included; add your own
     references/               ← COSMIC v3.6 SBS/DBS/ID profiles (tracked)
+      context_distributions/  ← genome/exome trinucleotide counts for normalization (tracked)
     input_cleaned/            ← auto-generated preprocessed data (NOT tracked)
 
-  results/                    ← NOT tracked (generated at runtime; aai_split/ for that testing option)
+  results/<run name>/<TYPE>/  ← NOT tracked; one folder per run, named by its settings
 
   tests/
     test_clustering_reproducibility.py  ← checks a run reproduces the expected clusters
@@ -105,6 +106,11 @@ expected files.
 bash run_pipeline.sh SBS 0.9 0.85
 bash run_pipeline.sh DBS 0.9 0.85
 bash run_pipeline.sh ID  0.9 0.85
+
+# Optional extras (SBS), in any combination:
+bash run_pipeline.sh SBS 0.9 0.85 aai-split          # testing: manual AAI/DBP split
+bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs         # opportunity normalization
+bash run_pipeline.sh SBS 0.9 0.85 own-opportunity    # opportunity normalization
 ```
 
 The second argument is the cosine similarity threshold used for clustering
@@ -113,7 +119,36 @@ resulting eSS profiles against COSMIC signatures (`--threshold` in Step 4). The
 project's current convention is 0.9 for clustering and 0.85 for the COSMIC
 comparison — adjust for your own analysis as needed.
 
-Each run writes to `results/<MUTATION_TYPE>/` automatically.
+### Output folders and run parameters
+
+Each run writes to `results/<run name>/<MUTATION_TYPE>/`, where the run name
+records the settings, so runs with different settings never overwrite each
+other:
+
+| Command | Output folder |
+|---|---|
+| `bash run_pipeline.sh SBS 0.9 0.85` | `results/min307_cos0.90/SBS/` |
+| `... aai-split` | `results/min307_cos0.90_aai-split/SBS/` |
+| `... wes-to-wgs` | `results/min307_cos0.90_wes-to-wgs/SBS/` |
+| `... own-opportunity` | `results/min307_cos0.90_own-opportunity/SBS/` |
+
+`min307` is the minimum mutation count from `config/preprocessing.yaml`
+(`min-per-species` if the species differ, `nomin` if none is set) and
+`cos0.90` the clustering threshold.
+
+Every run folder has **`run_parameters.txt`** (and the same in
+`run_parameters.json`) listing:
+
+- preprocessing: minimum mutations per species, samples excluded by name,
+  opportunity normalization
+- clustering: cosine threshold, linkage, custom thresholds, main-cluster size,
+  consensus method
+- COSMIC comparison: reference file, match threshold, artifacts included
+- results: samples clustered, main / small clusters, singletons, COSMIC
+  matched / unmatched
+- SHA-256 of every input file, opportunity table and COSMIC reference
+- the git commit the code ran from (and whether it had uncommitted changes),
+  the date, and Python/package versions
 
 ### Reproducing the clusters
 
@@ -152,8 +187,8 @@ is not part of the default analysis; use it to test how that split changes the
 results:
 
 ```bash
-bash run_pipeline.sh SBS 0.9 0.85 aai-split        # → results/aai_split/SBS/
-python pipeline/perform_clustering.py --mutation_type SBS --output_dir results/aai_split \
+bash run_pipeline.sh SBS 0.9 0.85 aai-split        # → results/min307_cos0.90_aai-split/SBS/
+python pipeline/perform_clustering.py --mutation_type SBS --output_dir results/min307_cos0.90_aai-split \
     --custom_thresholds aai-split
 ```
 
@@ -257,6 +292,11 @@ cluster and eSS number). They also check:
   - without them, the result equals `main` with only those 18 samples removed:
     48 eSS with identical members and profiles, the CX-5461 eSS reduced to its 3
     samples ≥307, identical small clusters, and 26 / 23 COSMIC matches
+- the optional opportunity normalizations: `wes-to-wgs` and
+  `own-opportunity` profiles equal an independent calculation from the
+  opportunity tables, keep the same samples, and leave uncorrected species
+  unchanged
+- run folder naming
 - the mouse exclusions, and that the safety checks below stop the run on bad
   input
 
@@ -630,6 +670,8 @@ Cisplatin	Cis
 | 3 | `generate_images_heatmap.py` | `interactive_heatmap/cluster_plots/*.png`, `interactive_heatmap/cosmic_plots/*.png` |
 | 4 | `generate_interactive_heatmap.py` | `interactive_heatmap.html`, `cosmic_similar_clusters_<t>.tsv`, `denovo_clusters_<t>.tsv` |
 | 5 | `generate_static_heatmap.py` | `cosine_similarity_heatmap.pdf` (3 versions) |
+| 6 | `species_compound_matrix.py` | `species_compound_matrix_*.pdf` |
+| 7 | `run_info.py` | `run_parameters.txt`, `run_parameters.json` |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_{human,mouse,other_species}.pdf` |
 
 ### Generating a print-ready PDF of a grid report
@@ -644,8 +686,8 @@ correctly (flexbox reflows row by row; CSS Grid does not paginate reliably and
 will scatter columns across separate pages).
 
 ```bash
-HTML_PATH="results/SBS/reports/cluster_summary.html"   # input — swap for the report/run you're rendering
-PDF_PATH="results/SBS/reports/cluster_summary.pdf"      # output
+HTML_PATH="results/min307_cos0.90/SBS/reports/cluster_summary.html"   # input — swap for the report/run you're rendering
+PDF_PATH="results/min307_cos0.90/SBS/reports/cluster_summary.pdf"      # output
 
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --headless --disable-gpu --no-sandbox \
@@ -688,23 +730,36 @@ All type-specific constants are in `pipeline/utils/mutation_type.py`.
 
 ---
 
-## Trinucleotide Opportunity Normalization (Experimental)
+## Trinucleotide Opportunity Normalization (Optional)
 
-Two independent methods for correcting cross-species and cross-technology
-(WGS/WES) trinucleotide-composition bias — a manuscript-revision item — are
-implemented and verified, but **not wired into the default pipeline**:
-`pipeline/normalize_wes_to_wgs.py` (rescales WES samples onto their species'
-WGS opportunity basis) and `pipeline/normalize_by_own_opportunity.py`
-(normalizes every sample, WGS included, by its own opportunity table
-independently, with no common reference genome). Both were run through the
-full 6-step pipeline and compared against the default clustering; see
-[NORMALIZATION_APPROACH.md](NORMALIZATION_APPROACH.md) for the method
-details, rationale, results, and current limitations (unconfirmed genome
-builds, no chicken/C. elegans opportunity tables yet).
+Two methods correct for trinucleotide-composition differences between genomes
+and between whole-genome and exome sequencing (manuscript revision item A4).
+Neither is part of the default run; each is an option that is applied in
+preprocessing, after the 307 filter:
 
-These scripts still expect the earlier input layout
-(`filtered_<species>_307.txt` / `normalized_filtered_<species>_307.tsv`) and
-have not been updated for the unfiltered inputs and preprocessing cutoffs.
+```bash
+bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs        # → results/min307_cos0.90_wes-to-wgs/SBS/
+bash run_pipeline.sh SBS 0.9 0.85 own-opportunity   # → results/min307_cos0.90_own-opportunity/SBS/
+```
+
+- **`wes-to-wgs`**: human and mouse WES samples are rescaled onto their own
+  genome's WGS opportunity, keeping each sample's total. Everything else is
+  unchanged.
+- **`own-opportunity`**: every human, mouse and rat sample (WGS and WES) is
+  normalized by its own genome and technology opportunity. Counts are
+  unchanged; only the profiles used for clustering change.
+
+Both keep the same samples as the default run (the totals used for the 307
+filter are not changed), use the opportunity tables in
+`data/references/context_distributions/` (from SigProfilerMatrixGenerator
+1.3.6), and leave chicken and C. elegans uncorrected (no tables). The code is
+`pipeline/utils/opportunity_normalization.py`; the preprocessed data goes to
+its own cache (`data/input_cleaned/SBS_<method>/`). The tests check both
+methods against an independent calculation.
+
+See [NORMALIZATION_APPROACH.md](NORMALIZATION_APPROACH.md) for the methods,
+the comparison with the default run, and open items (the genome builds used
+have not been confirmed against each source study).
 
 ---
 

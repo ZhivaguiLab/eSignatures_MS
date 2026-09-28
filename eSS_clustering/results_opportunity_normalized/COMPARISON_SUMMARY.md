@@ -1,83 +1,82 @@
-# `results_opportunity_normalized` vs `results_default`
+# `own-opportunity` normalization vs the default run
 
-**Method:** per-sample opportunity normalization
-([pipeline/normalize_by_own_opportunity.py](../pipeline/normalize_by_own_opportunity.py)),
-branch `per-sample-opportunity-normalization`. Every human, mouse, and rat
-sample — WGS *and* WES — is normalized by its own species+build+sequencing
--technology trinucleotide opportunity table, independently:
+**Runs compared:** `results/min307_cos0.90/SBS/` (default) and
+`results/min307_cos0.90_own-opportunity/SBS/`, made with
 
-```
-rate[c]    = raw_count[c] / opportunity[c]   (that sample's own context-count table)
-profile[c] = rate[c] / sum(rate)              (renormalize to sum 1)
+```bash
+bash run_pipeline.sh SBS 0.9 0.85
+bash run_pipeline.sh SBS 0.9 0.85 own-opportunity
 ```
 
-No common reference genome is chosen; each sample only ever uses its own
-opportunity table (human WGS → GRCh38-WGS; human WES → GRCh38-exome; mouse
-WGS → mm10-WGS; mouse WES → mm10-exome; rat WGS → rn7-WGS). Chicken and
-celegans have no confirmed opportunity table yet, so their input files are
-left completely unchanged (still plain `raw / raw.sum()`).
-
-This is a different method from the liftover/translation approach on
-`wes-to-wgs-normalization` ([normalize_wes_to_wgs.py](../pipeline/normalize_wes_to_wgs.py)),
-not a refinement of it — see that branch's
-[COMPARISON_SUMMARY.md](../results_wes_to_wgs_normalized/COMPARISON_SUMMARY.md)
-for the liftover version's results. Raw counts are unchanged in both
-approaches; only the normalized profile used for clustering/consensus
-averaging differs.
-
-## Scope of what changed
-
-This method touches every human/mouse/rat sample — 570 of ~902 total in the
-main atlas — versus the liftover approach's 152 (WES-only). That's the main
-reason the effect below is substantially larger.
+**Same for both:** the 653 samples with ≥307 SBSs (10 mouse MEF samples
+excluded), cosine similarity 0.90 with average linkage, no custom thresholds,
+equal-replicate consensus, COSMIC v3.6 match at ≥0.85 (artifact signatures
+included). The only difference: every human, mouse and rat sample (560
+samples, WGS and WES) has its profile divided by its own genome and
+technology trinucleotide opportunity (GRCh38, mm10, rn7; genome or exome) and
+renormalized. Counts are unchanged. Chicken and C. elegans have no opportunity
+tables and keep their plain profiles. See
+[NORMALIZATION_APPROACH.md](../NORMALIZATION_APPROACH.md).
 
 ## Headline numbers
 
-| | Default | Per-sample opportunity | Δ |
+| | Default | own-opportunity | Δ |
 |---|---|---|---|
-| Main clusters | 49 | 52 | +3 |
-| Main-cluster samples | 508 | 503 | −5 |
-| Small-cluster samples | 32 | 30 | −2 |
-| Singletons | 130 | 137 | +7 |
-| COSMIC-matched clusters (≥0.85) | 26 | **14** | **−12** |
-| De novo clusters | 23 | 38 | +15 |
+| Samples clustered | 653 | 653 | 0 |
+| Main clusters (eSS) | 48 | 52 | +4 |
+| Main-cluster samples | 498 | 493 | −5 |
+| Small clusters | 16 | 15 | −1 |
+| Singletons | 123 | 130 | +7 |
+| COSMIC matched (≥0.85) | 25 | **14** | **−11** |
+| COSMIC unmatched | 23 | 38 | +15 |
 
-## Cluster membership
+## What changed
 
-- 22 samples left main-cluster status, 17 newly entered — split roughly
-  Mouse (13/12) and Human (9/5). **Zero rat, chicken, or celegans samples
-  affected**: chicken/celegans untouched by design, and rat's 5 WGS samples,
-  despite being corrected, weren't perturbed enough to flip any cluster
-  boundary.
-- Among the 486 samples that stayed "main" in both runs, **241 regrouped
-  with different cluster partners** (194 mouse, 47 human, 0 other species) —
-  a much larger reshuffling than the liftover approach's 4 affected
-  groupings.
+- **Profiles change a lot.** Corrected profiles have cosine 0.57–0.996 (mean
+  0.87) to their uncorrected profiles, much more than wes-to-wgs (0.90–0.99,
+  WES only). The most affected are mouse MEF UVA and mouse mammary
+  γ-ray/Fe-ion samples.
+- **Only 22 of the 48 eSS keep the same members.** 2 have no counterpart
+  afterwards, 11 new ones appear, and the rest gain, lose or merge samples. The largest changes are in
+  mouse skin DMBA, mouse intestinal organoids (normal and high-fat diet),
+  mouse liver diethylnitrosamine, mouse breast γ-ray/Fe-ion and human BEAS-2B
+  benzo[a]pyrene.
+- 48 samples change group: 22 (13 mouse, 9 human) leave the main clusters and
+  17 (12 mouse, 5 human) join them. No rat, chicken or C. elegans sample
+  changes group.
+- **COSMIC matches fall from 25 to 14.** 12 eSS matched by default lose their
+  match (2 go the other way). Even among the 22 eSS with identical members,
+  4 flip from matched to unmatched, and their best COSMIC similarity drops by
+  a median of 0.03.
 
-## The COSMIC-match collapse (26 → 14): why this is expected, not a bug
+## Why COSMIC matches drop
 
-Under `equal_replicate` averaging, a cluster's consensus profile is the
-average of its members' *already-normalized* profiles. In the liftover
-approach, every sample was normalized onto the same target (WGS) basis
-first, so a cluster's consensus stays on one consistent basis, comparable
-to COSMIC. In this method, each sample is normalized by *its own*
-opportunity table — so a cluster mixing human-WGS, human-WES, and
-mouse-WGS samples now averages together profiles from **three different
-opportunity bases at once**, and the resulting consensus isn't on any
-single well-defined basis anymore, COSMIC's included. Since COSMIC
-signatures are built on a specific reference (standard human genome-wide),
-a consensus that's an average across mismatched bases would plausibly
-drift away from any COSMIC signature's shape — independent of whether the
-underlying biology is being represented more or less correctly.
+An earlier version of this summary suggested that the drop came from
+clusters mixing samples on different opportunity bases (for example human
+WGS with mouse WES). That is **not** the main cause: of the 12 eSS that lose
+their match, 9 contain a single species and a single sequencing technology.
+Among eSS of the corrected species, the single-species/technology ones lose
+more similarity (median −0.033) than the mixed ones (median +0.010), and eSS
+made only of chicken/C. elegans samples (uncorrected) are unchanged.
 
-This tracks with using a genuinely different opportunity table per species
-*and* per genome build/technology: clusters with mixed species/genome/tech
-composition are the ones expected to be most affected, since they're the
-ones averaging across incompatible bases. Clusters that are internally
-homogeneous (single species, single tech) shouldn't show this effect, since
-all their members share one opportunity table already.
+The more likely reason is that COSMIC signatures are expressed as
+mutations observed on the human genome; they are not opportunity-normalized.
+Dividing a profile by its trinucleotide opportunity puts it on a different
+basis from COSMIC, so the comparison is no longer like for like, whatever the
+cluster's composition.
 
-**Open follow-up:** confirm this mechanism directly by checking whether the
-clusters that lost their COSMIC match are disproportionately the
-mixed-composition ones, versus single-species/single-tech clusters losing
-matches too (which would point to something other than basis-mixing).
+**Suggested follow-up:** compare on a common basis, e.g. multiply the
+own-opportunity consensus profiles by the human GRCh38 WGS opportunity
+(COSMIC's basis) before the COSMIC comparison, and check whether the match
+rate recovers.
+
+## Bottom line
+
+Per-sample opportunity normalization changes the clustering substantially
+(22 of 48 eSS unchanged), mainly for mouse and human WGS samples. Its COSMIC
+match rate should not be compared directly with the default run's until the
+profiles and COSMIC are put on the same opportunity basis.
+
+*Earlier version:* this comparison was first made on the previous inputs
+(671 profiles, AAI/DBP split): 49 → 52 eSS, 26 → 14 COSMIC matches. That
+version is in git history.

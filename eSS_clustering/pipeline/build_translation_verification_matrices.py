@@ -2,7 +2,9 @@
 """
 build_translation_verification_matrices.py
 
-For every WES sample that was corrected by normalize_wes_to_wgs.py, build a
+For every WES sample corrected by the wes-to-wgs opportunity normalization
+(utils/opportunity_normalization.py, run via
+`bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs`), build a
 before/after SBS-96 profile matrix pair (suitable for sigProfilerPlotting)
 and a per-sample cosine-similarity table, so the effect of the correction
 can be checked sample by sample -- both visually and numerically.
@@ -10,8 +12,8 @@ can be checked sample by sample -- both visually and numerically.
 Usage
 -----
     python pipeline/build_translation_verification_matrices.py \\
-        --orig_dir data/input/SBS \\
-        --corrected_dir data/input_wes_to_wgs_normalized/SBS \\
+        --orig_dir data/input_cleaned/SBS \\
+        --corrected_dir data/input_cleaned/SBS_wes-to-wgs \\
         --output_dir results_translation_verification/SBS
 
 Then plot both matrices, e.g.:
@@ -53,9 +55,9 @@ def main():
     before_cols, after_cols, meta_rows = {}, {}, []
 
     for species in args.species:
-        orig = pd.read_csv(os.path.join(args.orig_dir, f"filtered_{species}_307.txt"),
+        orig = pd.read_csv(os.path.join(args.orig_dir, f"{species}_SBS96.txt"),
                            sep='\t', index_col=0)
-        corr = pd.read_csv(os.path.join(args.corrected_dir, f"filtered_{species}_307.txt"),
+        corr = pd.read_csv(os.path.join(args.corrected_dir, f"{species}_SBS96.txt"),
                            sep='\t', index_col=0)
         contexts = list(orig.index)
 

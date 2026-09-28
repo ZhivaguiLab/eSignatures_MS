@@ -42,6 +42,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from utils.naming import remove_replicate_suffix
 from utils.mutation_type import get_config, call_plot_function
+from utils import opportunity_normalization
 
 
 # ==============================================================================
@@ -288,7 +289,7 @@ def load_data(data_dir, cfg, mapping_file_path):
     return counts_df, normalized_df, all_mappings
 
 
-def check_loaded_data(counts_df, normalized_df):
+def check_loaded_data(counts_df, normalized_df, profiles_are_proportions=True):
     """
     Check that raw counts and normalized profiles describe the same samples.
 
@@ -313,6 +314,16 @@ def check_loaded_data(counts_df, normalized_df):
     if not counts_df.index.equals(normalized_df.index):
         raise AssertionError(
             "Counts and normalized data have different mutation-context rows.")
+
+    if not profiles_are_proportions:
+        # Opportunity-normalized profiles are not counts / total; check they
+        # are valid profiles instead.
+        sums = normalized_df.sum(axis=0)
+        if (normalized_df < 0).any().any() or not np.allclose(sums, 1.0, atol=1e-9):
+            raise AssertionError("Normalized profiles must be non-negative and sum to 1.")
+        print(f"Data check passed: {counts_df.shape[1]} samples, counts and "
+              f"opportunity-normalized profiles consistent.")
+        return
 
     # Each normalized profile must be its own counts divided by their total.
     col_sums = counts_df.sum(axis=0)
@@ -345,7 +356,7 @@ def check_min_mutations(counts_df, all_mappings, min_mutations):
         if cutoff is None:
             raise AssertionError(f"No min_mutations cutoff for species '{species}'.")
         for name in mapping.values():
-            if name in totals and totals[name] < cutoff:
+            if name in totals and totals[name] < cutoff - 1e-6:
                 below.append((name, totals[name], cutoff))
     if below:
         raise AssertionError(
@@ -885,7 +896,8 @@ def preprocess_file(input_path, output_path, exclusion_patterns,
 
 
 def run_preprocessing(input_dir, output_dir, exclusion_patterns, case_sensitive=False,
-                      min_mutations=None, make_normalized=False):
+                      min_mutations=None, make_normalized=False, normalization=None,
+                      context_dir=opportunity_normalization.DEFAULT_CONTEXT_DIR):
     """
     Preprocess all files in input directory.
 
@@ -894,6 +906,9 @@ def run_preprocessing(input_dir, output_dir, exclusion_patterns, case_sensitive=
         file can be passed through unfiltered.
     make_normalized : write normalized_<name>.tsv (each sample's counts
         divided by its total) for raw files that have no normalized file.
+    normalization : None, 'wes-to-wgs' or 'own-opportunity'. Applied to each
+        species' counts after filtering (utils/opportunity_normalization.py);
+        writes the corrected counts and the normalized profiles.
     Normalized files already in input_dir keep the same samples as their
     species' raw file.
     """
@@ -904,6 +919,7 @@ def run_preprocessing(input_dir, output_dir, exclusion_patterns, case_sensitive=
     print(f"Output: {output_dir}")
     print(f"Exclusion patterns: {exclusion_patterns}")
     print(f"Minimum mutations per species: {min_mutations or 'none'}")
+    print(f"Opportunity normalization: {normalization or 'none'}")
     print("="*70)
 
     files = []
@@ -957,10 +973,20 @@ def run_preprocessing(input_dir, output_dir, exclusion_patterns, case_sensitive=
                 print(f"      ... and {len(stats['removed_samples']) - 3} more")
 
         has_norm = any(detect_species(os.path.basename(n))[0] == species for n in norm_files)
-        if make_normalized and not has_norm:
-            counts = stats['filtered']
-            norm_path = os.path.join(output_dir,
-                                     "normalized_" + os.path.splitext(cleaned_file_name(filename))[0] + ".tsv")
+        norm_path = os.path.join(output_dir,
+                                 "normalized_" + os.path.splitext(cleaned_file_name(filename))[0] + ".tsv")
+        counts = stats['filtered']
+        if normalization:
+            if has_norm:
+                raise ValueError(f"{input_dir} already has normalized files; opportunity "
+                                 f"normalization needs count files only.")
+            counts, normalized, summary = opportunity_normalization.normalize(
+                normalization, counts, species, context_dir)
+            counts.to_csv(output_path, sep='\t')
+            normalized.to_csv(norm_path, sep='\t')
+            print(f"    Normalization ({normalization}): {summary}")
+            print(f"    Wrote normalized profiles: {os.path.basename(norm_path)}")
+        elif make_normalized and not has_norm:
             counts.div(counts.sum(axis=0), axis=1).to_csv(norm_path, sep='\t')
             print(f"    Wrote normalized profiles: {os.path.basename(norm_path)}")
 
@@ -991,24 +1017,33 @@ PREPROCESSING_STAMP = "preprocessing_stamp.json"
 
 
 def preprocessing_stamp(input_dir, exclusion_patterns, case_sensitive,
-                        min_mutations=None, make_normalized=False):
+                        min_mutations=None, make_normalized=False, normalization=None,
+                        context_dir=opportunity_normalization.DEFAULT_CONTEXT_DIR):
     """Record of the inputs and settings a cleaned-data cache was built from."""
     files = {}
     for path in sorted(glob.glob(os.path.join(input_dir, '*.txt')) +
                        glob.glob(os.path.join(input_dir, '*.tsv'))):
         with open(path, 'rb') as f:
             files[os.path.basename(path)] = hashlib.sha256(f.read()).hexdigest()
+    tables = {}
+    if normalization:
+        for path in sorted(glob.glob(os.path.join(context_dir, 'context_counts_*.csv'))):
+            with open(path, 'rb') as f:
+                tables[os.path.basename(path)] = hashlib.sha256(f.read()).hexdigest()
     return {
+        'context_tables_sha256': tables,
         'exclusion_patterns': list(exclusion_patterns),
         'case_sensitive': bool(case_sensitive),
         'min_mutations': dict(min_mutations or {}),
         'make_normalized': bool(make_normalized),
+        'normalization': normalization,
         'input_files_sha256': files,
     }
 
 
-def determine_data_directory(base_input_dir, mutation_type, preprocessing_config_path, 
-                             force_preprocess=False, skip_preprocessing=False):
+def determine_data_directory(base_input_dir, mutation_type, preprocessing_config_path,
+                             force_preprocess=False, skip_preprocessing=False,
+                             normalization=None):
     """
     Determine which data directory to use based on preprocessing config.
     
@@ -1017,7 +1052,10 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
     str : Path to data directory to use (either original or cleaned)
     """
     original_dir = os.path.join(base_input_dir, mutation_type)
-    cleaned_dir = os.path.join(base_input_dir + '_cleaned', mutation_type)
+    # Each normalization gets its own cache so runs with different settings
+    # don't overwrite each other's preprocessed data.
+    cleaned_dir = os.path.join(base_input_dir + '_cleaned',
+                               mutation_type + (f"_{normalization}" if normalization else ""))
     
     print("\n" + "="*70)
     print("DATA DIRECTORY SELECTION")
@@ -1044,13 +1082,17 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
     exclusion_patterns = type_config.get('exclude') or []
     min_mutations = type_config.get('min_mutations') or {}
 
-    if not exclusion_patterns and not min_mutations:
+    if normalization and not get_config(mutation_type).has_prenormalized_files:
+        raise ValueError(f"Opportunity normalization is only available for SBS, not {mutation_type}.")
+
+    if not exclusion_patterns and not min_mutations and not normalization:
         print(f"✗ No exclusion patterns or min_mutations defined for {mutation_type}")
         print(f"✓ Using original data: {original_dir}")
         return original_dir
 
     print(f"✓ Exclusion patterns for {mutation_type}: {exclusion_patterns}")
     print(f"✓ Minimum mutations for {mutation_type}: {min_mutations or 'none'}")
+    print(f"✓ Opportunity normalization: {normalization or 'none'}")
 
     case_sensitive = config.get('case_sensitive', False)
     make_normalized = get_config(mutation_type).has_prenormalized_files
@@ -1058,7 +1100,7 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
     # The cached cleaned data is reused only if it was built from the same
     # input files and the same settings; otherwise it is rebuilt.
     stamp = preprocessing_stamp(original_dir, exclusion_patterns, case_sensitive,
-                                min_mutations, make_normalized)
+                                min_mutations, make_normalized, normalization)
     stamp_path = os.path.join(cleaned_dir, PREPROCESSING_STAMP)
     cached_stamp = None
     if os.path.exists(stamp_path):
@@ -1084,6 +1126,7 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
         case_sensitive,
         min_mutations,
         make_normalized,
+        normalization,
     )
 
     if not success:
@@ -1123,6 +1166,85 @@ def validate_data_dir_argument(data_dir_arg, mutation_type):
 # ==============================================================================
 # 7. MAIN
 # ==============================================================================
+
+RUN_PARAMETERS_FILE = "run_parameters.json"
+
+
+def git_state():
+    """Commit of the code that ran, and whether it had uncommitted changes."""
+    import subprocess
+    try:
+        commit = subprocess.run(["git", "-C", REPO_ROOT, "rev-parse", "HEAD"],
+                                capture_output=True, text=True, check=True).stdout.strip()
+        dirty = subprocess.run(["git", "-C", REPO_ROOT, "status", "--porcelain", "--", "."],
+                               capture_output=True, text=True, check=True).stdout.strip()
+        return {"commit": commit, "uncommitted_changes": bool(dirty)}
+    except (OSError, subprocess.CalledProcessError):
+        return {"commit": None, "uncommitted_changes": None}
+
+
+def write_run_parameters(path, args, cfg, custom_thresholds, data_dir,
+                         n_samples, n_main, n_small, n_singletons):
+    """Record the settings, inputs, software and cluster counts of this run."""
+    import datetime
+    import platform
+    from importlib.metadata import version, PackageNotFoundError
+
+    def pkg(name):
+        try:
+            return version(name)
+        except PackageNotFoundError:
+            return None
+
+    pre_cfg = {}
+    if not args.skip_preprocessing:
+        pre_cfg = (load_preprocessing_config(args.preprocessing_config) or {}).get(cfg.name) or {}
+    stamp = {}
+    stamp_path = os.path.join(data_dir, PREPROCESSING_STAMP)
+    if os.path.exists(stamp_path):
+        with open(stamp_path) as f:
+            stamp = json.load(f)
+
+    record = {
+        "run_date": datetime.datetime.now().isoformat(timespec="seconds"),
+        "mutation_type": cfg.name,
+        "preprocessing": {
+            "skipped": args.skip_preprocessing,
+            "config": os.path.relpath(args.preprocessing_config, REPO_ROOT),
+            "min_mutations": pre_cfg.get("min_mutations"),
+            "exclude": pre_cfg.get("exclude"),
+            "normalization": args.normalization,
+        },
+        "clustering": {
+            "cosine_similarity": args.cosine_similarity,
+            "linkage": "average",
+            "custom_thresholds": custom_thresholds,
+            "averaging_method": args.averaging_method,
+            "main_cluster_min_samples": 3,
+        },
+        "inputs": {
+            "data_dir": os.path.relpath(data_dir, REPO_ROOT),
+            "mapping_file": os.path.relpath(args.mapping_file, REPO_ROOT),
+            "input_files_sha256": stamp.get("input_files_sha256"),
+            "context_tables_sha256": stamp.get("context_tables_sha256") or None,
+        },
+        "results": {
+            "samples_clustered": n_samples,
+            "main_clusters": n_main,
+            "small_clusters": n_small,
+            "singletons": n_singletons,
+        },
+        "software": {
+            "python": platform.python_version(),
+            **{name: pkg(name) for name in ["numpy", "scipy", "pandas", "scikit-learn",
+                                           "matplotlib", "seaborn", "SigProfilerPlotting"]},
+        },
+        "code": git_state(),
+    }
+    with open(path, "w") as f:
+        json.dump(record, f, indent=2)
+    print(f"Run parameters → {path}")
+
 
 def parse_custom_thresholds(value, cfg):
     """
@@ -1194,6 +1316,11 @@ def main():
                         help="Force reprocessing even if cleaned data exists.")
     parser.add_argument("--skip_preprocessing", action="store_true",
                         help="Skip preprocessing even if config exists.")
+    parser.add_argument("--normalization", default="none",
+                        choices=["none"] + list(opportunity_normalization.METHODS),
+                        help="Optional trinucleotide-opportunity normalization "
+                             "applied in preprocessing (SBS only): 'wes-to-wgs' or "
+                             "'own-opportunity'. See NORMALIZATION_APPROACH.md.")
     
     args = parser.parse_args()
 
@@ -1210,7 +1337,8 @@ def main():
         mutation_type=cfg.name,
         preprocessing_config_path=args.preprocessing_config,
         force_preprocess=args.force_preprocess,
-        skip_preprocessing=args.skip_preprocessing
+        skip_preprocessing=args.skip_preprocessing,
+        normalization=None if args.normalization == "none" else args.normalization,
     )
 
     # ── Output directory namespaced by mutation type ─────────────────────────
@@ -1226,6 +1354,7 @@ def main():
           f"(distance < {1 - args.cosine_similarity:.4f})")
     print(f"Custom thresholds: {custom_thresholds}")
     print(f"Averaging method: {args.averaging_method}")
+    print(f"Opportunity normalization: {args.normalization}")
     print("=" * 60)
 
     # ── Load data ─────────────────────────────────────────────────────────────
@@ -1233,7 +1362,8 @@ def main():
         data_dir, cfg, args.mapping_file
     )
 
-    check_loaded_data(counts_df, normalized_df)
+    check_loaded_data(counts_df, normalized_df,
+                      profiles_are_proportions=args.normalization != "own-opportunity")
     if not args.skip_preprocessing:
         pre_cfg = load_preprocessing_config(args.preprocessing_config) or {}
         check_min_mutations(counts_df, all_mappings,
@@ -1321,6 +1451,12 @@ def main():
             f"{cfg.pdf_prefix}_{singleton_project}.pdf"
         )
         convert_pdf_to_pngs(singleton_pdf, singleton_plot_dir, "singleton")
+
+    write_run_parameters(
+        os.path.join(typed_output_dir, RUN_PARAMETERS_FILE), args, cfg,
+        custom_thresholds, data_dir,
+        n_samples=normalized_df.shape[1], n_main=len(main_clusters),
+        n_small=len(small_clusters), n_singletons=len(true_singletons))
 
     # ── Done ─────────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)

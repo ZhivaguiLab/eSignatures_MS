@@ -32,10 +32,13 @@ bash run_pipeline.sh SBS 0.9 0.85
 python -m unittest discover tests   # checks the run reproduces the expected clusters
 ```
 
-A manual AAI/DBP split is available as a testing option
-(`bash run_pipeline.sh SBS 0.9 0.85 aai-split`: 49 eSS, 26 matched). The
-mutation cutoff can be changed per species in
-`eSS_clustering/config/preprocessing.yaml`.
+Results go to `eSS_clustering/results/<run name>/SBS/` (e.g.
+`results/min307_cos0.90/SBS/`), with a `run_parameters.txt` listing every
+setting, input file hash and software version. Optional runs: a manual
+AAI/DBP split for testing (`aai-split`: 49 eSS, 26 matched) and two
+trinucleotide-opportunity normalizations (`wes-to-wgs`, `own-opportunity`; see
+`eSS_clustering/NORMALIZATION_APPROACH.md`). The mutation cutoff can be changed
+per species in `eSS_clustering/config/preprocessing.yaml`.
 
 See `eSS_clustering/README.md` for installation, settings and outputs.
 
