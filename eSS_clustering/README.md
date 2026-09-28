@@ -111,7 +111,7 @@ expected files.
 
 > **Default analysis (SBS)** — `bash run_pipeline.sh SBS 0.9 0.85`
 >
-> - Minimum **307 SBSs per sample, for every species** (every sample tested)
+> - Minimum **307 SBSs per sample, for every species** (applied to every sample, whatever its name)
 > - 10 mouse MEF samples excluded by name (Xenon, Deoxynivalenol)
 > - Clustering: cosine similarity **0.90**, average linkage; no manual split
 > - COSMIC match: max cosine similarity **≥ 0.85** (artifact signatures included)
@@ -309,8 +309,9 @@ SBS:
 307 is the Poisson-resampling stability threshold ("SBS for 99% of
 simulations") over all samples; the per-species values are the same threshold
 computed from each species' own samples. `per-species` gives 674 profiles,
-48 eSS, 15 small clusters, 129 singletons and 25/23 COSMIC matched/unmatched
-(checked by the tests against `tests/expected/SBS_cluster_membership_per_species.tsv`).
+48 eSS, 15 small clusters, 129 singletons and 25/23 COSMIC matched/unmatched.
+The tests check its sample set, counts and cluster membership
+(`tests/expected/SBS_cluster_membership_per_species.tsv`).
 
 Notes:
 
@@ -322,8 +323,8 @@ Notes:
   ("Minimum mutations per sample", with "config default" or the option).
 - To try other per-species values, edit `min_mutations_per_species` (every
   species in `data/input/SBS` must be listed) and run with `per-species`.
-  Changing `min_mutations` itself changes the default, and the tests will
-  report the differences.
+  Editing `min_mutations` itself changes the default; the tests (written for
+  307) will then fail and list the differences. Prefer `min=<N>`.
 
 ### Cluster numbering
 
