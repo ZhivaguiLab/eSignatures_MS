@@ -24,6 +24,7 @@ eSS_clustering/
     generate_static_heatmap.py       ← Step 5: static heatmap
     species_compound_matrix.py       ← Step 6: species × compound matrix
     run_info.py                      ← run folder naming + run_parameters.txt (Step 7)
+    run_decomposition.py             ← COSMIC decomposition into eSS, SigProfilerAssignment (Step 8)
     utils/opportunity_normalization.py ← optional wes-to-wgs / own-opportunity normalization
     build_translation_verification_matrices.py ← before/after check for wes-to-wgs
     archive/                  ← superseded scripts, kept for reference
@@ -85,6 +86,11 @@ There are two requirements files:
 - `requirements.txt` pins only the packages the pipeline imports directly.
   Edit this one when updating a dependency, then regenerate the lock file
   (instructions at the top of `requirements-lock.txt`).
+
+Both include SigProfilerAssignment 1.1.4 for the COSMIC decomposition
+(Step 8). Other versions give different decomposition output (0.2.0, for
+example, renames the COSMIC signatures), so `run_decomposition.py` stops if a
+different version is installed.
 
 After installing, check the install reproduces the expected clusters:
 
@@ -149,6 +155,49 @@ Every run folder has **`run_parameters.txt`** (and the same in
 - SHA-256 of every input file, opportunity table and COSMIC reference
 - the git commit the code ran from (and whether it had uncommitted changes),
   the date, and Python/package versions
+
+For SBS, the run folder also has `decomposition/` (Step 8, below), with its
+own `decomposition_parameters.txt`.
+
+### COSMIC decomposition (Step 8)
+
+The last step of every SBS run decomposes each COSMIC v3.6 SBS signature into
+that run's eSS with SigProfilerAssignment 1.1.4 (`decompose_fit`), writing to
+`results/<run name>/SBS/decomposition/`:
+
+- `Decompose_Solution/De_Novo_map_to_COSMIC_SBS96.csv`: for each COSMIC
+  signature, the eSS combination that reconstructs it and the reconstruction
+  cosine similarity (the input for the Figure 5 decomposition plots)
+- `Decompose_Solution/SBS96_Decomposition_Plots.pdf`, `Signatures/`,
+  `Activities/`, `Solution_Stats/`: the rest of SigProfilerAssignment's output
+- `decomposition_parameters.txt` / `.json`: settings, input hashes, package
+  versions, and how many COSMIC signatures the eSS reconstruct
+
+Settings (`pipeline/run_decomposition.py`):
+
+- **Novelty threshold 0.8** (SigProfilerAssignment's default): a COSMIC
+  signature whose best eSS reconstruction has cosine similarity below 0.8
+  stays as itself, i.e. is not explained by the eSS. This is a different
+  question from the ≥0.85 COSMIC match of a single eSS, so the numbers
+  need not be the same. With the default run, 50 of the 101 COSMIC
+  signatures are reconstructed from eSS (38 at 0.85).
+- **Samples:** the COSMIC signatures themselves (as in
+  `SPA_1000_shuffled_libraries/null_library_fit.py`). The COSMIC-to-eSS map
+  does not depend on the samples; only the activities do.
+- Other settings are SigProfilerAssignment's defaults, stated explicitly
+  (`collapse_to_SBS96=False`, `connected_sigs=False`, NNLS penalties
+  0.05 / 0.01 / 0.05).
+
+To rerun it on its own, or with other choices:
+
+```bash
+python pipeline/run_decomposition.py --run_dir results/min307_cos0.90/SBS
+python pipeline/run_decomposition.py --run_dir results/min307_cos0.90/SBS \
+    --threshold 0.85 --samples clustered --output results/min307_cos0.90/SBS/decomposition_085
+```
+
+`--samples clustered` assigns the samples clustered in that run instead of
+the COSMIC signatures.
 
 ### Reproducing the clusters
 
@@ -672,6 +721,7 @@ Cisplatin	Cis
 | 5 | `generate_static_heatmap.py` | `cosine_similarity_heatmap.pdf` (3 versions) |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_*.pdf` |
 | 7 | `run_info.py` | `run_parameters.txt`, `run_parameters.json` |
+| 8 (SBS) | `run_decomposition.py` | `decomposition/` (COSMIC decomposition into eSS) |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_{human,mouse,other_species}.pdf` |
 
 ### Generating a print-ready PDF of a grid report

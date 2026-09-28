@@ -34,7 +34,10 @@ python -m unittest discover tests   # checks the run reproduces the expected clu
 
 Results go to `eSS_clustering/results/<run name>/SBS/` (e.g.
 `results/min307_cos0.90/SBS/`), with a `run_parameters.txt` listing every
-setting, input file hash and software version. Optional runs: a manual
+setting, input file hash and software version. The last step decomposes each
+COSMIC v3.6 signature into the eSS with SigProfilerAssignment 1.1.4
+(`decomposition/`; novelty threshold 0.8; 50 of 101 COSMIC signatures
+reconstructed from eSS). Optional runs: a manual
 AAI/DBP split for testing (`aai-split`: 49 eSS, 26 matched) and two
 trinucleotide-opportunity normalizations (`wes-to-wgs`, `own-opportunity`; see
 `eSS_clustering/NORMALIZATION_APPROACH.md`). The mutation cutoff can be changed
@@ -65,7 +68,8 @@ Python 3.10: SigProfilerMatrixGenerator 1.3.6, SigProfilerAssignment 1.1.4,
 SigProfilerPlotting 1.4.3, pandas 2.3.3, numpy 2.2.6, scipy 1.13.1, statsmodels,
 matplotlib. Reference genomes GRCh38 (human) and mm10 (mouse); SBS96 context.
 
-eSS clustering (`eSS_clustering/`): Python 3.11 only. Direct dependencies
+eSS clustering (`eSS_clustering/`): Python 3.11 only, including
+SigProfilerAssignment 1.1.4 for the COSMIC decomposition. Direct dependencies
 are pinned in `eSS_clustering/requirements.txt`; the complete environment
 (every package, including indirect dependencies) is frozen in
 `eSS_clustering/requirements-lock.txt`. Install from the lock file to

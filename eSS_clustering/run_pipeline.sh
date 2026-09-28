@@ -28,6 +28,8 @@
 #   bash run_pipeline.sh DBS 0.9 0.85
 #
 # The minimum mutation count per sample is set in config/preprocessing.yaml.
+# For SBS, the last step decomposes the COSMIC signatures into the run's eSS
+# with SigProfilerAssignment (Step 8).
 
 set -euo pipefail
 
@@ -265,6 +267,25 @@ python "${REPO_ROOT}/pipeline/run_info.py" summary \
     --run_name "${RUN_NAME}" \
     --cosmic_profiles "${COSMIC_PROFILE}" \
     --cosmic_threshold "${COSINE_THRES_HEATMAP}"
+
+# ---------------------------------------------------------------------------
+# Step 8: COSMIC decomposition (SBS only)
+# ---------------------------------------------------------------------------
+# Decompose each COSMIC v3.6 SBS signature into this run's eSS with
+# SigProfilerAssignment 1.1.4 (decompose_fit). A COSMIC signature whose best
+# eSS reconstruction has cosine similarity below 0.8 (SigProfilerAssignment's
+# default novelty threshold) stays as itself. Output, with its own
+# decomposition_parameters.txt, goes to <run folder>/<TYPE>/decomposition/.
+# See pipeline/run_decomposition.py for the settings.
+if [ "${MUTATION_TYPE}" == "SBS" ]; then
+    echo ""
+    echo "========================================"
+    echo "Step 8: COSMIC Decomposition"
+    echo "========================================"
+    python "${PIPELINE_DIR}/run_decomposition.py" \
+        --run_dir "${FILTER_DIR}" \
+        --cosmic "${COSMIC_PROFILE}"
+fi
 
 # ---------------------------------------------------------------------------
 # Done
