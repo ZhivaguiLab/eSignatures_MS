@@ -329,6 +329,31 @@ def check_loaded_data(counts_df, normalized_df):
           f"normalized profiles match.")
 
 
+def check_min_mutations(counts_df, all_mappings, min_mutations):
+    """
+    Check every loaded sample meets its species' minimum mutation count.
+
+    Preprocessing applies the cutoffs; this stops the run if the loaded data
+    doesn't reflect them (e.g. stale or hand-made input files).
+    """
+    if not min_mutations:
+        return
+    totals = counts_df.sum(axis=0)
+    below = []
+    for species, mapping in all_mappings.items():
+        cutoff = min_mutations.get(species)
+        if cutoff is None:
+            raise AssertionError(f"No min_mutations cutoff for species '{species}'.")
+        for name in mapping.values():
+            if name in totals and totals[name] < cutoff:
+                below.append((name, totals[name], cutoff))
+    if below:
+        raise AssertionError(
+            f"{len(below)} samples are below their species' minimum mutation count, "
+            f"e.g. {below[:5]}")
+    print(f"Minimum-mutation check passed: every sample meets its species cutoff {min_mutations}.")
+
+
 def filter_zero_columns(df, output_dir):
     all_zero_mask = (df == 0).all(axis=0)
     nonzero_df  = df.loc[:, ~all_zero_mask]
@@ -812,94 +837,161 @@ def should_exclude_sample(sample_name, exclusion_patterns, case_sensitive=False)
     return False, None
 
 
-def preprocess_file(input_path, output_path, exclusion_patterns, case_sensitive=False):
-    """Remove samples matching exclusion patterns from a single file."""
+PREPROCESSING_REMOVED_LOG = "preprocessing_removed_samples.csv"
+
+
+def cleaned_file_name(filename):
+    """Name of a preprocessed file: drops an 'unfiltered_' prefix."""
+    return filename[len("unfiltered_"):] if filename.startswith("unfiltered_") else filename
+
+
+def preprocess_file(input_path, output_path, exclusion_patterns,
+                    case_sensitive=False, min_mutations=None):
+    """
+    Remove samples from one count file.
+
+    A sample is removed if its name matches an exclusion pattern, or if
+    min_mutations is given and its total mutation count is below it. Every
+    sample is tested, whatever its name.
+    """
     df = pd.read_csv(input_path, sep='\t', index_col=0)
-    original_count = df.shape[1]
-    
-    # Identify samples to remove
-    removed_samples = []
+    totals = df.sum(axis=0)
+
+    removed = []          # (sample, reason, total)
     kept_columns = []
-    
     for col in df.columns:
         exclude, matched_pattern = should_exclude_sample(col, exclusion_patterns, case_sensitive)
         if exclude:
-            removed_samples.append((col, matched_pattern))
+            removed.append((col, f"excluded ('{matched_pattern}')", totals[col]))
+        elif min_mutations is not None and totals[col] < min_mutations:
+            removed.append((col, f"below {min_mutations:g} mutations", totals[col]))
         else:
             kept_columns.append(col)
-    
-    # Filter and save
+
     df_filtered = df[kept_columns]
+    if min_mutations is not None and (df_filtered.sum(axis=0) < min_mutations).any():
+        raise AssertionError(f"{input_path}: samples below {min_mutations} remain after filtering.")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     df_filtered.to_csv(output_path, sep='\t')
-    
+
     return {
-        'original_count': original_count,
-        'removed_count': len(removed_samples),
+        'original_count': df.shape[1],
+        'removed_count': len(removed),
         'kept_count': len(kept_columns),
-        'removed_samples': removed_samples,
+        'removed_samples': removed,
+        'kept_columns': kept_columns,
+        'filtered': df_filtered,
     }
 
 
-def run_preprocessing(input_dir, output_dir, exclusion_patterns, case_sensitive=False):
-    """Preprocess all files in input directory."""
+def run_preprocessing(input_dir, output_dir, exclusion_patterns, case_sensitive=False,
+                      min_mutations=None, make_normalized=False):
+    """
+    Preprocess all files in input directory.
+
+    min_mutations : dict {species: minimum total mutations} or None. When
+        given, every raw count file's species must have an entry, so no
+        file can be passed through unfiltered.
+    make_normalized : write normalized_<name>.tsv (each sample's counts
+        divided by its total) for raw files that have no normalized file.
+    Normalized files already in input_dir keep the same samples as their
+    species' raw file.
+    """
     print("\n" + "="*70)
     print("PREPROCESSING")
     print("="*70)
     print(f"Input:  {input_dir}")
     print(f"Output: {output_dir}")
     print(f"Exclusion patterns: {exclusion_patterns}")
+    print(f"Minimum mutations per species: {min_mutations or 'none'}")
     print("="*70)
-    
-    # Find all data files
+
     files = []
     for ext in ['*.txt', '*.tsv']:
         files.extend(glob.glob(os.path.join(input_dir, ext)))
-    
+
     if not files:
         print(f"\n⚠️  No .txt or .tsv files found in {input_dir}")
         return {}
-    
+
+    raw_files  = sorted(f for f in files if 'normaliz' not in os.path.basename(f).lower())
+    norm_files = sorted(f for f in files if 'normaliz' in os.path.basename(f).lower())
+
     total_removed = 0
     total_original = 0
-    
-    # Process each file
-    for input_path in sorted(files):
+    kept_by_species = {}
+    removed_rows = []
+
+    for input_path in raw_files:
         filename = os.path.basename(input_path)
-        output_path = os.path.join(output_dir, filename)
-        
-        print(f"\n  Processing: {filename}")
-        stats = preprocess_file(input_path, output_path, exclusion_patterns, case_sensitive)
-        
+        species, _ = detect_species(filename)
+        threshold = None
+        if min_mutations:
+            if species not in min_mutations:
+                raise ValueError(
+                    f"No min_mutations cutoff for species '{species}' "
+                    f"({filename}) in the preprocessing config.")
+            threshold = min_mutations[species]
+
+        output_path = os.path.join(output_dir, cleaned_file_name(filename))
+        print(f"\n  Processing: {filename}"
+              + (f"  (cutoff: {threshold:g} mutations)" if threshold is not None else ""))
+        stats = preprocess_file(input_path, output_path, exclusion_patterns,
+                                case_sensitive, threshold)
+        kept_by_species[species] = stats['kept_columns']
+        removed_rows += [(species, filename, sample, reason, total)
+                         for sample, reason, total in stats['removed_samples']]
+
         total_original += stats['original_count']
         total_removed += stats['removed_count']
-        
+
         print(f"    Original: {stats['original_count']} samples")
         print(f"    Removed:  {stats['removed_count']} samples")
         print(f"    Kept:     {stats['kept_count']} samples")
-        
+
         if stats['removed_samples']:
-            print(f"    Matched patterns (first 3):")
-            for sample, pattern in stats['removed_samples'][:3]:
-                print(f"      - {sample} ('{pattern}')")
+            print(f"    Removed (first 3):")
+            for sample, reason, total in stats['removed_samples'][:3]:
+                print(f"      - {sample} ({reason}; {total:,.1f} mutations)")
             if len(stats['removed_samples']) > 3:
                 print(f"      ... and {len(stats['removed_samples']) - 3} more")
-    
+
+        has_norm = any(detect_species(os.path.basename(n))[0] == species for n in norm_files)
+        if make_normalized and not has_norm:
+            counts = stats['filtered']
+            norm_path = os.path.join(output_dir,
+                                     "normalized_" + os.path.splitext(cleaned_file_name(filename))[0] + ".tsv")
+            counts.div(counts.sum(axis=0), axis=1).to_csv(norm_path, sep='\t')
+            print(f"    Wrote normalized profiles: {os.path.basename(norm_path)}")
+
+    for input_path in norm_files:
+        filename = os.path.basename(input_path)
+        species, _ = detect_species(filename)
+        df = pd.read_csv(input_path, sep='\t', index_col=0)
+        keep = [c for c in df.columns if c in set(kept_by_species.get(species, []))]
+        df[keep].to_csv(os.path.join(output_dir, cleaned_file_name(filename)), sep='\t')
+        print(f"\n  Processing: {filename} — kept the {len(keep)} samples kept in the {species} count file")
+
+    pd.DataFrame(removed_rows, columns=["species", "file", "sample", "reason", "total_mutations"]) \
+        .to_csv(os.path.join(output_dir, PREPROCESSING_REMOVED_LOG), index=False)
+
     print(f"\n{'='*70}")
     print(f"PREPROCESSING COMPLETE")
     print(f"  Total samples: {total_original}")
     print(f"  Removed: {total_removed}")
     print(f"  Kept: {total_original - total_removed}")
     print(f"  Cleaned data saved to: {output_dir}")
+    print(f"  Removed samples listed in: {PREPROCESSING_REMOVED_LOG}")
     print('='*70 + "\n")
-    
+
     return True
 
 
 PREPROCESSING_STAMP = "preprocessing_stamp.json"
 
 
-def preprocessing_stamp(input_dir, exclusion_patterns, case_sensitive):
+def preprocessing_stamp(input_dir, exclusion_patterns, case_sensitive,
+                        min_mutations=None, make_normalized=False):
     """Record of the inputs and settings a cleaned-data cache was built from."""
     files = {}
     for path in sorted(glob.glob(os.path.join(input_dir, '*.txt')) +
@@ -909,6 +1001,8 @@ def preprocessing_stamp(input_dir, exclusion_patterns, case_sensitive):
     return {
         'exclusion_patterns': list(exclusion_patterns),
         'case_sensitive': bool(case_sensitive),
+        'min_mutations': dict(min_mutations or {}),
+        'make_normalized': bool(make_normalized),
         'input_files_sha256': files,
     }
 
@@ -945,21 +1039,26 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
     
     print(f"✓ Found preprocessing config: {preprocessing_config_path}")
     
-    # Check if there are exclusion patterns for this mutation type
-    exclusion_patterns = config.get(mutation_type, {}).get('exclude', [])
-    
-    if not exclusion_patterns:
-        print(f"✗ No exclusion patterns defined for {mutation_type}")
+    # Exclusion patterns and per-species minimum mutation counts for this type
+    type_config = config.get(mutation_type) or {}
+    exclusion_patterns = type_config.get('exclude') or []
+    min_mutations = type_config.get('min_mutations') or {}
+
+    if not exclusion_patterns and not min_mutations:
+        print(f"✗ No exclusion patterns or min_mutations defined for {mutation_type}")
         print(f"✓ Using original data: {original_dir}")
         return original_dir
-    
+
     print(f"✓ Exclusion patterns for {mutation_type}: {exclusion_patterns}")
-    
+    print(f"✓ Minimum mutations for {mutation_type}: {min_mutations or 'none'}")
+
     case_sensitive = config.get('case_sensitive', False)
+    make_normalized = get_config(mutation_type).has_prenormalized_files
 
     # The cached cleaned data is reused only if it was built from the same
-    # input files and the same exclusion patterns; otherwise it is rebuilt.
-    stamp = preprocessing_stamp(original_dir, exclusion_patterns, case_sensitive)
+    # input files and the same settings; otherwise it is rebuilt.
+    stamp = preprocessing_stamp(original_dir, exclusion_patterns, case_sensitive,
+                                min_mutations, make_normalized)
     stamp_path = os.path.join(cleaned_dir, PREPROCESSING_STAMP)
     cached_stamp = None
     if os.path.exists(stamp_path):
@@ -982,7 +1081,9 @@ def determine_data_directory(base_input_dir, mutation_type, preprocessing_config
         original_dir,
         cleaned_dir,
         exclusion_patterns,
-        case_sensitive
+        case_sensitive,
+        min_mutations,
+        make_normalized,
     )
 
     if not success:
@@ -1023,6 +1124,31 @@ def validate_data_dir_argument(data_dir_arg, mutation_type):
 # 7. MAIN
 # ==============================================================================
 
+def parse_custom_thresholds(value, cfg):
+    """
+    Resolve --custom_thresholds: None -> the type's defaults (none for any
+    type), 'none' -> none, a preset name -> that preset, otherwise
+    'pattern:value,pattern:value'.
+    """
+    if value is None:
+        return dict(cfg.default_custom_thresholds)
+    value = value.strip()
+    if value.lower() == 'none':
+        return {}
+    if value in cfg.custom_threshold_presets:
+        return dict(cfg.custom_threshold_presets[value])
+    thresholds = {}
+    for item in value.split(','):
+        if ':' not in item:
+            presets = ", ".join(cfg.custom_threshold_presets) or "none"
+            raise ValueError(
+                f"Invalid --custom_thresholds entry {item!r}: expected "
+                f"'pattern:value' or a preset name ({presets}).")
+        pat, val = item.split(':', 1)
+        thresholds[pat.strip()] = float(val.strip())
+    return thresholds
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="eSignatures hierarchical clustering pipeline with integrated preprocessing.",
@@ -1040,11 +1166,11 @@ def main():
     parser.add_argument("--cosine_similarity", type=float, default=0.9,
                         help="Main cosine similarity threshold for clustering.")
     parser.add_argument("--custom_thresholds", default=None,
-                        help="Custom thresholds: 'pattern:value,pattern:value'. "
-                             "If omitted, uses the mutation type's canonical "
-                             "defaults from utils/mutation_type.py (SBS: "
-                             "Aristolochic_acid_I:0.095,Dibenzo[a,l]pyrene:0.095). "
-                             "Pass 'none' to disable.")
+                        help="Per-cluster custom thresholds, off by default. "
+                             "Either 'pattern:value,pattern:value' or a preset "
+                             "name from utils/mutation_type.py (SBS: 'aai-split' "
+                             "= Aristolochic_acid_I:0.095,Dibenzo[a,l]pyrene:0.095, "
+                             "used for testing). 'none' also turns them off.")
     parser.add_argument("--mapping_file",
                         default=os.path.join(REPO_ROOT, "config", "sample_mapping.tsv"),
                         help="Path to sample name mapping TSV.")
@@ -1076,16 +1202,7 @@ def main():
     # Validate and auto-correct data_dir if needed
     args.data_dir = validate_data_dir_argument(args.data_dir, cfg.name)
 
-    # Parse custom thresholds
-    if args.custom_thresholds is None:
-        custom_thresholds = dict(cfg.default_custom_thresholds)
-    else:
-        custom_thresholds = {}
-    if args.custom_thresholds and args.custom_thresholds.strip().lower() != 'none':
-        for item in args.custom_thresholds.split(','):
-            if ':' in item:
-                pat, val = item.split(':', 1)
-                custom_thresholds[pat.strip()] = float(val.strip())
+    custom_thresholds = parse_custom_thresholds(args.custom_thresholds, cfg)
 
     # ── Determine data directory (with integrated preprocessing) ─────────────
     data_dir = determine_data_directory(
@@ -1117,6 +1234,10 @@ def main():
     )
 
     check_loaded_data(counts_df, normalized_df)
+    if not args.skip_preprocessing:
+        pre_cfg = load_preprocessing_config(args.preprocessing_config) or {}
+        check_min_mutations(counts_df, all_mappings,
+                            (pre_cfg.get(cfg.name) or {}).get('min_mutations'))
     counts_df     = filter_zero_columns(counts_df, typed_output_dir)
     normalized_df = normalized_df[counts_df.columns]
 

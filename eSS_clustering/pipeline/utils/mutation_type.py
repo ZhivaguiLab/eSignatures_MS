@@ -15,7 +15,6 @@ Usage
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 # ---------------------------------------------------------------------------
@@ -63,20 +62,20 @@ class MutationTypeConfig:
     artifact_signatures : list[str]
         COSMIC signature IDs to flag as artefacts in static heatmap.
     has_prenormalized_files : bool
-        True  → load raw counts AND pre-normalized files separately (SBS).
+        True  → load raw counts AND normalized files separately (SBS; the
+                normalized files are written by preprocessing).
         False → load raw counts only; pipeline normalises internally (DBS/ID).
-    raw_file_suffix : str
-        Suffix appended after the species name to build the raw-count file path.
-        e.g. "_307.txt" → "filtered_mouse_307.txt"
-    norm_file_suffix : str or None
-        Suffix for the pre-normalised file (SBS only).  None for DBS/ID.
     cluster_prefix : str
         Label prefix in output IDs: "eSS", "eDS", "eIS".
     default_custom_thresholds : dict[str, float]
-        Canonical per-cluster cosine-distance thresholds ({sample-name
-        substring: distance}) applied when --custom_thresholds is not given.
-        A main cluster containing a matching sample is re-split at this
-        tighter distance.
+        Per-cluster cosine-distance thresholds ({sample-name substring:
+        distance}) applied when --custom_thresholds is not given. A main
+        cluster containing a matching sample is re-split at this tighter
+        distance. Empty for every type: custom thresholds are off by default.
+    custom_threshold_presets : dict[str, dict[str, float]]
+        Named sets of custom thresholds that can be passed by name to
+        --custom_thresholds (or run_pipeline.sh), e.g. the SBS 'aai-split'
+        used for testing.
     """
     name:                  str
     n_contexts:            int
@@ -85,10 +84,9 @@ class MutationTypeConfig:
     pdf_prefix:            str
     artifact_signatures:   list
     has_prenormalized_files: bool
-    raw_file_suffix:       str
-    norm_file_suffix:      Optional[str]
     cluster_prefix:        str   # Label prefix in output IDs: "eSS", "eDS", "eIS"
     default_custom_thresholds: dict = field(default_factory=dict)
+    custom_threshold_presets: dict = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -104,12 +102,15 @@ _CONFIGS = {
         pdf_prefix            = "SBS_96_plots",
         artifact_signatures   = _SBS_ARTIFACTS,
         has_prenormalized_files = True,
-        raw_file_suffix       = "_307.txt",
-        norm_file_suffix      = "_307.tsv",           # prefixed with "normalized_filtered_"
         cluster_prefix        = "eSS",
-        default_custom_thresholds = {
-            "Aristolochic_acid_I": 0.095,
-            "Dibenzo[a,l]pyrene":  0.095,
+        # Optional, for testing: re-split the cluster containing the
+        # Aristolochic acid I / Dibenzo[a,l]pyrene samples at distance 0.095
+        # (the "manual AAI/DBP split"). Not applied by default.
+        custom_threshold_presets = {
+            "aai-split": {
+                "Aristolochic_acid_I": 0.095,
+                "Dibenzo[a,l]pyrene":  0.095,
+            },
         },
     ),
     "DBS": MutationTypeConfig(
@@ -120,8 +121,6 @@ _CONFIGS = {
         pdf_prefix            = "DBS_78_plots",
         artifact_signatures   = _DBS_ARTIFACTS,
         has_prenormalized_files = False,
-        raw_file_suffix       = "_DBS.txt",
-        norm_file_suffix      = None,
         cluster_prefix        = "eDS",
     ),
     "ID": MutationTypeConfig(
@@ -132,8 +131,6 @@ _CONFIGS = {
         pdf_prefix            = "ID_83_plots",
         artifact_signatures   = _ID_ARTIFACTS,
         has_prenormalized_files = False,
-        raw_file_suffix       = "_ID.txt",
-        norm_file_suffix      = None,
         cluster_prefix        = "eIS",
     ),
 }

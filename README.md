@@ -8,7 +8,7 @@ downstream analysis, statistics, and figure generation.
 ## Layout
 
 ```
-eSS_clustering/                  eSS clustering pipeline (49 eSS, COSMIC matching)
+eSS_clustering/                  eSS clustering pipeline (48 eSS, COSMIC matching)
 figures/
   fig02_composition_coverage/    Sankey, model/exposure coverage, pie legends
   fig03_mutational_landscapes/   per-model mutation-burden heatmap
@@ -19,17 +19,23 @@ figures/
 
 ## eSS clustering
 
-`eSS_clustering/` builds the eSS atlas: hierarchical clustering of the 671
-SBS96 profiles into 49 main clusters (eSS), 16 small clusters and 131
-singletons, and comparison of the eSS consensus profiles with COSMIC v3.6
-(26 matched at cosine similarity ≥0.85, 23 unmatched). It includes the SBS
-input matrices and COSMIC references, so it runs without external data:
+`eSS_clustering/` builds the eSS atlas. It filters the 1,482 unfiltered SBS96
+profiles to those with ≥307 SBSs (653 pass), clusters them into 48 main
+clusters (eSS), 16 small clusters and 123 singletons, and compares the eSS
+consensus profiles with COSMIC v3.6 (25 matched at cosine similarity ≥0.85,
+23 unmatched). The unfiltered input profiles and COSMIC references are
+included, so it runs without external data:
 
 ```bash
 cd eSS_clustering
 bash run_pipeline.sh SBS 0.9 0.85
-python -m unittest discover tests   # checks the run reproduces the published clusters
+python -m unittest discover tests   # checks the run reproduces the expected clusters
 ```
+
+A manual AAI/DBP split is available as a testing option
+(`bash run_pipeline.sh SBS 0.9 0.85 aai-split`: 49 eSS, 26 matched). The
+mutation cutoff can be changed per species in
+`eSS_clustering/config/preprocessing.yaml`.
 
 See `eSS_clustering/README.md` for installation, settings and outputs.
 

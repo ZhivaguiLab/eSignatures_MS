@@ -14,12 +14,22 @@ None of them contains patient data or sensitive information.
 
 ## `preprocessing.yaml`
 
-Sample-name patterns excluded before clustering, per mutation type. Patterns
-are case-insensitive substrings. For SBS it excludes the 10 mouse MEF samples
-that are not part of the atlas (Xenon, Xenon XPA-/-, Deoxynivalenol,
-Deoxynivalenol + Patulin); this is part of the published analysis. The
-cleaned data is cached in `data/input_cleaned/<TYPE>/` and rebuilt
-automatically when the patterns or input files change. See the main README's
+Decides which samples are clustered, per mutation type:
+
+- `exclude`: sample-name patterns (case-insensitive substrings). For SBS it
+  excludes the 10 mouse MEF samples that are not part of the atlas (Xenon,
+  Xenon XPA-/-, Deoxynivalenol, Deoxynivalenol + Patulin).
+- `min_mutations` (SBS): the minimum total SBS count per species — 307 for
+  every species (the Poisson-resampling stability threshold). Every sample is
+  tested, and every species in `data/input/SBS` must have a value. To try a
+  different cutoff (e.g. per-species values), edit the numbers here; the next
+  run rebuilds the preprocessed data. See "Changing the minimum mutation
+  cutoff" in the main README.
+
+For SBS, preprocessing also writes the normalized profiles. The cleaned data
+is cached in `data/input_cleaned/<TYPE>/` and rebuilt automatically when the
+settings or input files change; removed samples are listed in
+`preprocessing_removed_samples.csv` there. See the main README's
 Preprocessing section.
 
 ---

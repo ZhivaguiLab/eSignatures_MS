@@ -5,12 +5,19 @@
 # Outputs are written to results/<MUTATION_TYPE>/ so separate runs are isolated.
 #
 # Usage:
-#   bash run_pipeline.sh <mutation-type> <cosine-clust> <cosine-heatmap>
+#   bash run_pipeline.sh <mutation-type> <cosine-clust> <cosine-heatmap> [aai-split]
+#
+# The optional 4th argument 'aai-split' (SBS, for testing) adds the manual
+# AAI/DBP split: the cluster containing the Aristolochic acid I /
+# Dibenzo[a,l]pyrene samples is re-split at cosine distance 0.095. It writes to
+# results/aai_split/ instead of results/, so both versions can be kept side by
+# side. The default run has no custom thresholds.
 #
 # Examples:
 #   bash run_pipeline.sh SBS 0.9 0.85
 #   bash run_pipeline.sh DBS 0.9 0.85
 #   bash run_pipeline.sh ID  0.9 0.85
+#   bash run_pipeline.sh SBS 0.9 0.85 aai-split     # testing: with the AAI/DBP split
 #
 # The canonical clustering threshold is 0.9 — this is also the default of
 # perform_clustering.py, so running that script directly gives the same
@@ -21,11 +28,18 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Argument validation
 # ---------------------------------------------------------------------------
-if [ "$#" -ne 3 ]; then
-    echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap>"
+if [ "$#" -ne 3 ] && [ "$#" -ne 4 ]; then
+    echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap> [aai-split]"
     echo "  mutation-type : SBS | DBS | ID"
+    echo "  aai-split     : optional, SBS testing only; add the manual AAI/DBP split"
     echo ""
     echo "Example: $0 SBS 0.9 0.85"
+    exit 1
+fi
+
+VARIANT="${4:-}"
+if [ -n "${VARIANT}" ] && [ "${VARIANT}" != "aai-split" ]; then
+    echo "Error: 4th argument must be 'aai-split' (got '${VARIANT}')"
     exit 1
 fi
 
@@ -53,6 +67,9 @@ REFERENCES_DIR="${REPO_ROOT}/data/references"
 CONFIG_DIR="${REPO_ROOT}/config"
 PIPELINE_DIR="${REPO_ROOT}/pipeline"
 RESULTS_ROOT="${REPO_ROOT}/results"
+if [ "${VARIANT}" == "aai-split" ]; then
+    RESULTS_ROOT="${REPO_ROOT}/results/aai_split"
+fi
 
 # Validate that input directory exists
 if [ ! -d "${DATA_DIR}" ]; then
@@ -111,6 +128,7 @@ echo "COSMIC ref:   ${COSMIC_PROFILE}"
 echo "Typed output: ${FILTER_DIR}"
 echo "Cosine (clust):   ${COSINE_THRES_CLUST}"
 echo "Cosine (heatmap): ${COSINE_THRES_HEATMAP}"
+echo "Custom thresholds: $([ "${VARIANT}" == "aai-split" ] && echo "aai-split (manual AAI/DBP split, testing)" || echo "none (default)")"
 echo "========================================"
 
 # ---------------------------------------------------------------------------
@@ -124,16 +142,16 @@ echo "========================================"
 CLUSTERING_ARGS=(
     --output_dir "${RESULTS_ROOT}"
     --mutation_type "${MUTATION_TYPE}"
-    --data_dir "${DATA_DIR}"
+    --data_dir "${REPO_ROOT}/data/input"
     --cosine_similarity "${COSINE_THRES_CLUST}"
     --use_original_names
     --mapping_file "${MAPPING_FILE}"
 )
-
-# Per-cluster custom thresholds (SBS: Aristolochic_acid_I and
-# Dibenzo[a,l]pyrene at 0.095) are not passed here: perform_clustering.py
-# applies them by default from pipeline/utils/mutation_type.py, so the
-# script and this wrapper cannot drift apart.
+# The AAI/DBP split is passed by preset name; its thresholds are defined
+# once, in custom_threshold_presets in pipeline/utils/mutation_type.py.
+if [ "${VARIANT}" == "aai-split" ]; then
+    CLUSTERING_ARGS+=(--custom_thresholds aai-split)
+fi
 
 python "${PERFORM_CLUSTERING_PY}" "${CLUSTERING_ARGS[@]}"
 

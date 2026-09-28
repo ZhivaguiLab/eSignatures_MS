@@ -16,7 +16,7 @@ eSS_clustering/
     utils/
       __init__.py
       naming.py               ← shared sample-name parsing
-      mutation_type.py        ← per-type constants (contexts, artifacts, file suffixes, custom thresholds)
+      mutation_type.py        ← per-type constants (contexts, artifacts, custom-threshold presets)
     perform_clustering.py     ← Step 1: hierarchical clustering (with integrated preprocessing)
     generate_summary.py       ← Step 2: HTML reports
     generate_images_heatmap.py       ← Step 3: PDF → PNG
@@ -35,16 +35,20 @@ eSS_clustering/
     abv_table_clusters.txt    ← compound → acronym abbreviations
 
   data/                       ← see data/README.md
-    input/SBS/                ← SBS count + normalized matrices (tracked)
+    input/SBS/                ← unfiltered SBS count matrices, one per species (tracked)
     input/DBS/, input/ID/     ← not included; add your own
     references/               ← COSMIC v3.6 SBS/DBS/ID profiles (tracked)
     input_cleaned/            ← auto-generated preprocessed data (NOT tracked)
 
-  results/                    ← NOT tracked (generated at runtime)
+  results/                    ← NOT tracked (generated at runtime; aai_split/ for that testing option)
 
   tests/
-    test_clustering_reproducibility.py  ← checks a run reproduces the published clusters
-    expected/SBS_cluster_membership.tsv ← published sample → cluster assignments
+    test_clustering_reproducibility.py  ← checks a run reproduces the expected clusters
+    expected/SBS_cluster_membership.tsv       ← expected sample → cluster assignments
+    expected/SBS_cluster_membership_aai_split.tsv    ← same, with the aai-split testing option
+    expected/published_307_input_samples.tsv  ← samples in the earlier ≥307 input files
+    expected/main_SBS_cluster_membership.tsv  ← earlier clustering on main (old ≥307 inputs)
+    expected/main_SBS_eSS_profiles.tsv        ← earlier eSS consensus profiles on main
 
   NORMALIZATION_APPROACH.md   ← experimental normalization methods and results
   results_*_normalized/       ← comparison summaries for those methods
@@ -67,7 +71,7 @@ conda activate esig
 brew install poppler          # macOS
 # sudo apt-get install poppler-utils  # Linux
 
-# Exact environment used for the published results (recommended)
+# Exact environment the results were verified in (recommended)
 pip install -r requirements-lock.txt
 ```
 
@@ -75,13 +79,13 @@ The pipeline requires Python 3.11 and stops at start-up on any other version.
 There are two requirements files:
 
 - `requirements-lock.txt` pins every package, including indirect
-  dependencies, to the versions that reproduce the published clusters. Use
+  dependencies, to the versions that reproduce the expected clusters. Use
   this to reproduce the manuscript results.
 - `requirements.txt` pins only the packages the pipeline imports directly.
   Edit this one when updating a dependency, then regenerate the lock file
   (instructions at the top of `requirements-lock.txt`).
 
-After installing, check the install reproduces the published clusters:
+After installing, check the install reproduces the expected clusters:
 
 ```bash
 python -m unittest discover tests
@@ -111,45 +115,90 @@ comparison — adjust for your own analysis as needed.
 
 Each run writes to `results/<MUTATION_TYPE>/` automatically.
 
-### Reproducing the published clusters
+### Reproducing the clusters
 
-The canonical SBS clustering uses:
+The SBS clustering uses:
 
 | Setting | Value | Where it's defined |
 |---|---|---|
+| Minimum mutations per sample | 307 SBSs for every species (Poisson-resampling stability threshold), applied to every sample | `SBS: min_mutations` in `config/preprocessing.yaml` |
+| Excluded samples | 10 mouse MEF samples (Xenon, Deoxynivalenol) | `SBS: exclude` in `config/preprocessing.yaml` |
 | Cosine similarity threshold | `0.9` (distance `0.1`), average linkage | `--cosine_similarity` default in `perform_clustering.py` |
-| Per-cluster custom thresholds | `Aristolochic_acid_I: 0.095`, `Dibenzo[a,l]pyrene: 0.095` (cosine distance) | `default_custom_thresholds` in `pipeline/utils/mutation_type.py` |
+| Per-cluster custom thresholds | none (the AAI/DBP split is an optional testing preset, see below) | `default_custom_thresholds` / `custom_threshold_presets` in `pipeline/utils/mutation_type.py` |
 | Main vs small clusters | main: ≥3 samples; small: 2 samples (`MEF_AID` and `MCF10_cisplatin` 2-sample clusters are kept as main) | `special_patterns` in `perform_clustering.py` |
-| Excluded samples | 10 mouse MEF samples (Xenon, Deoxynivalenol) | `SBS` section of `config/preprocessing.yaml` |
 | Sample mapping | `config/sample_mapping.tsv` | `--mapping_file` default |
 | Consensus profile | `equal_replicate` | `--averaging_method` default |
 | COSMIC match | max cosine similarity ≥ `0.85` to any COSMIC v3.6 SBS signature, artifact signatures included | `MATCH_THRESHOLD` in `generate_static_heatmap.py`; `--threshold` in `generate_interactive_heatmap.py` |
 
-The custom thresholds re-split any main cluster that contains a sample
-matching the pattern, using the tighter distance. They're applied by default,
-so these two commands give **identical** clusters. With the current
-`data/input/SBS` that's **49 main clusters, 16 small clusters and 131
-singletons**:
+These two commands give **identical** clusters. With the current
+`data/input/SBS`, 653 of the 1,482 bundled profiles pass preprocessing and are
+clustered into **48 main clusters, 16 small clusters and 123 singletons**:
 
 ```bash
 bash run_pipeline.sh SBS 0.9 0.85
 python pipeline/perform_clustering.py --mutation_type SBS --output_dir results
 ```
 
-To override the custom thresholds, pass `--custom_thresholds 'pattern:value,...'`.
-To turn them off, pass `--custom_thresholds none`, which gives 48 main clusters.
+**25 of the 48 main clusters match COSMIC (≥0.85); 23 don't.** Both heatmap
+scripts report the same split. Four clusters sit just under the cutoff (eSS7,
+eSS20, eSS22, eSS25 at 0.847–0.848) and are counted as not matched, even though
+the static heatmap shows their value rounded to "0.85".
 
-With these settings, 671 profiles are clustered and **26 of the 49 main
-clusters match COSMIC (≥0.85); 23 don't**. Both heatmap scripts report the same
-split. Four clusters sit just under the cutoff (eSS7, eSS20, eSS22, eSS25 at
-0.847–0.848) and are counted as not matched, even though the static heatmap
-shows their value rounded to "0.85".
+### Testing option: the manual AAI/DBP split
+
+The `aai-split` preset re-splits the cluster that contains the Aristolochic
+acid I and Dibenzo[a,l]pyrene samples at a tighter cosine distance (0.095). It
+is not part of the default analysis; use it to test how that split changes the
+results:
+
+```bash
+bash run_pipeline.sh SBS 0.9 0.85 aai-split        # → results/aai_split/SBS/
+python pipeline/perform_clustering.py --mutation_type SBS --output_dir results/aai_split \
+    --custom_thresholds aai-split
+```
+
+| | Default | `aai-split` |
+|---|---|---|
+| Main clusters (eSS) | 48 | 49 |
+| Small clusters / singletons | 16 / 123 | 16 / 123 |
+| COSMIC matched / unmatched (≥0.85) | 25 / 23 | 26 / 23 |
+
+With the split, the 11-sample AAI/DBP cluster becomes two: 8 samples (6
+Aristolochic acid I + 2 Dibenzo[a,l]pyrene/DBPDE, so still mixed) and 3 DBPDE
+samples. Every other cluster is identical. The preset's thresholds are defined
+once, in `custom_threshold_presets` in `pipeline/utils/mutation_type.py`. Other
+thresholds can be passed as `--custom_thresholds 'pattern:value,...'`.
+
+### Changing the minimum mutation cutoff
+
+The cutoff is set per species in `config/preprocessing.yaml`
+(`SBS: min_mutations`) and applied during preprocessing; no code change is
+needed. The default is 307 for every species. To try something else, for
+example the per-species "SBS for 99% of simulations" thresholds from the
+Poisson resampling, edit the values:
+
+```yaml
+SBS:
+  min_mutations:
+    mouse:    235
+    human:    295
+    celegans: 451
+    chicken:  300
+    rat:      6354   # only 5 rat samples: this is the smallest rat sample
+```
+
+The next run rebuilds the preprocessed data automatically. Every species in
+`data/input/SBS` must have a value. The tests are written for the default
+(307) and will report the differences if you change it.
+
+### Cluster numbering
 
 The clustering has no random step, so the same input and settings always give
 the same clusters. Cluster IDs (`eSS1`, `eSS2`, …) are numbered left to right
 along the dendrogram. When a custom threshold splits a cluster, the pieces keep
-that cluster's place and are numbered largest first. Adding or removing a sample, or changing a threshold, can
-renumber them. Compare runs by which samples are in each cluster, not by ID.
+that cluster's place and are numbered largest first. Adding or removing a
+sample, or changing a threshold, can renumber them. Compare runs by which
+samples are in each cluster, not by ID.
 
 ### How clusters are defined
 
@@ -163,8 +212,9 @@ renumber them. Compare runs by which samples are in each cluster, not by ID.
    two groups whose average pairwise cosine distance is below 0.1 (similarity
    above 0.9). Membership comes straight from the tree; nobody picks clusters
    by hand.
-4. **Custom thresholds.** Clusters containing an AAI or DBP sample are cut
-   again, on their own, at distance 0.095.
+4. **Custom thresholds (optional, off by default).** With `aai-split`, the
+   cluster containing the AAI or DBP samples is cut again, on its own, at
+   distance 0.095.
 5. **Group.** Clusters with ≥3 samples are main clusters (eSS), 2-sample
    clusters are small clusters, 1-sample clusters are singletons.
 
@@ -177,18 +227,41 @@ The log reports the closest merges on either side of the cutoff. For the
 current data they are 0.09851 (joined) and 0.10039 (not joined), so a cutoff
 anywhere between cosine similarity 0.8996 and 0.9015 gives the same clusters.
 
-### Checking a run reproduces the published clusters
+### Checking a run reproduces the expected clusters
 
 ```bash
 python -m unittest discover tests -v
 ```
 
-The tests run the clustering on `data/input/SBS` and check it against
-`tests/expected/SBS_cluster_membership.tsv` (every sample's cluster and eSS
-number). They also check the 49 / 16 / 131 counts (48 without custom
-thresholds), the 26 / 23 COSMIC split, the mouse exclusions, and that the
-safety checks below stop the run on bad input. If you change the input data
-or settings on purpose, regenerate the expected file and review the diff.
+The tests run preprocessing and clustering on `data/input/SBS` and check the
+result against `tests/expected/SBS_cluster_membership.tsv` (every sample's
+cluster and eSS number). They also check:
+
+- the 48 / 16 / 123 counts and 25 / 23 COSMIC split, and for the `aai-split`
+  testing option, 49 / 16 / 123, 26 / 23 and its own expected membership
+  (`tests/expected/SBS_cluster_membership_aai_split.tsv`), which differs from
+  the default only in the AAI/DBP cluster
+- preprocessing: every clustered sample meets its species cutoff; each cleaned
+  file equals an independent re-filter of the unfiltered file (and each
+  normalized file equals its counts / total); every input sample is either kept
+  or listed in the removed-samples log; a cached rerun is identical
+- with 307 for every species, preprocessing keeps exactly the samples in the
+  earlier published `filtered_*_307.txt` inputs
+  (`tests/expected/published_307_input_samples.tsv`), except the 18 C. elegans
+  CX-5461 samples below 307 that the old filtering script let through
+- **agreement with the earlier clustering on `main`** (which used the AAI/DBP
+  split, so these tests use `aai-split`), with 307 for every species:
+  - adding back the 18 CX-5461 samples the old script never tested gives
+    exactly `main`'s inputs, cluster membership, eSS numbering and eSS
+    profiles (671 profiles, 49 / 16 / 131)
+  - without them, the result equals `main` with only those 18 samples removed:
+    48 eSS with identical members and profiles, the CX-5461 eSS reduced to its 3
+    samples ≥307, identical small clusters, and 26 / 23 COSMIC matches
+- the mouse exclusions, and that the safety checks below stop the run on bad
+  input
+
+If you change the input data or settings on purpose, regenerate the expected
+membership file and review the diff.
 
 ### Safety checks
 
@@ -201,6 +274,8 @@ The run stops with an error, rather than continuing, if:
 - the tree cut and the dendrogram colours disagree, or a sample ends up in
   more than one cluster or in none
 - preprocessing fails (it used to fall back to the unfiltered data)
+- `min_mutations` is set but a species in the input has no cutoff, or a loaded
+  sample is below its species' cutoff
 
 **Preprocessing is automatic** — if `config/preprocessing.yaml` exists and defines
 exclusion patterns for the mutation type, samples will be filtered before clustering.
@@ -250,8 +325,19 @@ colour.
 The pipeline includes integrated preprocessing to filter out unwanted samples before
 clustering. This is useful for removing experimental artifacts, controls, or other
 samples that should not be included in the analysis. For SBS it is part of the
-published analysis: it removes the 10 excluded mouse MEF samples, so skipping it
-does not reproduce the published clusters.
+analysis: `data/input/SBS` holds the **unfiltered** profiles, and preprocessing
+
+1. removes the 10 excluded mouse MEF samples (by name), and
+2. removes every sample whose total SBS count is below its species' cutoff
+   (`min_mutations`: 307 SBSs for every species, the Poisson-resampling
+   stability threshold), and
+3. writes the normalized profiles (each sample's counts divided by its total).
+
+Every sample is tested against its cutoff, whatever its name. (The notebook
+that made the earlier `filtered_*_307.txt` inputs only tested samples whose
+name contained "exome" or "genome", so 21 C. elegans CX-5461 samples were never
+filtered.) Skipping preprocessing does not reproduce the results, and SBS won't
+run without it because the normalized files are only made here.
 
 ### Quick Start
 
@@ -267,6 +353,12 @@ SBS:
   exclude:
     - Xenon
     - Deoxynivalenol
+  min_mutations:      # per species; species is detected from the file name
+    mouse:    307
+    human:    307
+    celegans: 307
+    chicken:  307
+    rat:      307
 DBS:
   exclude:
     - hTumor
@@ -286,7 +378,12 @@ The pipeline will:
 - If exclusion patterns are defined for DBS → preprocess and save to `data/input_cleaned/DBS/`
 - If cleaned data already exists and was built from the same input files and
   patterns → reuse it (cached); otherwise rebuild it
-- If no patterns defined → use original data
+- If no patterns or cutoffs defined → use original data
+
+Removed samples, with the reason and their total mutation count, are listed in
+`data/input_cleaned/<TYPE>/preprocessing_removed_samples.csv`. If
+`min_mutations` is set, every species in the input folder must have a cutoff;
+a missing one stops the run.
 
 ### How It Works
 
@@ -385,31 +482,33 @@ DATA DIRECTORY SELECTION
 ======================================================================
 ✓ Found preprocessing config: config/preprocessing.yaml
 ✓ Exclusion patterns for SBS: ['Xenon', 'Deoxynivalenol']
+✓ Minimum mutations for SBS: {'mouse': 307, 'human': 307, 'celegans': 307, 'chicken': 307, 'rat': 307}
 
 Running preprocessing...
+  ...
+  Processing: unfiltered_celegans_SBS96.txt  (cutoff: 307 mutations)
+    Original: 245 samples
+    Removed:  155 samples
+    Kept:     90 samples
+    Removed (first 3):
+      - CX-5461_NO_UVA19 (below 307 mutations; 48.0 mutations)
+      - CX-5461_NO_UVA1 (below 307 mutations; 301.0 mutations)
+      - CX-5461_NO_UVA20 (below 307 mutations; 45.0 mutations)
+      ... and 152 more
+    Wrote normalized profiles: normalized_celegans_SBS96.tsv
+  ...
+PREPROCESSING COMPLETE
+  Total samples: 1482
+  Removed: 829
+  Kept: 653
+  Cleaned data saved to: data/input_cleaned/SBS
+  Removed samples listed in: preprocessing_removed_samples.csv
+======================================================================
 
-======================================================================
-PREPROCESSING
-======================================================================
-Input:  data/input/SBS
-Output: data/input_cleaned/SBS
-Exclusion patterns: ['Xenon', 'Deoxynivalenol']
-======================================================================
-  ...
-  Processing: filtered_mouse_307.txt
-    Original: 371 samples
-    Removed:  10 samples
-    Kept:     361 samples
-    Matched patterns (first 3):
-      - MEF_Deoxynivalenol_Patulin__Genome_1 ('deoxynivalenol')
-      - MEF_Deoxynivalenol_Patulin__Genome_2 ('deoxynivalenol')
-      - MEF_Deoxynivalenol_Patulin__Genome_3 ('deoxynivalenol')
-      ... and 7 more
-  ...
 ✓ Using cleaned data: data/input_cleaned/SBS
 ```
 
-On later runs with unchanged inputs and patterns, the log shows
+On later runs with unchanged inputs and settings, the log shows
 `✓ Using cached cleaned data` instead.
 
 ---
@@ -582,7 +681,7 @@ On Linux, use `google-chrome --headless ...` instead of the macOS app path above
 | Cluster prefix | `eSS` | `eDS` | `eIS` |
 | Normalisation | pre-computed file | internal (col sum → 1) | internal (col sum → 1) |
 | Artifact signatures | SBS27, 43, 45–60, 95 | *(none)* | ID9 |
-| Preprocessing | 10 mouse MEF samples (Xenon, Deoxynivalenol) | hTumor exclusion | hTumor exclusion |
+| Preprocessing | min_mutations 307 + 10 mouse MEF samples excluded | hTumor exclusion | hTumor exclusion |
 | Matrix generation | ✓ | ✓ | ✓ |
 
 All type-specific constants are in `pipeline/utils/mutation_type.py`.
@@ -602,6 +701,10 @@ full 6-step pipeline and compared against the default clustering; see
 [NORMALIZATION_APPROACH.md](NORMALIZATION_APPROACH.md) for the method
 details, rationale, results, and current limitations (unconfirmed genome
 builds, no chicken/C. elegans opportunity tables yet).
+
+These scripts still expect the earlier input layout
+(`filtered_<species>_307.txt` / `normalized_filtered_<species>_307.tsv`) and
+have not been updated for the unfiltered inputs and preprocessing cutoffs.
 
 ---
 
@@ -640,8 +743,8 @@ python pipeline/perform_clustering.py --mutation_type DBS --output_dir results -
 
 **Want to use original data (skip preprocessing):**
 
-For SBS this puts the excluded mouse samples back in, so it won't reproduce
-the published clusters.
+Not for SBS: the SBS inputs are unfiltered, and the normalized SBS files are
+only made by preprocessing, so SBS won't run without it.
 ```bash
 python pipeline/perform_clustering.py --mutation_type DBS --output_dir results --skip_preprocessing
 ```
