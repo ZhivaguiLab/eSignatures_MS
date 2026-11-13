@@ -25,6 +25,7 @@ eSS_clustering/
     generate_interactive_heatmap.py  ← Step 4: interactive heatmap
     generate_static_heatmap.py       ← Step 5: static heatmap
     species_compound_matrix.py       ← Step 6: species × compound matrix
+    combined_matrix_figure.py        ← Step 6b: the three matrices as one figure (HTML + PDF)
     run_info.py                      ← run folder naming + run_parameters.txt (Step 7)
     run_decomposition.py             ← COSMIC decomposition into eSS, SigProfilerAssignment (Step 8)
     utils/opportunity_normalization.py ← optional wes-to-wgs / own-opportunity normalization
@@ -807,6 +808,7 @@ Cisplatin	Cis
 | 4 | `generate_interactive_heatmap.py` | `interactive_heatmap.html`, `cosmic_similar_clusters_<t>.tsv`, `denovo_clusters_<t>.tsv` |
 | 5 | `generate_static_heatmap.py` | `cosine_similarity_heatmap.pdf` (3 versions) |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_*.pdf` |
+| 6b | `combined_matrix_figure.py` | `species_compound_matrix_combined.html`, `species_compound_matrix_combined.pdf` (one page; needs Google Chrome) |
 | 7 | `run_info.py` | `run_parameters.txt`, `run_parameters.json` |
 | 8 (SBS) | `run_decomposition.py` | `decomposition/` (COSMIC decomposition into eSS) |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_{human,mouse,other_species}.pdf` |
@@ -846,6 +848,30 @@ needed for `pdf2image`, see [Installation](#installation)) gives one PNG at
 
 ```bash
 pdftoppm -png -r 300 -singlefile results/min307/SBS/reports/cluster_summary.pdf results/min307/SBS/reports/cluster_summary
+```
+
+### Combined species × compound figure (Step 6b)
+
+Step 6 draws three species × compound matrices (`species_compound_matrix_human.pdf`,
+`_mouse.pdf`, `_other_species.pdf`). Step 6b puts them together as one figure,
+in the run folder:
+
+- `species_compound_matrix_combined.html`
+- `species_compound_matrix_combined.pdf` (one page, A4-landscape width)
+
+Panels **a** Human, **b** Mouse and **c** Other experimental models, each
+titled with its number of models, exposures (columns) and profiles. The
+panels are the Step 6 PDFs themselves, converted to vector SVG with
+`pdftocairo` (Poppler), so the figure always matches Step 6. Each PDF's own
+legend is cropped off, one shared legend is placed next to panel c, and the
+three panels are scaled so their grid cells are the same size. The PDF is
+printed with headless Google Chrome, as in Step 2b (skipped with a warning if
+Chrome is not found).
+
+To make it for an existing run folder:
+
+```bash
+python pipeline/combined_matrix_figure.py --run_dir results/min307/SBS
 ```
 
 ---

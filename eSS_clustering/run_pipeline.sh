@@ -44,8 +44,8 @@
 #   bash run_pipeline.sh SBS 0.9 0.85 per-species wes-to-wgs
 #   bash run_pipeline.sh SBS 0.9 0.85 pooled             # pooled consensus profiles
 #
-# Step 2b prints the cluster summary reports to one-page PDFs (needs Google
-# Chrome; skipped otherwise). For SBS, the last step decomposes the COSMIC
+# Step 2b prints the cluster summary reports, and Step 6b the combined species
+# × compound figure, to one-page PDFs (needs Google Chrome; skipped otherwise). For SBS, the last step decomposes the COSMIC
 # signatures into the run's eSS with SigProfilerAssignment (Step 8).
 
 set -euo pipefail
@@ -314,6 +314,22 @@ python "${GENERATE_MATRIX_PY}" \
     --main_output_dir "${FILTER_DIR}" \
     --output_path "${FILTER_DIR}/species_compound_matrix.pdf" \
     --mutation_type "${MUTATION_TYPE}" \
+    --abbreviation_file "${ABBREVIATION_FILE}" \
+    --compound_grouping "${CONFIG_DIR}/compound_grouping.yaml"
+
+# ---------------------------------------------------------------------------
+# Step 6b: Combined species × compound figure
+# ---------------------------------------------------------------------------
+# The three Step 6 matrix PDFs as one figure (panels a Human, b Mouse,
+# c Other, one shared legend, equal cell size):
+# species_compound_matrix_combined.html and a one-page .pdf (needs Google
+# Chrome for the PDF; skipped with a warning otherwise).
+echo ""
+echo "========================================"
+echo "Step 6b: Combined Species-Compound Figure"
+echo "========================================"
+python "${PIPELINE_DIR}/combined_matrix_figure.py" \
+    --run_dir "${FILTER_DIR}" \
     --abbreviation_file "${ABBREVIATION_FILE}" \
     --compound_grouping "${CONFIG_DIR}/compound_grouping.yaml"
 
