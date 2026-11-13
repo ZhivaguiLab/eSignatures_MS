@@ -272,6 +272,30 @@ class ClusteringReproducibilityTest(unittest.TestCase):
         self.assertEqual(self._cosmic_counts(self.default, "default"),
                          tuple(EXPECTED["default"]["cosmic"]))
 
+    def test_pooled_profiles_sum_to_one(self):
+        # Counts can be non-integer (some mouse inputs, wes-to-wgs), so the
+        # pooled profile must be divided by the exact total, not a rounded one.
+        main, *_ = self.default
+        out = os.path.join(self.tmp, "summary_pooled")
+        os.makedirs(out, exist_ok=True)
+        path = pc.summarize_and_average_clusters(
+            main, self.normalized, self.counts, out, "main", self.mappings,
+            "eSS", averaging_method="pooled")
+        profiles = pd.read_csv(path, sep="\t", index_col=0)
+        np.testing.assert_allclose(profiles.sum().values, 1.0, rtol=0, atol=1e-12)
+        for i, members in enumerate(main.values()):
+            pooled = self.counts[members].sum(axis=1)
+            np.testing.assert_allclose(profiles[f"eSS{i + 1}"].values,
+                                       (pooled / pooled.sum()).values, rtol=0, atol=1e-15)
+
+    def test_own_opportunity_with_pooled_is_refused(self):
+        import subprocess
+        result = subprocess.run(["bash", os.path.join(REPO_ROOT, "run_pipeline.sh"),
+                                 "SBS", "0.9", "0.85", "own-opportunity", "pooled"],
+                                capture_output=True, text=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("own-opportunity cannot be combined with pooled", result.stdout)
+
     def test_cosmic_match_count_with_aai_split(self):
         self.assertEqual(self._cosmic_counts(self.aai_split, "aai_split"),
                          tuple(EXPECTED["aai_split"]["cosmic"]))

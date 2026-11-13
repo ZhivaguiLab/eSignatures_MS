@@ -718,7 +718,8 @@ def summarize_and_average_clusters(clusters, normalized_df, counts_df,
 
         # Per-sample mutation counts
         per_sample = counts_sub.sum(axis=0)
-        cluster_total = int(counts_sub.values.sum())
+        cluster_total_exact = float(counts_sub.values.sum())   # counts can be non-integer
+        cluster_total = int(round(cluster_total_exact))         # for display and the stats TSV
 
         print(f"\n  {cluster_id}: {len(sigs)} samples, "
               f"{cluster_total:,} total mutations")
@@ -741,7 +742,7 @@ def summarize_and_average_clusters(clusters, normalized_df, counts_df,
             # count. Equivalent to sum_s(counts[c,s]) / sum_s(sample_total[s])
             # for every c -- higher-burden samples dominate proportionally.
             pooled_counts = counts_sub.sum(axis=1)          # per-channel sum across samples
-            columns[cluster_id] = (pooled_counts / cluster_total).tolist()
+            columns[cluster_id] = (pooled_counts / cluster_total_exact).tolist()
 
         mut_stats.append({
             'Cluster_ID': cluster_id,
@@ -1353,6 +1354,11 @@ def main():
     args.data_dir = validate_data_dir_argument(args.data_dir, cfg.name)
 
     custom_thresholds = parse_custom_thresholds(args.custom_thresholds, cfg)
+    if args.normalization == "own-opportunity" and args.averaging_method == "pooled":
+        # pooled sums raw counts; own-opportunity normalizes only the profiles.
+        parser.error("--normalization own-opportunity cannot be combined with "
+                     "--averaging_method pooled (pooled sums raw counts, which "
+                     "own-opportunity leaves unnormalized)")
 
     # ── Determine data directory (with integrated preprocessing) ─────────────
     data_dir = determine_data_directory(

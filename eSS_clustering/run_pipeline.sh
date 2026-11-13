@@ -101,6 +101,13 @@ for opt in "${@:4}"; do
            exit 1 ;;
     esac
 done
+if [ "${NORMALIZATION}" = "own-opportunity" ] && [ "${AVERAGING_METHOD}" = "pooled" ]; then
+    # pooled sums raw counts, but own-opportunity changes only the profiles,
+    # not the counts, so the consensus would lose the normalization.
+    echo "Error: own-opportunity cannot be combined with pooled (pooled sums raw counts,"
+    echo "       which own-opportunity leaves unnormalized). Use wes-to-wgs pooled, or own-opportunity alone."
+    exit 1
+fi
 
 MUTATION_TYPE=$(echo "$1" | tr '[:lower:]' '[:upper:]')   # uppercase
 COSINE_THRES_CLUST="$2"

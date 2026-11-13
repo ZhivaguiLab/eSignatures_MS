@@ -12,7 +12,7 @@ signature clustering.
 cd eSS_clustering
 conda activate esignatures                 # see Installation
 python pipeline/html_to_pdf.py --check     # Poppler (required) and Google Chrome (for PDFs)
-python -m unittest discover tests          # 50 tests; should end with OK
+python -m unittest discover tests          # 52 tests; should end with OK
 
 bash run_background.sh SBS 0.9 0.85          # default (equal_replicate) → results/min307/SBS/
 bash run_background.sh SBS 0.9 0.85 pooled   # pooled consensus      → results/min307_pooled/SBS/
@@ -350,7 +350,7 @@ The SBS clustering uses:
 | Excluded samples | 10 mouse MEF samples (Xenon, Deoxynivalenol) | `SBS: exclude` in `config/preprocessing.yaml` |
 | Cosine similarity threshold | `0.9` (distance `0.1`), average linkage | `--cosine_similarity` default in `perform_clustering.py` |
 | Per-cluster custom thresholds | none (the AAI/DBP split is an optional testing preset, see below) | `default_custom_thresholds` / `custom_threshold_presets` in `pipeline/utils/mutation_type.py` |
-| Main vs small clusters | main: ≥3 samples; small: 2 samples (`MEF_AID` and `MCF10_cisplatin` 2-sample clusters are kept as main) | `special_patterns` in `perform_clustering.py` |
+| Main vs small clusters | main: ≥3 samples; small: 2 samples | `perform_clustering.py`. (Its `special_patterns`, `MEF_AID` and `MCF10_cisplatin`, were meant to keep those 2-sample clusters as main, but they don't match the standardized sample names, so they have no effect: MCF10A cisplatin is a 3-sample eSS and MEF AID samples are below 307.) |
 | Sample mapping | `config/sample_mapping.tsv` | `--mapping_file` default |
 | Consensus profile | `equal_replicate` (option `pooled`, see below) | `--averaging_method` default in `perform_clustering.py`; `pooled` option in `run_pipeline.sh` |
 | COSMIC match | max cosine similarity ≥ `0.85` to any COSMIC v3.6 SBS signature, artifact signatures included | `MATCH_THRESHOLD` in `generate_static_heatmap.py`; `--threshold` in `generate_interactive_heatmap.py` |
@@ -365,10 +365,11 @@ bash run_pipeline.sh SBS 0.9 0.85
 python pipeline/perform_clustering.py --mutation_type SBS --output_dir results
 ```
 
-**25 of the 48 main clusters match COSMIC (≥0.85); 23 don't.** Both heatmap
-scripts report the same split. Four clusters sit just under the cutoff (eSS7,
-eSS20, eSS22, eSS25 at 0.847–0.848) and are counted as not matched, even though
-the static heatmap shows their value rounded to "0.85".
+**26 of the 50 main clusters match COSMIC (≥0.85); 24 don't** (2026-11-13
+inputs). Both heatmap scripts report the same split. Four clusters sit just
+under the cutoff (eSS10, eSS12, eSS18, eSS28 at 0.846–0.848) and are counted
+as not matched, even though the static heatmap shows their value rounded to
+"0.85".
 
 ### Testing option: the manual AAI/DBP split
 
@@ -595,8 +596,8 @@ Each eSS's consensus profile can be computed in two ways:
   then take the unweighted mean across the cluster's samples. Every
   sample/replicate contributes equally regardless of mutation burden — avoids
   one high-burden replicate dominating a cluster's apparent profile.
-- **`pooled`**: sum raw counts across a cluster's samples, then normalize
-  once. Samples with a higher mutation burden contribute proportionally more
+- **`pooled`**: sum raw counts across a cluster's samples, then divide by
+  the cluster's total so the profile sums to 1. Samples with a higher mutation burden contribute proportionally more
   to the consensus profile.
 
 To compare the two, run the pipeline once with each. The `pooled` run writes
@@ -608,8 +609,10 @@ to its own folder, so it does not overwrite the default run:
 | `pooled` | `bash run_pipeline.sh SBS 0.9 0.85 pooled` | `results/min307_pooled/SBS/` |
 
 `pooled` combines with the other options (e.g. `per-species pooled` →
-`results/min-per-species_pooled/SBS/`), and `run_background.sh` takes it the
-same way. The method used is listed in each run's `run_parameters.txt`
+`results/min-per-species_pooled/SBS/`), except `own-opportunity`: that
+normalizes the profiles but not the counts, and `pooled` sums counts, so the
+pipeline refuses the combination (`wes-to-wgs pooled` is fine, as it corrects
+the counts themselves). `run_background.sh` takes `pooled` the same way. The method used is listed in each run's `run_parameters.txt`
 ("Consensus profile").
 
 The method does not change cluster membership. It changes the consensus
