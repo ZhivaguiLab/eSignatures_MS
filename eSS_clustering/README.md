@@ -20,6 +20,7 @@ eSS_clustering/
       mutation_type.py        ← per-type constants (contexts, artifacts, custom-threshold presets)
     perform_clustering.py     ← Step 1: hierarchical clustering (with integrated preprocessing)
     generate_summary.py       ← Step 2: HTML reports
+    html_to_pdf.py            ← Step 2b: one-page PDFs of the summary reports
     generate_images_heatmap.py       ← Step 3: PDF → PNG
     generate_interactive_heatmap.py  ← Step 4: interactive heatmap
     generate_static_heatmap.py       ← Step 5: static heatmap
@@ -801,6 +802,7 @@ Cisplatin	Cis
 | 0 (optional) | *integrated preprocessing* | `data/input_cleaned/<TYPE>/` (cached, auto-generated) |
 | 1 | `perform_clustering.py` | `main_clusters/`, `small_clusters/`, `singletons/`, `interactive_clustering/` |
 | 2 | `generate_summary.py` | `reports/cluster_report.html`, `reports/cluster_summary.html`, `reports/main_clusters_with_dendrogram.html`, `reports/small_clusters_cluster_report.html`, `reports/small_clusters_summary.html` |
+| 2b | `html_to_pdf.py` | `reports/cluster_summary.pdf`, `reports/main_clusters_with_dendrogram.pdf`, `reports/small_clusters_summary.pdf` (one page each; needs Google Chrome) |
 | 3 | `generate_images_heatmap.py` | `interactive_heatmap/cluster_plots/*.png`, `interactive_heatmap/cosmic_plots/*.png` |
 | 4 | `generate_interactive_heatmap.py` | `interactive_heatmap.html`, `cosmic_similar_clusters_<t>.tsv`, `denovo_clusters_<t>.tsv` |
 | 5 | `generate_static_heatmap.py` | `cosine_similarity_heatmap.pdf` (3 versions) |
@@ -809,44 +811,42 @@ Cisplatin	Cis
 | 8 (SBS) | `run_decomposition.py` | `decomposition/` (COSMIC decomposition into eSS) |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_{human,mouse,other_species}.pdf` |
 
-### Generating a print-ready PDF of a grid report
+### One-page PDFs of the cluster summaries (Step 2b)
 
-`cluster_summary.html`, `main_clusters_with_dendrogram.html`, and
-`small_clusters_summary.html` (all produced by Step 2, and all sharing the same
-grid of mutational profile + pie chart + sample legend, at 3 columns) are meant
-to be printed or exported to PDF for use as a manuscript figure. Use headless
-Chrome rather than relying on a manual browser print — each report's CSS is
-written specifically so that headless-Chrome print pagination lays the grid out
-correctly (flexbox reflows row by row; CSS Grid does not paginate reliably and
-will scatter columns across separate pages).
+Every run prints the three grid reports (mutational profile + pie chart +
+sample legend, 3 columns) to PDFs next to their HTML, for use as manuscript
+figures:
 
-```bash
-HTML_PATH="results/min307/SBS/reports/cluster_summary.html"   # input — swap for the report/run you're rendering
-PDF_PATH="results/min307/SBS/reports/cluster_summary.pdf"      # output
+- `reports/cluster_summary.pdf`
+- `reports/main_clusters_with_dendrogram.pdf`
+- `reports/small_clusters_summary.pdf`
 
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-  --headless --disable-gpu --no-sandbox \
-  --print-to-pdf="${PDF_PATH}" \
-  --print-to-pdf-no-header \
-  "file://$(cd "$(dirname "${HTML_PATH}")" && pwd)/$(basename "${HTML_PATH}")"
-```
+Each PDF is **one page**: A4-landscape width (the reports' print layout) and
+as tall as the content, so no rows are split onto a second page and nothing
+has to be put back together by hand. With the current data,
+`cluster_summary.pdf` is 297 × 267 mm and `main_clusters_with_dendrogram.pdf`
+297 × 310 mm. `pipeline/html_to_pdf.py` prints them with headless Google
+Chrome (the same rendering as printing from the browser), on a page tall
+enough for the whole report, then trims the empty space under the last row.
 
-To convert the PDF to PNG (e.g. for embedding in a slide deck or manuscript figure),
-one option is `pdftoppm` (Poppler — already a dependency for `pdf2image`, see
-[Installation](#installation)):
+Chrome is found at its usual macOS or Linux location, or set `CHROME_PATH`.
+Without Chrome the step prints a warning and the run continues without the
+PDFs.
+
+To make the PDFs for an existing run folder, or after editing a report:
 
 ```bash
-pdftoppm -png -r 300 "${PDF_PATH}" "${PDF_PATH%.pdf}"
+python pipeline/html_to_pdf.py --reports_dir results/min307/SBS/reports
+python pipeline/html_to_pdf.py --reports_dir results/min307/SBS/reports --html cluster_report.html
 ```
 
-`pdftoppm` appends a page number to the given prefix, so a multi-page
-`cluster_summary.pdf` produces `cluster_summary-1.png`, `cluster_summary-2.png`,
-etc. — one PNG per page. `-r 300` sets the resolution in DPI; raise it for a
-higher-resolution export. To combine multiple pages into a single figure,
-assemble them manually in a layout tool (e.g. Adobe Illustrator) — this step
-isn't scripted here.
+To convert a PDF to PNG (e.g. for slides), `pdftoppm` (Poppler, already
+needed for `pdf2image`, see [Installation](#installation)) gives one PNG at
+300 DPI:
 
-On Linux, use `google-chrome --headless ...` instead of the macOS app path above.
+```bash
+pdftoppm -png -r 300 -singlefile results/min307/SBS/reports/cluster_summary.pdf results/min307/SBS/reports/cluster_summary
+```
 
 ---
 

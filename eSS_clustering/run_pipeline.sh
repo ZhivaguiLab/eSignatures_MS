@@ -44,8 +44,9 @@
 #   bash run_pipeline.sh SBS 0.9 0.85 per-species wes-to-wgs
 #   bash run_pipeline.sh SBS 0.9 0.85 pooled             # pooled consensus profiles
 #
-# For SBS, the last step decomposes the COSMIC signatures into the run's eSS
-# with SigProfilerAssignment (Step 8).
+# Step 2b prints the cluster summary reports to one-page PDFs (needs Google
+# Chrome; skipped otherwise). For SBS, the last step decomposes the COSMIC
+# signatures into the run's eSS with SigProfilerAssignment (Step 8).
 
 set -euo pipefail
 
@@ -245,6 +246,20 @@ python "${GENERATE_SUMMARY_PY}" \
     --create_dendrogram_summaries \
     --mutation_type "${MUTATION_TYPE}" \
     --abbreviation_file "${ABBREVIATION_FILE}"
+
+# ---------------------------------------------------------------------------
+# Step 2b: One-page PDFs of the cluster summaries
+# ---------------------------------------------------------------------------
+# cluster_summary.pdf, main_clusters_with_dendrogram.pdf and
+# small_clusters_summary.pdf next to their HTML in reports/, each on a single
+# page (A4-landscape width, as tall as the content). Printed with headless
+# Google Chrome; skipped with a warning if Chrome is not installed.
+echo ""
+echo "========================================"
+echo "Step 2b: Summary PDFs"
+echo "========================================"
+python "${PIPELINE_DIR}/html_to_pdf.py" \
+    --reports_dir "${FILTER_DIR}/reports"
 
 # ---------------------------------------------------------------------------
 # Step 3: Heatmap images (PDF → PNG)
