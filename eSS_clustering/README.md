@@ -74,12 +74,29 @@ cd eSignatures_MS/eSS_clustering
 conda create -n esig python=3.11
 conda activate esig
 
-# poppler required by pdf2image
+# Poppler (required: pdf2image, the PNGs and the combined figure use it)
 brew install poppler          # macOS
 # sudo apt-get install poppler-utils  # Linux
+# conda install -c conda-forge poppler  # or inside the conda environment
 
 # Exact environment the results were verified in (recommended)
 pip install -r requirements-lock.txt
+```
+
+Two programs outside Python are used:
+
+- **Poppler** (required). Not a Python package, so `pip install` does not
+  install it; use the commands above. Without it the run stops at start-up.
+- **Google Chrome** (optional), for the one-page PDFs and PNGs of the cluster
+  summaries (Step 2b) and the combined species × compound figure (Step 6b).
+  Without it the run continues and those files are skipped. Set `CHROME_PATH`
+  if Chrome is not in the usual place.
+
+Every run checks for both first and says so at the top of its log. To check
+after creating the environment:
+
+```bash
+python pipeline/html_to_pdf.py --check
 ```
 
 The pipeline requires Python 3.11 and stops at start-up on any other version.
@@ -803,12 +820,12 @@ Cisplatin	Cis
 | 0 (optional) | *integrated preprocessing* | `data/input_cleaned/<TYPE>/` (cached, auto-generated) |
 | 1 | `perform_clustering.py` | `main_clusters/`, `small_clusters/`, `singletons/`, `interactive_clustering/` |
 | 2 | `generate_summary.py` | `reports/cluster_report.html`, `reports/cluster_summary.html`, `reports/main_clusters_with_dendrogram.html`, `reports/small_clusters_cluster_report.html`, `reports/small_clusters_summary.html` |
-| 2b | `html_to_pdf.py` | `reports/cluster_summary.pdf`, `reports/main_clusters_with_dendrogram.pdf`, `reports/small_clusters_summary.pdf` (one page each; needs Google Chrome) |
+| 2b | `html_to_pdf.py` | `reports/cluster_summary.pdf`, `reports/main_clusters_with_dendrogram.pdf`, `reports/small_clusters_summary.pdf` (one page each) and a 300 DPI `.png` of each; needs Google Chrome |
 | 3 | `generate_images_heatmap.py` | `interactive_heatmap/cluster_plots/*.png`, `interactive_heatmap/cosmic_plots/*.png` |
 | 4 | `generate_interactive_heatmap.py` | `interactive_heatmap.html`, `cosmic_similar_clusters_<t>.tsv`, `denovo_clusters_<t>.tsv` |
 | 5 | `generate_static_heatmap.py` | `cosine_similarity_heatmap.pdf` (3 versions) |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_*.pdf` |
-| 6b | `combined_matrix_figure.py` | `species_compound_matrix_combined.html`, `species_compound_matrix_combined.pdf` (one page; needs Google Chrome) |
+| 6b | `combined_matrix_figure.py` | `species_compound_matrix_combined.html`, `.pdf` (one page) and `.png` (300 DPI); PDF/PNG need Google Chrome |
 | 7 | `run_info.py` | `run_parameters.txt`, `run_parameters.json` |
 | 8 (SBS) | `run_decomposition.py` | `decomposition/` (COSMIC decomposition into eSS) |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_{human,mouse,other_species}.pdf` |
@@ -816,12 +833,12 @@ Cisplatin	Cis
 ### One-page PDFs of the cluster summaries (Step 2b)
 
 Every run prints the three grid reports (mutational profile + pie chart +
-sample legend, 3 columns) to PDFs next to their HTML, for use as manuscript
-figures:
+sample legend, 3 columns) to PDFs, plus a 300 DPI PNG of each, next to their
+HTML, for use as manuscript figures and slides:
 
-- `reports/cluster_summary.pdf`
-- `reports/main_clusters_with_dendrogram.pdf`
-- `reports/small_clusters_summary.pdf`
+- `reports/cluster_summary.pdf` / `.png`
+- `reports/main_clusters_with_dendrogram.pdf` / `.png`
+- `reports/small_clusters_summary.pdf` / `.png`
 
 Each PDF is **one page**: A4-landscape width (the reports' print layout) and
 as tall as the content, so no rows are split onto a second page and nothing
@@ -842,12 +859,11 @@ python pipeline/html_to_pdf.py --reports_dir results/min307/SBS/reports
 python pipeline/html_to_pdf.py --reports_dir results/min307/SBS/reports --html cluster_report.html
 ```
 
-To convert a PDF to PNG (e.g. for slides), `pdftoppm` (Poppler, already
-needed for `pdf2image`, see [Installation](#installation)) gives one PNG at
-300 DPI:
+The PNG is the whole page as one image at 300 DPI, made with `pdftoppm`
+(Poppler). For another resolution:
 
 ```bash
-pdftoppm -png -r 300 -singlefile results/min307/SBS/reports/cluster_summary.pdf results/min307/SBS/reports/cluster_summary
+pdftoppm -png -r 600 -singlefile results/min307/SBS/reports/cluster_summary.pdf results/min307/SBS/reports/cluster_summary_600dpi
 ```
 
 ### Combined species × compound figure (Step 6b)
@@ -858,6 +874,7 @@ in the run folder:
 
 - `species_compound_matrix_combined.html`
 - `species_compound_matrix_combined.pdf` (one page, A4-landscape width)
+- `species_compound_matrix_combined.png` (the same page at 300 DPI)
 
 Panels **a** Human, **b** Mouse and **c** Other experimental models, each
 titled with its number of models, exposures (columns) and profiles. The

@@ -45,7 +45,9 @@
 #   bash run_pipeline.sh SBS 0.9 0.85 pooled             # pooled consensus profiles
 #
 # Step 2b prints the cluster summary reports, and Step 6b the combined species
-# × compound figure, to one-page PDFs (needs Google Chrome; skipped otherwise). For SBS, the last step decomposes the COSMIC
+# × compound figure, to one-page PDFs and 300 DPI PNGs (needs Google Chrome;
+# skipped with a warning otherwise). The run first checks for Poppler (needed
+# throughout) and Chrome. For SBS, the last step decomposes the COSMIC
 # signatures into the run's eSS with SigProfilerAssignment (Step 8).
 
 set -euo pipefail
@@ -200,6 +202,16 @@ echo "Custom thresholds: ${CUSTOM_THRESHOLDS}"
 echo "Normalization:    ${NORMALIZATION}"
 echo "Consensus:        ${AVERAGING_METHOD}"
 echo "========================================"
+
+# ---------------------------------------------------------------------------
+# Tool check
+# ---------------------------------------------------------------------------
+# Stops here if Poppler is missing (pdf2image needs it from Step 1 on);
+# warns if Google Chrome is missing (only the PDFs/PNGs of Steps 2b and 6b
+# need it, and those steps are then skipped).
+echo ""
+echo "Checking tools..."
+python "${PIPELINE_DIR}/html_to_pdf.py" --check
 
 # ---------------------------------------------------------------------------
 # Step 1: Clustering

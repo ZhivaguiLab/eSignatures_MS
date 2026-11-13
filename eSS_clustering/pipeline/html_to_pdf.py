@@ -6,7 +6,8 @@ html_to_pdf.py — print the cluster summary HTML reports to one-page PDFs.
 
 For each summary report in --reports_dir (cluster_summary.html,
 main_clusters_with_dendrogram.html, small_clusters_summary.html) it writes a
-PDF with the same name next to it, e.g. reports/cluster_summary.pdf.
+PDF and a 300 DPI PNG with the same name next to it, e.g.
+reports/cluster_summary.pdf and reports/cluster_summary.png.
 
 Each PDF is ONE page: the report's A4-landscape width, and as tall as the
 report's content, so nothing is split across pages (printing from the browser
@@ -18,7 +19,16 @@ Chrome is looked up in $CHROME_PATH, then the usual macOS and Linux
 locations. If it is not found, the script prints a warning and exits without
 an error, so a run never fails over the PDFs.
 
+The PNG is the whole page as one image (pdftoppm, part of Poppler).
+
 Other HTML files can be given with --html (paths relative to --reports_dir).
+
+    python pipeline/html_to_pdf.py --check
+
+checks the tools before a run (run_pipeline.sh does this first): stops with
+an error if Poppler is missing (the pipeline needs it, through pdf2image, from
+Step 1 on) and warns if Google Chrome is missing (only the PDFs and PNGs of
+Steps 2b and 6b need it).
 """
 
 import argparse
@@ -43,6 +53,14 @@ PAGE_MARGIN_MM = 3             # same margin as the reports' print CSS
 START_HEIGHT_MM = 600          # first try; doubled until everything fits
 MAX_HEIGHT_MM = 5000           # Chrome's page size limit is about 5 m
 BOTTOM_MARGIN_PT = PAGE_MARGIN_MM * MM
+PNG_DPI = 300
+POPPLER_TOOLS = ("pdftoppm", "pdftocairo")
+
+POPPLER_INSTALL = ("Install Poppler: brew install poppler (macOS), "
+                   "sudo apt-get install poppler-utils (Linux), "
+                   "or conda install -c conda-forge poppler (in the conda environment).")
+CHROME_INSTALL = ("Install Google Chrome (https://www.google.com/chrome/) "
+                  "or set CHROME_PATH to its executable.")
 
 
 def find_chrome():
@@ -112,6 +130,39 @@ def trim_bottom(pdf_path):
     return (page_height - new_bottom) / MM
 
 
+def pdf_to_png(pdf_path, dpi=PNG_DPI):
+    """Save the PDF's page as <name>.png at dpi, next to the PDF."""
+    if shutil.which("pdftoppm") is None:
+        print(f"  Warning: pdftoppm (Poppler) not found; no PNG for "
+              f"{os.path.basename(pdf_path)}. {POPPLER_INSTALL}")
+        return None
+    base = os.path.splitext(pdf_path)[0]
+    subprocess.run(["pdftoppm", "-png", "-r", str(dpi), "-singlefile", pdf_path, base],
+                   check=True)
+    print(f"  {os.path.basename(base)}.png: {dpi} DPI")
+    return base + ".png"
+
+
+def check_tools():
+    """Print what the PDF/PNG steps will use; return False if Poppler is missing."""
+    ok = True
+    missing = [t for t in POPPLER_TOOLS if shutil.which(t) is None]
+    if missing:
+        print(f"ERROR: Poppler not found ({', '.join(missing)} missing). The pipeline "
+              f"needs it from Step 1 on (pdf2image) and for the PNGs. {POPPLER_INSTALL}")
+        ok = False
+    else:
+        print(f"Poppler:       {os.path.dirname(shutil.which('pdftoppm'))}")
+    chrome = find_chrome()
+    if chrome is None:
+        print("WARNING: Google Chrome not found. The run continues, but the one-page "
+              "PDFs and PNGs of the cluster summaries (Step 2b) and the combined "
+              f"species x compound figure (Step 6b) will be skipped. {CHROME_INSTALL}")
+    else:
+        print(f"Google Chrome: {chrome}")
+    return ok
+
+
 def html_to_one_page_pdf(chrome, html_path, profile_dir):
     pdf_path = os.path.splitext(html_path)[0] + ".pdf"
     height_mm = START_HEIGHT_MM
@@ -124,21 +175,28 @@ def html_to_one_page_pdf(chrome, html_path, profile_dir):
         height_mm = min(height_mm * 2, MAX_HEIGHT_MM)
     final_height = trim_bottom(pdf_path)
     print(f"  {os.path.basename(pdf_path)}: 1 page, {PAGE_WIDTH_MM} x {final_height:.0f} mm")
+    pdf_to_png(pdf_path)
     return pdf_path
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--reports_dir", required=True, help="<run folder>/<TYPE>/reports")
+    parser.add_argument("--reports_dir", help="<run folder>/<TYPE>/reports")
+    parser.add_argument("--check", action="store_true",
+                        help="only check for Poppler and Google Chrome")
     parser.add_argument("--html", nargs="+", default=None,
                         help="HTML files to print (default: the cluster summaries)")
     args = parser.parse_args()
+    if args.check:
+        return 0 if check_tools() else 1
+    if not args.reports_dir:
+        parser.error("--reports_dir is required (or use --check)")
 
     chrome = find_chrome()
     if chrome is None:
-        print("Warning: Google Chrome not found (set CHROME_PATH); "
-              "skipping the PDF versions of the summary reports.")
+        print("WARNING: Google Chrome not found; skipping the PDF and PNG versions of "
+              f"the summary reports. {CHROME_INSTALL}")
         return 0
 
     names = args.html or [n for n in SUMMARY_REPORTS
@@ -147,7 +205,7 @@ def main():
         print(f"No summary reports found in {args.reports_dir}")
         return 0
 
-    print(f"Printing {len(names)} report(s) to one-page PDFs with {chrome}")
+    print(f"Printing {len(names)} report(s) to one-page PDFs and {PNG_DPI} DPI PNGs with {chrome}")
     with tempfile.TemporaryDirectory(prefix="chrome_profile_") as profile_dir:
         for name in names:
             html_to_one_page_pdf(chrome, os.path.join(args.reports_dir, name), profile_dir)

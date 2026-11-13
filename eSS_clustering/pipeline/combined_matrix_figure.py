@@ -15,6 +15,7 @@ and writes, in the same folder:
 
     species_compound_matrix_combined.html
     species_compound_matrix_combined.pdf     (one page; needs Google Chrome)
+    species_compound_matrix_combined.png     (the same page at 300 DPI)
 
 The panels are the Step 6 PDFs themselves, converted to vector SVG
 (pdftocairo, part of Poppler), so the figure always shows exactly what Step 6
@@ -233,7 +234,8 @@ def main():
         return 0
     chrome = html_to_pdf.find_chrome()
     if chrome is None:
-        print("Warning: Google Chrome not found (set CHROME_PATH); skipping the PDF.")
+        print("WARNING: Google Chrome not found; skipping the PDF and PNG of the "
+              f"combined figure. {html_to_pdf.CHROME_INSTALL}")
         return 0
     with tempfile.TemporaryDirectory(prefix="chrome_profile_") as profile_dir:
         html_to_pdf.html_to_one_page_pdf(chrome, out_html, profile_dir)
