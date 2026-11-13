@@ -151,6 +151,7 @@ hTERT-RPE1_No_Treatment_TP53-/-; BRCA2-/-_Genome	Human_hTERT-RPE1_No_treatment
 hTERT-RPE1_Pyridostatin__Genome	Human_hTERT-RPE1_Pyridostatin
 hTERT-RPE1_Pyridostatin_TP53-/-; BRCA1-/-_Genome	Human_hTERT-RPE1_Pyridostatin
 hTERT-RPE1_Pyridostatin_TP53-/-; BRCA2-/-_Genome	Human_hTERT-RPE1_Pyridostatin
+hTERT-RPE1_Cisplatin_P53-/-_Genome	Human_hTERT-RPE1_Cisplatin
 Intestinal_organoids_5-Fluorouracil__Genome	Human_h_Intestinal_organoids_5-Fluorouracil
 Intestinal_organoids_Colibactin__Genome	Human_h_Intestinal_organoids_Colibactin
 Intestinal_organoids_Colibactin_knock_out__Genome	Human_h_Intestinal_organoids_Colibactin_knock_out
@@ -248,6 +249,20 @@ TK6_Diazinon__Genome	Human_TK6_Diazinon
 TK6_Glyphosate__Genome	Human_TK6_Glyphosate
 TK6_Malathion__Genome	Human_TK6_Malathion
 TK6_No_Treatment__Genome	Human_TK6_No_treatment
+TK6_4NQO__Genome	Human_TK6_4-Nitroquinoline_N-oxide
+TK6_4NQO_POLH-/-_Genome	Human_TK6_4-Nitroquinoline_N-oxide
+TK6_4NQO_POLI-/-_Genome	Human_TK6_4-Nitroquinoline_N-oxide
+TK6_4NQO_POLK-/-_Genome	Human_TK6_4-Nitroquinoline_N-oxide
+TK6_cisplatin__Genome	Human_TK6_Cisplatin
+TK6_cisplatin_POLH-/-_Genome	Human_TK6_Cisplatin
+TK6_cisplatin_POLI-/-_Genome	Human_TK6_Cisplatin
+TK6_cisplatin_POLK-/-_Genome	Human_TK6_Cisplatin
+XP30RO_UVA_POLH-/-_Exome	Human_XP30RO_UVA
+XP30RO_UVA_complementedPOLH_Exome	Human_XP30RO_UVA
+XP30RO_N-acetylcysteine-UVA_POLH-/-_Exome	Human_XP30RO_N-acetylcysteine-UVA
+XP30RO_N-acetylcysteine-UVA_complementedPOLH_Exome	Human_XP30RO_N-acetylcysteine-UVA
+XP30RO_N-acetylcysteine_POLH-/-_Exome	Human_XP30RO_N-acetylcysteine
+XP30RO_N-acetylcysteine_complementedPOLH_Exome	Human_XP30RO_N-acetylcysteine
 U937_5-Aza-40-thio-20-deoxycytidine__Exome	Human_U937_5-aza-4-thio-2-deoxycytidine
 U937_Decitabine__Exome	Human_U937_Decitabine
 U937_No_Treatment__Exome	Human_U937_No_treatment
