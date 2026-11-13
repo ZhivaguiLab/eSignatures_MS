@@ -11,6 +11,7 @@ signature clustering.
 ```
 eSS_clustering/
   run_pipeline.sh              ← entry point — run this
+  run_background.sh            ← same, in the background with a log in results/logs/
 
   pipeline/                   ← all Python scripts
     utils/
@@ -133,10 +134,31 @@ bash run_pipeline.sh SBS 0.9 0.85 per-species        # per-species cutoffs
 bash run_pipeline.sh SBS 0.9 0.85 aai-split          # testing: manual AAI/DBP split
 bash run_pipeline.sh SBS 0.9 0.85 wes-to-wgs         # opportunity normalization
 bash run_pipeline.sh SBS 0.9 0.85 own-opportunity    # opportunity normalization
+bash run_pipeline.sh SBS 0.9 0.85 pooled             # pooled consensus profiles
 ```
 
 See [Changing the minimum mutation cutoff](#changing-the-minimum-mutation-cutoff)
-for `min=<N>` and `per-species`.
+for `min=<N>` and `per-species`, and
+[Consensus profile averaging method](#consensus-profile-averaging-method) for
+`pooled`.
+
+### Running in the background
+
+`run_background.sh` takes the same arguments as `run_pipeline.sh` and runs it
+in the background (so the terminal can be closed), in the `esignatures` conda
+environment, with a timestamped log in `results/logs/`:
+
+```bash
+bash run_background.sh SBS 0.9 0.85                 # default
+bash run_background.sh SBS 0.9 0.85 pooled          # pooled consensus profiles
+tail -f results/logs/SBS_0.9_0.85_pooled_*.log      # follow a run
+```
+
+The log ends with `Pipeline complete!` when the run succeeds. To use another
+conda environment, set `ESIG_ENV`, e.g. `ESIG_ENV=esig bash run_background.sh ...`.
+Runs with different options write to different folders, but they share a
+preprocessing cache when their cutoff and normalization are the same (e.g.
+the default and `pooled`), so start the second one after the first finishes.
 
 The second argument is the cosine similarity threshold used for clustering
 (`--cosine_similarity`); the third is the threshold used when comparing
@@ -158,10 +180,12 @@ never overwrite each other:
 | `... aai-split` | `results/min307_aai-split/SBS/` |
 | `... wes-to-wgs` | `results/min307_wes-to-wgs/SBS/` |
 | `... own-opportunity` | `results/min307_own-opportunity/SBS/` |
+| `... pooled` | `results/min307_pooled/SBS/` |
 
 `min307` is the minimum mutation count per sample (`min<N>` for `min=<N>`,
 `min-per-species` for `per-species`, `nomin` if none is set). Options
-combine, e.g. `per-species wes-to-wgs` → `results/min-per-species_wes-to-wgs/`. The
+combine, e.g. `per-species wes-to-wgs` → `results/min-per-species_wes-to-wgs/`
+and `per-species pooled` → `results/min-per-species_pooled/`. The
 clustering cosine threshold (0.9) is not in the name, to avoid confusing it
 with the COSMIC match threshold; it is recorded in `run_parameters.txt`. Runs
 that differ only in the clustering threshold write to the same folder, so
@@ -237,7 +261,7 @@ The SBS clustering uses:
 | Per-cluster custom thresholds | none (the AAI/DBP split is an optional testing preset, see below) | `default_custom_thresholds` / `custom_threshold_presets` in `pipeline/utils/mutation_type.py` |
 | Main vs small clusters | main: ≥3 samples; small: 2 samples (`MEF_AID` and `MCF10_cisplatin` 2-sample clusters are kept as main) | `special_patterns` in `perform_clustering.py` |
 | Sample mapping | `config/sample_mapping.tsv` | `--mapping_file` default |
-| Consensus profile | `equal_replicate` | `--averaging_method` default |
+| Consensus profile | `equal_replicate` (option `pooled`, see below) | `--averaging_method` default in `perform_clustering.py`; `pooled` option in `run_pipeline.sh` |
 | COSMIC match | max cosine similarity ≥ `0.85` to any COSMIC v3.6 SBS signature, artifact signatures included | `MATCH_THRESHOLD` in `generate_static_heatmap.py`; `--threshold` in `generate_interactive_heatmap.py` |
 
 These two commands give **identical** clusters. With the current
@@ -428,18 +452,7 @@ See [Preprocessing](#preprocessing) below.
 
 ### Consensus profile averaging method
 
-`perform_clustering.py` supports two ways to compute each cluster's consensus
-profile (`--averaging_method`, default `equal_replicate`). `run_pipeline.sh`
-does not expose this as a pass-through argument, so to override it, call the
-script directly:
-
-```bash
-python pipeline/perform_clustering.py \
-    --mutation_type SBS \
-    --output_dir results \
-    --data_dir data/input \
-    --averaging_method pooled
-```
+Each eSS's consensus profile can be computed in two ways:
 
 - **`equal_replicate`** (default): normalize each sample to sum to 1 first,
   then take the unweighted mean across the cluster's samples. Every
@@ -449,8 +462,25 @@ python pipeline/perform_clustering.py \
   once. Samples with a higher mutation burden contribute proportionally more
   to the consensus profile.
 
-Neither option affects cluster membership, only the reported consensus
-profile used for plotting and COSMIC comparison.
+To compare the two, run the pipeline once with each. The `pooled` run writes
+to its own folder, so it does not overwrite the default run:
+
+| Method | Command | Output folder |
+|---|---|---|
+| `equal_replicate` (default) | `bash run_pipeline.sh SBS 0.9 0.85` | `results/min307/SBS/` |
+| `pooled` | `bash run_pipeline.sh SBS 0.9 0.85 pooled` | `results/min307_pooled/SBS/` |
+
+`pooled` combines with the other options (e.g. `per-species pooled` →
+`results/min-per-species_pooled/SBS/`), and `run_background.sh` takes it the
+same way. The method used is listed in each run's `run_parameters.txt`
+("Consensus profile").
+
+The method does not change cluster membership. It changes the consensus
+profiles (`main_clusters/main_clusters_NORMALIZED_weighted_avg_profiles.tsv`)
+and everything computed from them: the eSS signature plots, the COSMIC
+heatmaps and matched/unmatched counts, and the COSMIC decomposition (Step 8).
+
+With `perform_clustering.py` directly, use `--averaging_method pooled`.
 
 ### Dendrogram color count
 
