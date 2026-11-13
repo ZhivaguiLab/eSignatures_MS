@@ -734,6 +734,10 @@ class RunNameTest(unittest.TestCase):
         self.assertEqual(name(custom_thresholds="aai-split"), "min307_aai-split")
         self.assertEqual(name(normalization="wes-to-wgs"), "min307_wes-to-wgs")
         self.assertEqual(name(normalization="own-opportunity"), "min307_own-opportunity")
+        self.assertEqual(name(averaging_method="equal_replicate"), "min307")
+        self.assertEqual(name(averaging_method="pooled"), "min307_pooled")
+        self.assertEqual(name(min_mutations="per-species", averaging_method="pooled"),
+                         "min-per-species_pooled")
 
 
 if __name__ == "__main__":

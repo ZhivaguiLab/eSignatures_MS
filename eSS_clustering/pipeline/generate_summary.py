@@ -151,6 +151,15 @@ def _collapse_and_map_prefixes(sample_lines, acronym_mapping):
 # SVG PIE CHART & LEGEND HELPERS
 # ==============================================================================
 
+def _by_contribution(counts):
+    """(name, count) pairs, largest contributor first; ties in name order.
+
+    Sets the order of the pie slices, the legend and the pie chart counts
+    file, so the largest contributor is always on top of the legend.
+    """
+    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+
 def _svg_pie(samples, size=30):
     """Return an inline SVG pie chart for use in HTML."""
     import math
@@ -246,11 +255,11 @@ def _build_cluster_sample_data(row, acronym_mapping):
     """Return (sample_data_list, plot_image_path_template_idx) from a cluster row."""
     sample_lines = [l.strip() for l in str(row['Samples']).split('\n') if l.strip()]
     collapsed    = _collapse_and_map_prefixes(sample_lines, acronym_mapping)
-    counts       = Counter(collapsed)
-    total        = sum(counts.values())
+    counts       = _by_contribution(Counter(collapsed))
+    total        = sum(c for _, c in counts)
     sample_data  = [
         {'name': _smart_wrap(p), 'percentage': round(c / total * 100, 1)}
-        for p, c in counts.items()
+        for p, c in counts
     ]
     return sample_data
 
@@ -604,10 +613,10 @@ def create_pie_chart_tsv(cluster_summary, output_dir, cluster_type,
     for i, (cluster_id, row) in enumerate(cluster_summary.iterrows()):
         sample_lines = [l.strip() for l in str(row['Samples']).split('\n') if l.strip()]
         collapsed    = _collapse_and_map_prefixes(sample_lines, acronym_mapping)
-        counts       = Counter(collapsed)
+        counts       = _by_contribution(Counter(collapsed))
 
         label   = f"{cluster_prefix}{cluster_id}"
-        entries = ",".join(f"{p}:{c}" for p, c in counts.items())
+        entries = ",".join(f"{p}:{c}" for p, c in counts)
         total   = len(sample_lines)
         if original_mappings:
             orig_names = []

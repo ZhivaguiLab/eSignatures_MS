@@ -4,9 +4,9 @@ run_info.py — run naming and the run parameter summary for run_pipeline.sh.
 
     python pipeline/run_info.py name --mutation_type SBS \\
         [--min_mutations 250 | per-species] [--custom_thresholds aai-split] \\
-        [--normalization wes-to-wgs]
-        → prints e.g. "min307", "min250", "min-per-species" or
-          "min307_aai-split_wes-to-wgs"
+        [--normalization wes-to-wgs] [--averaging_method pooled]
+        → prints e.g. "min307", "min250", "min-per-species",
+          "min307_aai-split_wes-to-wgs" or "min307_pooled"
 
 The name records the minimum mutation count and the optional extras. It does
 not include the clustering cosine threshold (0.9 by default), which is
@@ -35,7 +35,8 @@ DEFAULT_PREPROCESSING = os.path.join(REPO_ROOT, "config", "preprocessing.yaml")
 
 
 def run_name(mutation_type, preprocessing_config=DEFAULT_PREPROCESSING,
-             custom_thresholds="none", normalization="none", min_mutations=None):
+             custom_thresholds="none", normalization="none", min_mutations=None,
+             averaging_method="equal_replicate"):
     with open(preprocessing_config) as f:
         config = yaml.safe_load(f) or {}
     cutoffs = cutoff_config.resolve(config.get(mutation_type), min_mutations)
@@ -44,6 +45,10 @@ def run_name(mutation_type, preprocessing_config=DEFAULT_PREPROCESSING,
         parts.append(custom_thresholds if ":" not in custom_thresholds else "custom")
     if normalization and normalization != "none":
         parts.append(normalization)
+    # equal_replicate is the default consensus profile and is left out of the
+    # name; pooled gets its own folder so the two can be compared side by side.
+    if averaging_method and averaging_method != "equal_replicate":
+        parts.append(averaging_method)
     return "_".join(parts)
 
 
@@ -135,6 +140,8 @@ def main():
     n.add_argument("--custom_thresholds", default="none")
     n.add_argument("--normalization", default="none")
     n.add_argument("--min_mutations", default=None)
+    n.add_argument("--averaging_method", default="equal_replicate",
+                   choices=["equal_replicate", "pooled"])
 
     s = sub.add_parser("summary")
     s.add_argument("--output_dir", required=True, help="results/<run name>/<TYPE>")
@@ -145,7 +152,8 @@ def main():
     args = parser.parse_args()
     if args.command == "name":
         print(run_name(args.mutation_type.upper(), args.preprocessing_config,
-                       args.custom_thresholds, args.normalization, args.min_mutations))
+                       args.custom_thresholds, args.normalization, args.min_mutations,
+                       args.averaging_method))
         return
 
     json_path = os.path.join(args.output_dir, "run_parameters.json")

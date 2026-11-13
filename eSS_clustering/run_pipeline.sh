@@ -22,6 +22,10 @@
 #                    WGS basis (see NORMALIZATION_APPROACH.md)
 #   own-opportunity  SBS: opportunity normalization, every sample normalized by
 #                    its own genome/technology opportunity
+#   pooled           consensus profile per cluster from summed raw counts
+#                    (perform_clustering.py --averaging_method pooled) instead
+#                    of the default equal_replicate (mean of each sample's
+#                    normalized profile); writes to results/<run name>_pooled/
 #
 # Each run writes to results/<run name>/<MUTATION_TYPE>/, where the run name
 # records the settings, e.g. results/min307/SBS/, results/min250/SBS/,
@@ -38,6 +42,7 @@
 #   bash run_pipeline.sh SBS 0.9 0.85 own-opportunity
 #   bash run_pipeline.sh DBS 0.9 0.85
 #   bash run_pipeline.sh SBS 0.9 0.85 per-species wes-to-wgs
+#   bash run_pipeline.sh SBS 0.9 0.85 pooled             # pooled consensus profiles
 #
 # For SBS, the last step decomposes the COSMIC signatures into the run's eSS
 # with SigProfilerAssignment (Step 8).
@@ -48,13 +53,14 @@ set -euo pipefail
 # Argument validation
 # ---------------------------------------------------------------------------
 if [ "$#" -lt 3 ]; then
-    echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap> [min=<N> | per-species] [aai-split] [wes-to-wgs | own-opportunity]"
+    echo "Usage: $0 <mutation-type> <cosine-clust> <cosine-heatmap> [min=<N> | per-species] [aai-split] [wes-to-wgs | own-opportunity] [pooled]"
     echo "  mutation-type   : SBS | DBS | ID"
     echo "  min=<N>         : optional; minimum <N> mutations per sample for every species (default 307)"
     echo "  per-species     : optional; per-species minimums from config/preprocessing.yaml"
     echo "  aai-split       : optional, SBS testing only; add the manual AAI/DBP split"
     echo "  wes-to-wgs      : optional, SBS; WES -> WGS opportunity normalization"
     echo "  own-opportunity : optional, SBS; per-sample opportunity normalization"
+    echo "  pooled          : optional; pooled consensus profiles instead of equal_replicate"
     echo ""
     echo "Example: $0 SBS 0.9 0.85"
     exit 1
@@ -63,6 +69,7 @@ fi
 CUSTOM_THRESHOLDS="none"
 NORMALIZATION="none"
 MIN_MUTATIONS=""        # empty: the default from config/preprocessing.yaml
+AVERAGING_METHOD="equal_replicate"
 for opt in "${@:4}"; do
     case "$opt" in
         min=*|per-species)
@@ -86,7 +93,8 @@ for opt in "${@:4}"; do
                 exit 1
             fi
             NORMALIZATION="$opt" ;;
-        *) echo "Error: unknown option '$opt' (expected min=<N>, per-species, aai-split, wes-to-wgs or own-opportunity)"
+        pooled) AVERAGING_METHOD="pooled" ;;
+        *) echo "Error: unknown option '$opt' (expected min=<N>, per-species, aai-split, wes-to-wgs, own-opportunity or pooled)"
            exit 1 ;;
     esac
 done
@@ -124,6 +132,7 @@ RUN_NAME=$(python "${REPO_ROOT}/pipeline/run_info.py" name \
     --preprocessing_config "${REPO_ROOT}/config/preprocessing.yaml" \
     --custom_thresholds "${CUSTOM_THRESHOLDS}" \
     --normalization "${NORMALIZATION}" \
+    --averaging_method "${AVERAGING_METHOD}" \
     ${MIN_MUTATIONS_ARGS[@]+"${MIN_MUTATIONS_ARGS[@]}"})
 RESULTS_ROOT="${REPO_ROOT}/results/${RUN_NAME}"
 
@@ -188,6 +197,7 @@ echo "Run name:         ${RUN_NAME}"
 echo "Min mutations:    ${MIN_MUTATIONS:-default (config/preprocessing.yaml)}"
 echo "Custom thresholds: ${CUSTOM_THRESHOLDS}"
 echo "Normalization:    ${NORMALIZATION}"
+echo "Consensus:        ${AVERAGING_METHOD}"
 echo "========================================"
 
 # ---------------------------------------------------------------------------
@@ -212,6 +222,7 @@ if [ "${CUSTOM_THRESHOLDS}" != "none" ]; then
     CLUSTERING_ARGS+=(--custom_thresholds "${CUSTOM_THRESHOLDS}")
 fi
 CLUSTERING_ARGS+=(--normalization "${NORMALIZATION}")
+CLUSTERING_ARGS+=(--averaging_method "${AVERAGING_METHOD}")
 if [ -n "${MIN_MUTATIONS}" ]; then
     CLUSTERING_ARGS+=(--min_mutations "${MIN_MUTATIONS}")
 fi
