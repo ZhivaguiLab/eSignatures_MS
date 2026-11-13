@@ -378,10 +378,26 @@ if [ "${MUTATION_TYPE}" == "SBS" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Step 9: Collect the final figures
+# ---------------------------------------------------------------------------
+# Copies of every figure PDF/PNG (cluster summaries, species x compound
+# matrices, COSMIC heatmaps, dendrogram, signature profiles, decomposition
+# plots) and run_parameters.txt into <run folder>/<TYPE>/final_output/,
+# with a MANIFEST.txt of where each came from. Replaced on every run.
+echo ""
+echo "========================================"
+echo "Step 9: Final Outputs"
+echo "========================================"
+python "${PIPELINE_DIR}/collect_final_outputs.py" \
+    --run_dir "${FILTER_DIR}" \
+    --mutation_type "${MUTATION_TYPE}"
+
+# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 echo ""
 echo "========================================"
 echo "Pipeline complete! (${MUTATION_TYPE})"
 echo "Results in: ${FILTER_DIR}"
+echo "Figures in: ${FILTER_DIR}/final_output"
 echo "========================================"

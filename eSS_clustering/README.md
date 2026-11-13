@@ -27,6 +27,7 @@ eSS_clustering/
     species_compound_matrix.py       ← Step 6: species × compound matrix
     combined_matrix_figure.py        ← Step 6b: the three matrices as one figure (HTML + PDF)
     run_info.py                      ← run folder naming + run_parameters.txt (Step 7)
+    collect_final_outputs.py         ← copies the figure PDFs/PNGs into final_output/ (Step 9)
     run_decomposition.py             ← COSMIC decomposition into eSS, SigProfilerAssignment (Step 8)
     utils/opportunity_normalization.py ← optional wes-to-wgs / own-opportunity normalization
     normalize_wes_to_wgs.py          ← standalone: wes-to-wgs copy of a preprocessed folder
@@ -184,6 +185,32 @@ The second argument is the cosine similarity threshold used for clustering
 resulting eSS profiles against COSMIC signatures (`--threshold` in Step 4). The
 project's current convention is 0.9 for clustering and 0.85 for the COSMIC
 comparison — adjust for your own analysis as needed.
+
+### Final figures: `final_output/`
+
+The last step copies every figure of the run into one folder,
+`results/<run name>/<TYPE>/final_output/` (e.g. `results/min307/SBS/final_output/`
+and `results/min307_pooled/SBS/final_output/`), to share or to compare runs:
+
+| Folder | Files |
+|---|---|
+| `cluster_summaries/` | `cluster_summary`, `main_clusters_with_dendrogram`, `small_clusters_summary` (.pdf + 300 DPI .png) |
+| `species_compound_matrix/` | `species_compound_matrix_combined` (.pdf + .png) and the `_human`, `_mouse`, `_other_species` matrices |
+| `cosine_similarity/` | the three eSS vs COSMIC heatmaps |
+| `dendrogram/` | `all_esignature_models_dendrogram` (.pdf + .png) |
+| `signature_profiles/` | eSS and small-cluster signature plots |
+| `decomposition/` | `SBS96_Decomposition_Plots.pdf` (SBS) |
+| `run_parameters.txt` | the run's settings and results |
+| `MANIFEST.txt` | each file and where in the run folder it was copied from |
+
+These are copies; the originals stay where the other steps wrote them. The
+folder is replaced on every run. An expected file that was not made (e.g. the
+summary PDFs without Google Chrome) is listed in `MANIFEST.txt` and in the log
+as a warning. To collect an existing run folder:
+
+```bash
+python pipeline/collect_final_outputs.py --run_dir results/min307/SBS
+```
 
 ### Output folders and run parameters
 
@@ -828,6 +855,7 @@ Cisplatin	Cis
 | 6b | `combined_matrix_figure.py` | `species_compound_matrix_combined.html`, `.pdf` (one page) and `.png` (300 DPI); PDF/PNG need Google Chrome |
 | 7 | `run_info.py` | `run_parameters.txt`, `run_parameters.json` |
 | 8 (SBS) | `run_decomposition.py` | `decomposition/` (COSMIC decomposition into eSS) |
+| 9 | `collect_final_outputs.py` | `final_output/` (copies of all figure PDFs/PNGs, see below) |
 | 6 | `species_compound_matrix.py` | `species_compound_matrix_{human,mouse,other_species}.pdf` |
 
 ### One-page PDFs of the cluster summaries (Step 2b)
