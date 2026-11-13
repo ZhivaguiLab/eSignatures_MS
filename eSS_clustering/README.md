@@ -6,6 +6,47 @@ signature clustering.
 
 ---
 
+## Quick start
+
+```bash
+cd eSS_clustering
+conda activate esignatures                 # see Installation
+python pipeline/html_to_pdf.py --check     # Poppler (required) and Google Chrome (for PDFs)
+python -m unittest discover tests          # 50 tests; should end with OK
+
+bash run_background.sh SBS 0.9 0.85          # default (equal_replicate) → results/min307/SBS/
+bash run_background.sh SBS 0.9 0.85 pooled   # pooled consensus      → results/min307_pooled/SBS/
+tail -f results/logs/<log printed above>     # ends with "Pipeline complete!"
+```
+
+Start the second run after the first finishes (they share a preprocessing
+cache). `run_pipeline.sh` takes the same arguments and runs in the foreground.
+
+All figures of a run (cluster summaries, species × compound matrices, COSMIC
+heatmaps, dendrogram, signature profiles, decomposition) end up as PDF +
+300 DPI PNG in **`results/<run name>/SBS/final_output/`**, with
+`run_parameters.txt`.
+
+### Changes in November 2026
+
+- **New inputs (data version 2026-11-13):** the collaborator's human file adds
+  70 samples (694 profiles clustered, 50 eSS, 26/24 COSMIC matched/unmatched).
+  New sample names are mapped in `config/sample_mapping.tsv`, genotypes
+  collapsed into cell line + compound (the raw names keep the genotype).
+  See [Input data versions](#input-data-versions).
+- **`pooled` option:** pooled consensus profiles alongside the default
+  `equal_replicate`, in their own run folder. See
+  [Consensus profile averaging method](#consensus-profile-averaging-method).
+- **Pie charts:** slices and legends ordered from the largest contributor down.
+- **Figures made automatically:** one-page PDFs of the cluster summaries
+  (Step 2b), the combined species × compound figure (Step 6b), a 300 DPI PNG of
+  each, and all figures collected in `final_output/` (Step 9).
+- **`run_background.sh`:** runs the pipeline in the background with a log.
+- **Tests by data version:** expected results are stored per dated input
+  release and the tests pass on either.
+
+---
+
 ## Repository structure
 
 ```
@@ -75,8 +116,8 @@ eSS_clustering/
 git clone https://github.com/ZhivaguiLab/eSignatures_MS.git
 cd eSignatures_MS/eSS_clustering
 
-conda create -n esig python=3.11
-conda activate esig
+conda create -n esignatures python=3.11
+conda activate esignatures
 
 # Poppler (required: pdf2image, the PNGs and the combined figure use it)
 brew install poppler          # macOS
@@ -179,7 +220,7 @@ tail -f results/logs/SBS_0.9_0.85_pooled_*.log      # follow a run
 ```
 
 The log ends with `Pipeline complete!` when the run succeeds. To use another
-conda environment, set `ESIG_ENV`, e.g. `ESIG_ENV=esig bash run_background.sh ...`.
+conda environment, set `ESIG_ENV`, e.g. `ESIG_ENV=myenv bash run_background.sh ...`.
 Runs with different options write to different folders, but they share a
 preprocessing cache when their cutoff and normalization are the same (e.g.
 the default and `pooled`), so start the second one after the first finishes.
@@ -261,7 +302,7 @@ own `decomposition_parameters.txt`.
 
 ### COSMIC decomposition (Step 8)
 
-The last step of every SBS run decomposes each COSMIC v3.6 SBS signature into
+Step 8 of every SBS run decomposes each COSMIC v3.6 SBS signature into
 that run's eSS with SigProfilerAssignment 1.1.4 (`decompose_fit`), writing to
 `results/<run name>/SBS/decomposition/`:
 
@@ -279,8 +320,8 @@ Settings (`pipeline/run_decomposition.py`):
   signature whose best eSS reconstruction has cosine similarity below 0.8
   stays as itself, i.e. is not explained by the eSS. This is a different
   question from the ≥0.85 COSMIC match of a single eSS, so the numbers
-  need not be the same. With the default run, 50 of the 101 COSMIC
-  signatures are reconstructed from eSS (38 at 0.85).
+  need not be the same. With the default run (2026-11-13 inputs), 50
+  of the 101 COSMIC signatures are reconstructed from eSS.
 - **Samples:** the COSMIC signatures themselves (as in
   `SPA_1000_shuffled_libraries/null_library_fit.py`). The COSMIC-to-eSS map
   does not depend on the samples; only the activities do.
@@ -892,11 +933,11 @@ Cisplatin	Cis
 
 ## Pipeline steps and outputs
 
-| Step | Script | Key outputs in `results/<TYPE>/` |
+| Step | Script | Key outputs in `results/<run name>/<TYPE>/` |
 |------|--------|----------------------------------|
 | 0 (optional) | *integrated preprocessing* | `data/input_cleaned/<TYPE>/` (cached, auto-generated) |
 | 1 | `perform_clustering.py` | `main_clusters/`, `small_clusters/`, `singletons/`, `interactive_clustering/` |
-| 2 | `generate_summary.py` | `reports/cluster_report.html`, `reports/cluster_summary.html`, `reports/main_clusters_with_dendrogram.html`, `reports/small_clusters_cluster_report.html`, `reports/small_clusters_summary.html` |
+| 2 | `generate_summary.py` (pie slices and legends largest first) | `reports/cluster_report.html`, `reports/cluster_summary.html`, `reports/main_clusters_with_dendrogram.html`, `reports/small_clusters_cluster_report.html`, `reports/small_clusters_summary.html` |
 | 2b | `html_to_pdf.py` | `reports/cluster_summary.pdf`, `reports/main_clusters_with_dendrogram.pdf`, `reports/small_clusters_summary.pdf` (one page each) and a 300 DPI `.png` of each; needs Google Chrome |
 | 3 | `generate_images_heatmap.py` | `interactive_heatmap/cluster_plots/*.png`, `interactive_heatmap/cosmic_plots/*.png` |
 | 4 | `generate_interactive_heatmap.py` | `interactive_heatmap.html`, `cosmic_similar_clusters_<t>.tsv`, `denovo_clusters_<t>.tsv` |
@@ -905,8 +946,7 @@ Cisplatin	Cis
 | 6b | `combined_matrix_figure.py` | `species_compound_matrix_combined.html`, `.pdf` (one page) and `.png` (300 DPI); PDF/PNG need Google Chrome |
 | 7 | `run_info.py` | `run_parameters.txt`, `run_parameters.json` |
 | 8 (SBS) | `run_decomposition.py` | `decomposition/` (COSMIC decomposition into eSS) |
-| 9 | `collect_final_outputs.py` | `final_output/` (copies of all figure PDFs/PNGs, see below) |
-| 6 | `species_compound_matrix.py` | `species_compound_matrix_{human,mouse,other_species}.pdf` |
+| 9 | `collect_final_outputs.py` | `final_output/` (copies of all figure PDFs/PNGs, see [Final figures](#final-figures-final_output)) |
 
 ### One-page PDFs of the cluster summaries (Step 2b)
 
@@ -920,9 +960,7 @@ HTML, for use as manuscript figures and slides:
 
 Each PDF is **one page**: A4-landscape width (the reports' print layout) and
 as tall as the content, so no rows are split onto a second page and nothing
-has to be put back together by hand. With the current data,
-`cluster_summary.pdf` is 297 × 267 mm and `main_clusters_with_dendrogram.pdf`
-297 × 310 mm. `pipeline/html_to_pdf.py` prints them with headless Google
+has to be put back together by hand. `pipeline/html_to_pdf.py` prints them with headless Google
 Chrome (the same rendering as printing from the browser), on a page tall
 enough for the whole report, then trims the empty space under the last row.
 
