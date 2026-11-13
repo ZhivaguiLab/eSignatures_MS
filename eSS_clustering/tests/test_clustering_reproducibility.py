@@ -3,15 +3,32 @@
 Reproducibility checks for the SBS eSignature clustering.
 
 Runs preprocessing and clustering on data/input/SBS (no plotting of signature
-profiles) and checks them against:
+profiles) and checks them against the expected results for that input data.
 
-- tests/expected/SBS_cluster_membership.tsv: 48 main clusters, 16 small
-  clusters, 123 singletons from 653 profiles (min_mutations 307 for every
-  species, no custom thresholds), with identical membership and eSS numbering;
-- tests/expected/SBS_cluster_membership_aai_split.tsv: the same with the
-  optional 'aai-split' custom thresholds (49 / 16 / 123);
-- tests/expected/SBS_cluster_membership_per_species.tsv: the optional
-  'per-species' cutoffs (min_mutations_per_species; 674 profiles, 48 / 15 / 129);
+Input data versions (tests/data_versions.py): each release of the input
+matrices is registered by date in tests/expected/data_versions.json, with its
+expected numbers, and its expected membership files are in
+tests/expected/<date>/:
+
+    2026-09-28  original inputs: 653 profiles, 48 / 16 / 123, 25 / 23 COSMIC
+    2026-11-13  + 70 human samples: 694 profiles, 50 / 18 / 130, 26 / 24 COSMIC
+
+The tests find which version is in data/input/SBS and check, for it:
+
+- SBS_cluster_membership.tsv: every sample's cluster and eSS number with
+  min_mutations 307 for every species and no custom thresholds, plus the
+  profile, cluster and COSMIC counts;
+- SBS_cluster_membership_aai_split.tsv: the same with the optional
+  'aai-split' custom thresholds;
+- SBS_cluster_membership_per_species.tsv: the optional 'per-species' cutoffs
+  (min_mutations_per_species).
+
+Inputs that aren't a registered version fail DataVersionTest and skip the
+version-specific checks; register them with tests/make_expected.py.
+
+Checks against earlier, published results always use the 2026-09-28 inputs,
+rebuilt from the current files (later releases only add samples):
+
 - tests/expected/published_307_input_samples.tsv: the samples in the
   previously published filtered_*_307.txt inputs, which preprocessing must
   reproduce when every species' cutoff is 307 (apart from the 18 C. elegans
@@ -39,8 +56,10 @@ import pandas as pd
 import scipy.cluster.hierarchy as sch
 from scipy.spatial.distance import pdist
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(TESTS_DIR)
 sys.path.insert(0, os.path.join(REPO_ROOT, "pipeline"))
+sys.path.insert(0, TESTS_DIR)
 
 # pdf2image is only used to convert plots to PNG, which these tests skip.
 try:
@@ -53,13 +72,26 @@ import perform_clustering as pc  # noqa: E402
 import run_info  # noqa: E402
 from utils.mutation_type import get_config  # noqa: E402
 from utils import min_mutations as cutoff_config  # noqa: E402
+import data_versions as dv  # noqa: E402
 
-EXPECTED_MEMBERSHIP = os.path.join(REPO_ROOT, "tests", "expected",
-                                   "SBS_cluster_membership.tsv")
-EXPECTED_MEMBERSHIP_AAI_SPLIT = os.path.join(REPO_ROOT, "tests", "expected",
-                                             "SBS_cluster_membership_aai_split.tsv")
-EXPECTED_MEMBERSHIP_PER_SPECIES = os.path.join(REPO_ROOT, "tests", "expected",
-                                               "SBS_cluster_membership_per_species.tsv")
+# The input data version in data/input/SBS and what the tests expect for it.
+DATA_VERSION = dv.current_version()
+EXPECTED = dv.load_registry()[DATA_VERSION]["expected"] if DATA_VERSION else None
+MEMBERSHIP_FILES = {
+    "default": "SBS_cluster_membership.tsv",
+    "aai_split": "SBS_cluster_membership_aai_split.tsv",
+    "per_species": "SBS_cluster_membership_per_species.tsv",
+}
+
+
+def expected_membership(key, version=None):
+    return os.path.join(dv.expected_dir(version or DATA_VERSION), MEMBERSHIP_FILES[key])
+
+
+def require_data_version():
+    if DATA_VERSION is None:
+        raise unittest.SkipTest("input data is not a registered version (see DataVersionTest)")
+
 PUBLISHED_307_INPUTS = os.path.join(REPO_ROOT, "tests", "expected",
                                     "published_307_input_samples.tsv")
 PREPROCESSING_CONFIG = os.path.join(REPO_ROOT, "config", "preprocessing.yaml")
@@ -92,6 +124,21 @@ def run_clustering(normalized_df, output_dir, custom_thresholds):
     )
 
 
+def cosmic_counts(main, normalized, counts, mappings, out_dir):
+    """(matched, unmatched) eSS at COSMIC_MATCH_THRESHOLD, equal_replicate profiles."""
+    os.makedirs(out_dir, exist_ok=True)
+    path = pc.summarize_and_average_clusters(
+        main, normalized, counts, out_dir, "main", mappings,
+        "eSS", averaging_method="equal_replicate")
+    profiles = pd.read_csv(path, sep="\t", index_col=0)
+    cosmic = pd.read_csv(COSMIC_SBS, sep="\t", index_col=0)
+    assert profiles.index.equals(cosmic.index)
+    A = profiles.values / np.linalg.norm(profiles.values, axis=0)
+    B = cosmic.values / np.linalg.norm(cosmic.values, axis=0)
+    best = (A.T @ B).max(axis=1)
+    return int((best >= COSMIC_MATCH_THRESHOLD).sum()), int((best < COSMIC_MATCH_THRESHOLD).sum())
+
+
 def assert_membership(test, result, expected_path):
     """Cluster membership and numbering must equal an expected table."""
     main, small, *_, singletons = result
@@ -111,6 +158,7 @@ class ClusteringReproducibilityTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        require_data_version()
         cls.tmp = tempfile.mkdtemp(prefix="ess_clustering_test_")
         cls.cfg = get_config("SBS")
 
@@ -145,7 +193,7 @@ class ClusteringReproducibilityTest(unittest.TestCase):
     # ── Input ────────────────────────────────────────────────────────────────
 
     def test_input_profile_count(self):
-        self.assertEqual(self.normalized.shape, (96, 653))
+        self.assertEqual(self.normalized.shape, (96, EXPECTED["profiles"]))
 
     def test_mouse_exclusions_applied(self):
         mouse_originals = set(self.mappings["mouse"])
@@ -155,11 +203,11 @@ class ClusteringReproducibilityTest(unittest.TestCase):
 
     def test_default_cluster_counts(self):
         main, small, *_, singletons = self.default
-        self.assertEqual((len(main), len(small), len(singletons)), (48, 16, 123))
+        self.assertEqual((len(main), len(small), len(singletons)), tuple(EXPECTED["default"]["clusters"]))
 
     def test_cluster_counts_with_aai_split(self):
         main, small, *_, singletons = self.aai_split
-        self.assertEqual((len(main), len(small), len(singletons)), (49, 16, 123))
+        self.assertEqual((len(main), len(small), len(singletons)), tuple(EXPECTED["aai_split"]["clusters"]))
 
     def test_no_custom_thresholds_by_default(self):
         self.assertEqual(self.cfg.default_custom_thresholds, {})
@@ -179,10 +227,10 @@ class ClusteringReproducibilityTest(unittest.TestCase):
     # ── Membership and numbering ─────────────────────────────────────────────
 
     def test_membership_matches_expected(self):
-        assert_membership(self, self.default, EXPECTED_MEMBERSHIP)
+        assert_membership(self, self.default, expected_membership("default"))
 
     def test_membership_matches_expected_with_aai_split(self):
-        assert_membership(self, self.aai_split, EXPECTED_MEMBERSHIP_AAI_SPLIT)
+        assert_membership(self, self.aai_split, expected_membership("aai_split"))
 
     def test_tree_cut_matches_dendrogram_colours(self):
         # Rebuild clusters the old way, from dendrogram leaf colours, and
@@ -217,26 +265,16 @@ class ClusteringReproducibilityTest(unittest.TestCase):
     # ── Consensus profiles and COSMIC matching ───────────────────────────────
 
     def _cosmic_counts(self, result, label):
-        main, *_ = result
-        out = os.path.join(self.tmp, f"summary_{label}")
-        os.makedirs(out, exist_ok=True)
-        path = pc.summarize_and_average_clusters(
-            main, self.normalized, self.counts, out, "main", self.mappings,
-            "eSS", averaging_method="equal_replicate")
-        profiles = pd.read_csv(path, sep="\t", index_col=0)
-        cosmic = pd.read_csv(COSMIC_SBS, sep="\t", index_col=0)
-        self.assertTrue(profiles.index.equals(cosmic.index))
-
-        A = profiles.values / np.linalg.norm(profiles.values, axis=0)
-        B = cosmic.values / np.linalg.norm(cosmic.values, axis=0)
-        best = (A.T @ B).max(axis=1)
-        return int((best >= COSMIC_MATCH_THRESHOLD).sum()), int((best < COSMIC_MATCH_THRESHOLD).sum())
+        return cosmic_counts(result[0], self.normalized, self.counts, self.mappings,
+                             os.path.join(self.tmp, f"summary_{label}"))
 
     def test_cosmic_match_count(self):
-        self.assertEqual(self._cosmic_counts(self.default, "default"), (25, 23))
+        self.assertEqual(self._cosmic_counts(self.default, "default"),
+                         tuple(EXPECTED["default"]["cosmic"]))
 
     def test_cosmic_match_count_with_aai_split(self):
-        self.assertEqual(self._cosmic_counts(self.aai_split, "aai_split"), (26, 23))
+        self.assertEqual(self._cosmic_counts(self.aai_split, "aai_split"),
+                         tuple(EXPECTED["aai_split"]["cosmic"]))
 
     # ── Safety checks fail loudly ────────────────────────────────────────────
 
@@ -340,14 +378,15 @@ class ClusteringReproducibilityTest(unittest.TestCase):
     def test_307_cutoff_reproduces_published_inputs(self):
         # With 307 for every species, preprocessing must keep exactly the
         # samples in the previously published filtered_*_307.txt files,
-        # except the 18 C. elegans CX-5461 samples below 307.
+        # except the 18 C. elegans CX-5461 samples below 307. The published
+        # files were made from the 2026-09-28 inputs, so use those.
         config = os.path.join(self.tmp, "preprocessing_307.yaml")
         with open(config, "w") as f:
             f.write("SBS:\n  min_mutations:\n" +
                     "".join(f"    {sp}: 307\n" for sp in self._raw_files()) +
                     "case_sensitive: false\n")
         base = os.path.join(self.tmp, "input307")
-        shutil.copytree(self.raw_dir, os.path.join(base, "SBS"))
+        self.assertIsNotNone(dv.build_inputs(dv.PUBLISHED_VERSION, os.path.join(base, "SBS")))
         data_dir = pc.determine_data_directory(base, "SBS", config)
 
         published = pd.read_csv(PUBLISHED_307_INPUTS, sep="\t")
@@ -412,9 +451,14 @@ class MatchesMainAt307Test(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.mkdtemp(prefix="ess_clustering_307_")
         cls.cfg = get_config("SBS")
-        raw_dir = os.path.join(REPO_ROOT, "data", "input", "SBS")
+        # The published clustering was made from the 2026-09-28 inputs,
+        # rebuilt here from the current files.
         base = os.path.join(cls.tmp, "input")
-        shutil.copytree(raw_dir, os.path.join(base, "SBS"))
+        raw_dir = dv.build_inputs(dv.PUBLISHED_VERSION, os.path.join(base, "SBS"))
+        if raw_dir is None:
+            shutil.rmtree(cls.tmp, ignore_errors=True)
+            raise unittest.SkipTest(f"the {dv.PUBLISHED_VERSION} inputs can't be rebuilt "
+                                    "from data/input/SBS (see DataVersionTest)")
         cls.raw_files = {pc.detect_species(f)[0]: os.path.join(raw_dir, f)
                          for f in sorted(os.listdir(raw_dir)) if f.endswith(".txt")}
 
@@ -694,13 +738,18 @@ class MinMutationsOptionTest(unittest.TestCase):
         self.assertEqual(cutoffs, self.PER_SPECIES)
         self.assertEqual(os.path.basename(self.dirs["per-species"]), "SBS_min-per-species")
         self._assert_filtered(self.dirs["per-species"], cutoffs)
-        self.assertEqual(sum(c.shape[1] for c in self._cleaned(self.dirs["per-species"]).values()), 674)
+
+    def test_per_species_profile_count(self):
+        require_data_version()
+        self.assertEqual(sum(c.shape[1] for c in self._cleaned(self.dirs["per-species"]).values()),
+                         EXPECTED["per_species"]["profiles"])
 
     def test_other_cutoffs_leave_default_cache_alone(self):
         self.assertEqual(pc.preprocessing_stamp(self.default_dir, [], False), self.default_stamp)
         self._assert_filtered(self.default_dir, cutoff_config.resolve(self.pre_config))
 
     def test_per_species_membership_matches_expected(self):
+        require_data_version()
         cfg = get_config("SBS")
         counts, normalized, mappings = pc.load_data(
             self.dirs["per-species"], cfg, os.path.join(REPO_ROOT, "config", "sample_mapping.tsv"))
@@ -710,8 +759,9 @@ class MinMutationsOptionTest(unittest.TestCase):
         result = run_clustering(normalized[counts.columns], self.tmp,
                                 dict(cfg.default_custom_thresholds))
         main, small, *_, singletons = result
-        self.assertEqual((len(main), len(small), len(singletons)), (48, 15, 129))
-        assert_membership(self, result, EXPECTED_MEMBERSHIP_PER_SPECIES)
+        self.assertEqual((len(main), len(small), len(singletons)),
+                         tuple(EXPECTED["per_species"]["clusters"]))
+        assert_membership(self, result, expected_membership("per_species"))
 
     def test_invalid_setting_raises(self):
         for bad in ("abc", "-5", "per_species"):
@@ -719,6 +769,37 @@ class MinMutationsOptionTest(unittest.TestCase):
                 cutoff_config.resolve(self.pre_config, bad)
         with self.assertRaises(ValueError):   # no per-species values for DBS
             cutoff_config.resolve({"exclude": ["hTumor"]}, "per-species")
+
+
+class DataVersionTest(unittest.TestCase):
+    """data/input/SBS is a registered input data version with expected results."""
+
+    def test_inputs_are_a_registered_version(self):
+        self.assertIsNotNone(DATA_VERSION, dv.UNKNOWN_DATA_MESSAGE)
+
+    def test_every_version_has_its_expected_files(self):
+        for version, entry in dv.load_registry().items():
+            for key in ("profiles", "default", "aai_split", "per_species"):
+                self.assertIn(key, entry["expected"], version)
+            for key in MEMBERSHIP_FILES:
+                path = expected_membership(key, version)
+                self.assertTrue(os.path.exists(path), path)
+                rows = len(pd.read_csv(path, sep="\t"))
+                want = entry["expected"]["per_species" if key == "per_species" else "default"]
+                self.assertEqual(rows, want.get("profiles", entry["expected"]["profiles"]),
+                                 f"{version} {path}")
+
+    def test_published_inputs_can_be_rebuilt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIsNotNone(dv.build_inputs(dv.PUBLISHED_VERSION, tmp),
+                                 f"data/input/SBS no longer contains the {dv.PUBLISHED_VERSION} "
+                                 "inputs as its first samples")
+
+    def test_fingerprint_ignores_file_formatting(self):
+        df = pd.DataFrame({"a": [1, 2], "b": [3.0, 4.0]}, index=["x", "y"])
+        same = df.astype(float)
+        self.assertEqual(dv.fingerprint(df), dv.fingerprint(same))
+        self.assertNotEqual(dv.fingerprint(df), dv.fingerprint(df.rename(columns={"a": "c"})))
 
 
 class RunNameTest(unittest.TestCase):

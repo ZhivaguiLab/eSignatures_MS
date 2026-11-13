@@ -52,8 +52,11 @@ eSS_clustering/
 
   tests/
     test_clustering_reproducibility.py  ← checks a run reproduces the expected clusters
-    expected/SBS_cluster_membership.tsv       ← expected sample → cluster assignments
-    expected/SBS_cluster_membership_aai_split.tsv    ← same, with the aai-split testing option
+    data_versions.py                    ← which input data version is in data/input/SBS
+    make_expected.py                    ← registers a new input data version + its expected results
+    expected/data_versions.json         ← each input data version: date, what changed, fingerprints, expected numbers
+    expected/<YYYY-MM-DD>/              ← expected sample → cluster assignments for that version
+                                          (default, aai-split, per-species)
     expected/published_307_input_samples.tsv  ← samples in the earlier ≥307 input files
     expected/main_SBS_cluster_membership.tsv  ← earlier clustering on main (old ≥307 inputs)
     expected/main_SBS_eSS_profiles.tsv        ← earlier eSS consensus profiles on main
@@ -139,8 +142,9 @@ expected files.
 > - COSMIC decomposition: SigProfilerAssignment 1.1.4, novelty threshold **0.8**
 > - No opportunity normalization
 >
-> Output: `results/min307/SBS/` — 653 profiles, 48 eSS, 25/23 COSMIC
-> matched/unmatched. The tests and `tests/expected/` are for this default.
+> Output: `results/min307/SBS/` — 694 profiles, 50 eSS, 26/24 COSMIC
+> matched/unmatched (input data version 2026-11-13; see
+> [Input data versions](#input-data-versions)). The tests check this default.
 
 ```bash
 # From eSS_clustering/ (run_pipeline.sh also works from any other directory)
@@ -311,8 +315,9 @@ The SBS clustering uses:
 | COSMIC match | max cosine similarity ≥ `0.85` to any COSMIC v3.6 SBS signature, artifact signatures included | `MATCH_THRESHOLD` in `generate_static_heatmap.py`; `--threshold` in `generate_interactive_heatmap.py` |
 
 These two commands give **identical** clusters. With the current
-`data/input/SBS`, 653 of the 1,482 bundled profiles pass preprocessing and are
-clustered into **48 main clusters, 16 small clusters and 123 singletons**:
+`data/input/SBS` (version 2026-11-13), 694 of the 1,552 bundled profiles pass
+preprocessing and are clustered into **50 main clusters, 18 small clusters and
+130 singletons**:
 
 ```bash
 bash run_pipeline.sh SBS 0.9 0.85
@@ -339,9 +344,9 @@ python pipeline/perform_clustering.py --mutation_type SBS --output_dir results/m
 
 | | Default | `aai-split` |
 |---|---|---|
-| Main clusters (eSS) | 48 | 49 |
-| Small clusters / singletons | 16 / 123 | 16 / 123 |
-| COSMIC matched / unmatched (≥0.85) | 25 / 23 | 26 / 23 |
+| Main clusters (eSS) | 50 | 51 |
+| Small clusters / singletons | 18 / 130 | 18 / 130 |
+| COSMIC matched / unmatched (≥0.85) | 26 / 24 | 27 / 24 |
 
 With the split, the 11-sample AAI/DBP cluster becomes two: 8 samples (6
 Aristolochic acid I + 2 Dibenzo[a,l]pyrene/DBPDE, so still mixed) and 3 DBPDE
@@ -356,9 +361,9 @@ without editing any file:
 
 | Cutoff | Command | Output folder | Clustered profiles |
 |---|---|---|---|
-| **307 for every species (default)** | `bash run_pipeline.sh SBS 0.9 0.85` | `results/min307/` | 653 |
+| **307 for every species (default)** | `bash run_pipeline.sh SBS 0.9 0.85` | `results/min307/` | 694 |
 | One number for every species | `bash run_pipeline.sh SBS 0.9 0.85 min=250` | `results/min250/` | depends on N |
-| Per species | `bash run_pipeline.sh SBS 0.9 0.85 per-species` | `results/min-per-species/` | 674 |
+| Per species | `bash run_pipeline.sh SBS 0.9 0.85 per-species` | `results/min-per-species/` | 715 |
 
 With `perform_clustering.py` directly, use `--min_mutations 250` or
 `--min_mutations per-species`.
@@ -378,10 +383,10 @@ SBS:
 
 307 is the Poisson-resampling stability threshold ("SBS for 99% of
 simulations") over all samples; the per-species values are the same threshold
-computed from each species' own samples. `per-species` gives 674 profiles,
-48 eSS, 15 small clusters, 129 singletons and 25/23 COSMIC matched/unmatched.
-The tests check its sample set, counts and cluster membership
-(`tests/expected/SBS_cluster_membership_per_species.tsv`).
+computed from each species' own samples. `per-species` gives 715 profiles,
+50 eSS, 17 small clusters, 136 singletons and 26/24 COSMIC matched/unmatched
+(2026-11-13 inputs). The tests check its sample set, counts and cluster
+membership (`tests/expected/<version>/SBS_cluster_membership_per_species.tsv`).
 
 Notes:
 
@@ -438,24 +443,27 @@ anywhere between cosine similarity 0.8996 and 0.9015 gives the same clusters.
 python -m unittest discover tests -v
 ```
 
-The tests run preprocessing and clustering on `data/input/SBS` and check the
-result against `tests/expected/SBS_cluster_membership.tsv` (every sample's
-cluster and eSS number). They also check:
+The tests find which [input data version](#input-data-versions) is in
+`data/input/SBS`, run preprocessing and clustering on it, and check the result
+against that version's `tests/expected/<version>/SBS_cluster_membership.tsv`
+(every sample's cluster and eSS number). They also check:
 
-- the 48 / 16 / 123 counts and 25 / 23 COSMIC split, and for the `aai-split`
-  testing option, 49 / 16 / 123, 26 / 23 and its own expected membership
-  (`tests/expected/SBS_cluster_membership_aai_split.tsv`), which differs from
-  the default only in the AAI/DBP cluster
+- the profile and cluster counts and COSMIC split recorded for the version
+  (see the table under [Input data versions](#input-data-versions)), and for the `aai-split` testing
+  option its counts, COSMIC split and own expected membership
+  (`SBS_cluster_membership_aai_split.tsv`), which differs from the default
+  only in the AAI/DBP cluster
 - preprocessing: every clustered sample meets its species cutoff; each cleaned
   file equals an independent re-filter of the unfiltered file (and each
   normalized file equals its counts / total); every input sample is either kept
   or listed in the removed-samples log; a cached rerun is identical
 - the cutoff options: `min=<N>` applies N to every species (checked against an
   independent re-filter), `min=307` is the default, and `per-species` gives
-  674 profiles and 48 / 15 / 129 with the membership in
-  `tests/expected/SBS_cluster_membership_per_species.tsv`; other cutoffs use
+  the version's profile and cluster counts and the membership in
+  `SBS_cluster_membership_per_species.tsv`; other cutoffs use
   their own cache and leave the default's alone
-- with 307 for every species, preprocessing keeps exactly the samples in the
+- on the 2026-09-28 inputs (rebuilt from the current files, see below): with
+  307 for every species, preprocessing keeps exactly the samples in the
   earlier published `filtered_*_307.txt` inputs
   (`tests/expected/published_307_input_samples.tsv`), except the 18 C. elegans
   CX-5461 samples below 307 that the old filtering script let through
@@ -475,8 +483,50 @@ cluster and eSS number). They also check:
 - the mouse exclusions, and that the safety checks below stop the run on bad
   input
 
-If you change the input data or settings on purpose, regenerate the expected
-membership file and review the diff.
+If you change the settings on purpose, regenerate the expected results
+(`python tests/make_expected.py --version <date> --description "..." --force`)
+and review the diff. For new input data, register a new version (below).
+
+### Input data versions
+
+Each release of the SBS input matrices in `data/input/SBS` is a **data
+version**, named by the date the inputs changed and registered in
+`tests/expected/data_versions.json` with what changed, a fingerprint of each
+input file's contents and the expected results. Its expected cluster
+membership files are in `tests/expected/<date>/`.
+
+| Version | What changed | Profiles (≥307) | eSS / small / singletons | COSMIC matched / unmatched | Per-species: profiles, eSS / small / singletons |
+|---|---|---|---|---|---|
+| 2026-09-28 | original inputs (manuscript submission), 486 human samples | 653 | 48 / 16 / 123 | 25 / 23 | 674, 48 / 15 / 129 |
+| **2026-11-13** (current) | collaborator's new human file: +70 human samples (TK6 4NQO/cisplatin ± POLH/I/K, XP30RO UVA/N-acetylcysteine, hTERT-RPE1 cisplatin P53-/-), 556 human samples; other species unchanged | 694 | 50 / 18 / 130 | 26 / 24 | 715, 50 / 17 / 136 |
+
+The tests detect the version from the fingerprints, so they pass with either
+set of inputs. If `data/input/SBS` matches no registered version, the
+`DataVersionTest` fails with instructions and the version-specific checks are
+skipped. The fingerprint is of the matrices themselves (sample names,
+contexts, counts), not the file bytes, so line endings or number formatting
+don't matter.
+
+The checks against earlier published results (the old `filtered_*_307.txt`
+inputs and the clustering on `main`) always use the 2026-09-28 inputs. New
+releases so far only add samples after the existing ones (the 2026-11-13
+human file is the 2026-09-28 file with 70 samples appended, counts
+unchanged), so the tests rebuild the 2026-09-28 inputs from the current
+files and confirm the rebuild with its fingerprint.
+
+When the collaborator sends new inputs:
+
+1. Copy them into `data/input/SBS/` and add any new sample names to
+   `config/sample_mapping.tsv`.
+2. Register them, dated the day they changed:
+   ```bash
+   python tests/make_expected.py --version 2027-01-15 --description "what changed"
+   ```
+   This writes `tests/expected/2027-01-15/` and adds the version, with its
+   numbers, to `data_versions.json`.
+3. Check the printed numbers against a full run on the same inputs, diff the
+   new membership files against the previous version's, add a row to the
+   table above, and commit the inputs and the new version together.
 
 ### Safety checks
 
@@ -718,9 +768,9 @@ Running preprocessing...
     Wrote normalized profiles: normalized_celegans_SBS96.tsv
   ...
 PREPROCESSING COMPLETE
-  Total samples: 1482
-  Removed: 829
-  Kept: 653
+  Total samples: 1552
+  Removed: 858
+  Kept: 694
   Cleaned data saved to: data/input_cleaned/SBS
   Removed samples listed in: preprocessing_removed_samples.csv
 ======================================================================
@@ -1035,5 +1085,7 @@ normalized profiles. The message names the samples involved; fix the input
 files rather than bypassing the check.
 
 **Tests fail after changing inputs or settings:** expected if the change was
-intentional. Check the reported differences, then regenerate
-`tests/expected/SBS_cluster_membership.tsv` from the new run.
+intentional. For new inputs, `DataVersionTest` says the data isn't a
+registered version: register it as in [Input data versions](#input-data-versions).
+For changed settings, check the reported differences, then regenerate the
+current version's expected results with `make_expected.py --force`.

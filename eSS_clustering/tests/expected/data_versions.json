@@ -1,0 +1,118 @@
+{
+  "2026-09-28": {
+    "description": "Original inputs (manuscript submission): 5 species, 486 human samples",
+    "files": {
+      "unfiltered_celegans_SBS96.txt": {
+        "samples": 245,
+        "fingerprint": "b8a4ddcd5be6e1167af13b5cf726aeded7120cd632f3333fe6f94464a39158e9"
+      },
+      "unfiltered_chicken_SBS96.txt": {
+        "samples": 23,
+        "fingerprint": "9de9743656409cb11fef4b96b4a023c5738f63fd74a591768fc22248d0bb72cb"
+      },
+      "unfiltered_human_SBS96.txt": {
+        "samples": 486,
+        "fingerprint": "cc557e7cad246f1cfae46f7b058c150c4f3bc40ac0eff2d92777aa7e3aebc9ad"
+      },
+      "unfiltered_mouse_SBS96.txt": {
+        "samples": 723,
+        "fingerprint": "6932c0e5e64f9c3ff9832ee48d79be25288dab90511a8dc48acc02e342c14062"
+      },
+      "unfiltered_rat_SBS96.txt": {
+        "samples": 5,
+        "fingerprint": "31d4b58f3668bcaa9bac79843772332beef8e73c875e252a5b1029efa22a97b9"
+      }
+    },
+    "expected": {
+      "profiles": 653,
+      "default": {
+        "clusters": [
+          48,
+          16,
+          123
+        ],
+        "cosmic": [
+          25,
+          23
+        ]
+      },
+      "aai_split": {
+        "clusters": [
+          49,
+          16,
+          123
+        ],
+        "cosmic": [
+          26,
+          23
+        ]
+      },
+      "per_species": {
+        "clusters": [
+          48,
+          15,
+          129
+        ],
+        "profiles": 674
+      }
+    }
+  },
+  "2026-11-13": {
+    "description": "Collaborator's new human file: +70 human samples (TK6 4NQO/cisplatin +/- POLH/I/K, XP30RO UVA/N-acetylcysteine, hTERT-RPE1 cisplatin P53-/-), 556 human samples; other species unchanged",
+    "files": {
+      "unfiltered_celegans_SBS96.txt": {
+        "samples": 245,
+        "fingerprint": "b8a4ddcd5be6e1167af13b5cf726aeded7120cd632f3333fe6f94464a39158e9"
+      },
+      "unfiltered_chicken_SBS96.txt": {
+        "samples": 23,
+        "fingerprint": "9de9743656409cb11fef4b96b4a023c5738f63fd74a591768fc22248d0bb72cb"
+      },
+      "unfiltered_human_SBS96.txt": {
+        "samples": 556,
+        "fingerprint": "0ce4ab6bccce1d183b5e502289133c599085301101a5733be1589a64719dee96"
+      },
+      "unfiltered_mouse_SBS96.txt": {
+        "samples": 723,
+        "fingerprint": "6932c0e5e64f9c3ff9832ee48d79be25288dab90511a8dc48acc02e342c14062"
+      },
+      "unfiltered_rat_SBS96.txt": {
+        "samples": 5,
+        "fingerprint": "31d4b58f3668bcaa9bac79843772332beef8e73c875e252a5b1029efa22a97b9"
+      }
+    },
+    "expected": {
+      "profiles": 694,
+      "default": {
+        "clusters": [
+          50,
+          18,
+          130
+        ],
+        "cosmic": [
+          26,
+          24
+        ]
+      },
+      "aai_split": {
+        "clusters": [
+          51,
+          18,
+          130
+        ],
+        "cosmic": [
+          27,
+          24
+        ]
+      },
+      "per_species": {
+        "clusters": [
+          50,
+          17,
+          136
+        ],
+        "profiles": 715
+      }
+    }
+  }
+}
